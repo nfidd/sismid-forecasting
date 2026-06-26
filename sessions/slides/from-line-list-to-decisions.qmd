@@ -39,7 +39,7 @@ Hans Rosling, Liberia, 2014
 - Measures % of outpatient visits due to ILI
 
 ```{r ili-plot, fig.width=8, fig.height=4, fig.align='center'}
-library(nfidd)
+library(nfidd.forecasting)
 library(ggplot2)
 library(dplyr)
 data(flu_data)
@@ -56,9 +56,9 @@ ggplot(flu_data, aes(x = epiweek, y = wili)) +
 
 How can we use data typically collected for other purposes to answer questions like
 
-- what **is** the number of cases now? (*nowcasting*)
-- is it rising/falling and by how much? (*$R_t$ estimation*)
-- what does this mean for the near future (*forecasting*)
+- what does the recent trend mean for the near future? (*forecasting*)
+- how good are our predictions, and how can we tell? (*evaluation*)
+- how can we combine and share models? (*ensembles & hubs*)
 
 in real time.
 
@@ -66,58 +66,24 @@ in real time.
 
 Throughout the course we will
 
-1. use models to simulate data sets in **R** <br>
-(the *generative model* of the simulated data)
-   
-```{r outbreak-plot, fig.width=5, fig.height=3, fig.align='center'}
-library(ggplot2)
-library(nfidd)
-### visualise the infection curve
-data(infection_times)
-ggplot(infection_times, aes(x = infection_time)) +
-  geom_histogram(binwidth = 1) +
-  scale_x_continuous(n.breaks = 10) +
-  labs(
-    x = "Infection time (in days)", y = "Number of infections",
-    title = "Infections during an outbreak"
-  ) +
-  theme_minimal()
-```
-
-### Approach
-
-Throughout the course we will
-
-2. apply generative models to simulated data in **Stan** to
-   - learn about the system (conduct inference)
-   - **make predictions** (nowcasting/forecasting)
-
-### Approach
-
-Throughout the course we will
-
-3. shift, in the second half, to demonstrations of **data-driven forecasting** and real-world applications
-
-### Approach
-
-Throughout the course we will
-
-4. work through all steps of a forecasting pipeline of data exploration, model and experimental design, forecast evaluation and combination.
+1. work with real epidemiological surveillance data in **R**
+2. fit time-series forecasting models and **make predictions**
+3. evaluate forecasts using proper scoring rules
+4. combine models into ensembles and contribute to collaborative modelling hubs
 
 ### Timeline
 
 ::: {.incremental}
-- delay distributions and how to estimate them (day 1)
-- $R_t$ estimation and nowcasting (day 2)
-- forecasting, evaluation, and ensemble methods (day 2)
-- forecasting hubs, applications, and linking nowcasting and forecasting (day 3)
+- forecasting concepts and models (day 1)
+- forecast evaluation and ensembles (day 2)
+- collaborative forecasting with hubs and course wrap-up (day 3)
 :::
 
 #
 
 To start the course go to:
-[https://nfidd.github.io/sismid/](https://nfidd.github.io/sismid/)
-and get started on the first session (*Delay distributions*)
+[https://nfidd.github.io/sismid-forecasting/](https://nfidd.github.io/sismid-forecasting/)
+and get started on the first session (*Forecasting concepts*)
 
 #
 

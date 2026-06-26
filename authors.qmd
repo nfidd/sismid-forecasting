@@ -20,7 +20,7 @@ If you use materials from this course in your work, please cite:
 
 > NFIDD course contributors (2025). NFIDD: Nowcasting and Forecasting Infectious Disease Dynamics. Version [VERSION]. DOI: [PLACEHOLDER - Zenodo DOI will be added upon release]
 
-> SISMID course contributors (2025). NFIDD SISMID: Nowcasting and Forecasting Infectious Disease Dynamics - SISMID. Version [VERSION]. DOI: [PLACEHOLDER - Zenodo DOI will be added upon release]
+> SISMID course contributors (2025). SISMID: Forecasting & Evaluation of Infectious Disease Dynamics. Version [VERSION]. DOI: [PLACEHOLDER - Zenodo DOI will be added upon release]
 
 ### BibTeX Entry
 
@@ -38,11 +38,11 @@ If you use materials from this course in your work, please cite:
 ```bibtex
 @misc{sismid2025,
   author = {{Sam Abbott, Thomas Robacker, Nick Reich}},
-  title = {{NFIDD SISMID: Nowcasting and Forecasting Infectious Disease Dynamics - SISMID}},
+  title = {{SISMID: Forecasting & Evaluation of Infectious Disease Dynamics}},
   year = {2025},
   version = {[VERSION]},
   doi = {[PLACEHOLDER - Zenodo DOI]},
-  url = {https://nfidd.github.io/sismid/}
+  url = {https://nfidd.github.io/sismid-forecasting/}
 }
 ```
 
@@ -59,9 +59,9 @@ All course materials are provided under the [MIT License](https://opensource.org
 We welcome contributions to improve and expand the course materials.
 You can:
 
-- [Report issues or suggest improvements](https://github.com/nfidd/nfidd/issues)
-- [Join discussions](https://github.com/nfidd/nfidd/discussions)
-- [Submit pull requests](https://github.com/nfidd/nfidd/pulls)
+- [Report issues or suggest improvements](https://github.com/nfidd/sismid-forecasting/issues)
+- [Join discussions](https://github.com/nfidd/sismid-forecasting/discussions)
+- [Submit pull requests](https://github.com/nfidd/sismid-forecasting/pulls)
 
 ## Acknowledgements
 

@@ -1,8 +1,10 @@
 
-# Nowcasting and forecasting infectious disease dynamics
+# Forecasting and evaluation of infectious disease dynamics
 
-This repository contains the material to create the nfidd sismid course
-page.
+This repository contains the material to create the SISMID
+forecasting & evaluation course page. It is the second half of the SISMID
+week; the companion [nowcasting & Rt estimation
+course](https://github.com/nfidd/sismid-nowcasting) covers the first half.
 
 All the raw material is in the folder `sessions/` and is written in
 `quarto`. Any changes to the quarto files are automatically updated on
@@ -33,16 +35,21 @@ All contributions to this project are gratefully acknowledged using the
 following the [allcontributors](https://allcontributors.org)
 specification. Contributions of any kind are welcome!
 
-<a href="https://github.com/nfidd/sismid-forecasting/commits?author=seabbs">seabbs</a>,
+### Code
+
 <a href="https://github.com/nfidd/sismid-forecasting/commits?author=sbfnk">sbfnk</a>,
-<a href="https://github.com/nfidd/sismid-forecasting/commits?author=nickreich">nickreich</a>,
+<a href="https://github.com/nfidd/sismid-forecasting/commits?author=seabbs">seabbs</a>,
 <a href="https://github.com/nfidd/sismid-forecasting/commits?author=kathsherratt">kathsherratt</a>,
-<a href="https://github.com/nfidd/sismid-forecasting/commits?author=trobacker">trobacker</a>,
+<a href="https://github.com/nfidd/sismid-forecasting/commits?author=nickreich">nickreich</a>,
 <a href="https://github.com/nfidd/sismid-forecasting/commits?author=github-actions[bot]">github-actions\[bot\]</a>,
 <a href="https://github.com/nfidd/sismid-forecasting/commits?author=dependabot[bot]">dependabot\[bot\]</a>,
 <a href="https://github.com/nfidd/sismid-forecasting/commits?author=jamesmbaazam">jamesmbaazam</a>,
 <a href="https://github.com/nfidd/sismid-forecasting/commits?author=ManuelStapper">ManuelStapper</a>,
 <a href="https://github.com/nfidd/sismid-forecasting/commits?author=zsusswein">zsusswein</a>
+
+### Issues
+
+<a href="https://github.com/nfidd/sismid-forecasting/issues?q=is%3Aissue+author%3Atrobacker">trobacker</a>
 
 <!-- markdownlint-enable -->
 

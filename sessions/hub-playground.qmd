@@ -39,7 +39,7 @@ Additionally, we will use some [hubverse](https://hubverse.io/) packages such as
 
 
 ```{r libraries, message = FALSE}
-library("nfidd")
+library("nfidd.forecasting")
 library("dplyr")
 library("ggplot2")
 library("epidatr")
