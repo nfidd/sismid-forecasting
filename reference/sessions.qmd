@@ -145,14 +145,14 @@ The following notes flag where the proposed schedule depends on instructor judge
 ## Content gaps (thin for the time available)
 
 -   **`forecasting-concepts`** is noticeably shorter than the other practicals. If Wednesday afternoon feels under-filled, candidates for expansion: more on interpreting `fable` output, a short exercise contrasting point vs probabilistic forecasts, or an explicit bridge from the nowcasting half.
--   **`hub-playground`** has comparatively few exercise/callout markers for its length and currently cannot be run at all (see blocking gap below); if the sandbox is restored, it may still want clearer step-by-step exercises.
+-   **`hub-playground`** has comparatively few exercise/callout markers for its length; it may want clearer step-by-step exercises. (It depends on the toy hub sandbox — see "Other notes" — which is provided automatically in CI, so this is not a blocker.)
 -   **Course recap deck (`closing.qmd`)** is the *shared* deck and still recaps the nowcasting half (delay distributions, $R_t$, nowcasting). For a forecasting-only cohort those slides may need trimming or reframing.
 
-## Blocking asset gaps (prevent teaching as-is)
+## Minor asset gaps
 
--   **Missing `sessions/slides/figures/wili_timeseries.png`.** Referenced (currently commented out) in `improving-forecasting-models.qmd`. The intended title-page time-series figure is absent from the repository. Either add the figure or remove/replace the reference before relying on that slide.
--   **Missing `sismid-ili-forecasting-sandbox/` directory.** `hub-playground.qmd` calls `here::here("sismid-ili-forecasting-sandbox")`, but this directory is **not present** in this fork (nor in the upstream `nfidd/sismid` repository). **The local hub playground session (Session 6) will fail to render/run until this directory is added.** This needs to be sourced or recreated before Friday afternoon can be taught.
+-   **Missing `sessions/slides/figures/wili_timeseries.png`.** Referenced (currently commented out) in `improving-forecasting-models.qmd`. The intended title-page time-series figure is absent from the repository. Either add the figure or remove/replace the reference before relying on that slide. This is minor — the line is already commented out, so the slide still renders.
 
 ## Other notes
 
+-   **Toy hub sandbox (`sismid-ili-forecasting-sandbox/`).** `hub-playground.qmd` calls `here::here("sismid-ili-forecasting-sandbox")`. This directory is intentionally **not committed** (it is in `.gitignore`): the deploy workflow (`.github/workflows/deploy.yaml`) checks out `reichlab/sismid-ili-forecasting-sandbox` into the repo root at build time, so the session renders fine in CI. **This is not a blocker.** To run the hub playground **locally**, clone the sandbox into the repo root first, e.g. `git clone https://github.com/reichlab/sismid-ili-forecasting-sandbox` from the repository root (the same path the workflow uses).
 -   **Unscheduled deck.** `introduction-to-the-spectrum-of-forecasting-models.qmd` exists but is not linked from any session. It is offered above as optional Friday material; decide whether to schedule it, fold it into Session 1, or drop it.
