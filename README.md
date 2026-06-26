@@ -1,10 +1,11 @@
 
 # Forecasting and evaluation of infectious disease dynamics
 
-This repository contains the material to create the SISMID
-forecasting & evaluation course page. It is the second half of the SISMID
-week; the companion [nowcasting & Rt estimation
-course](https://github.com/nfidd/sismid-nowcasting) covers the first half.
+This repository contains the material to create the SISMID forecasting &
+evaluation course page. It is the second half of the SISMID week; the
+companion [nowcasting & Rt estimation
+course](https://github.com/nfidd/sismid-nowcasting) covers the first
+half.
 
 All the raw material is in the folder `sessions/` and is written in
 `quarto`. Any changes to the quarto files are automatically updated on
@@ -32,7 +33,7 @@ quarto::quarto_render()
 
 All contributions to this project are gratefully acknowledged using the
 [`allcontributors` package](https://github.com/ropensci/allcontributors)
-following the [allcontributors](https://allcontributors.org)
+following the [all-contributors](https://allcontributors.org)
 specification. Contributions of any kind are welcome!
 
 ### Code
