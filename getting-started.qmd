@@ -74,11 +74,6 @@ Then you can check that the installation completed successfully by loading the p
 library("nfidd.forecasting")
 ```
 
-::: callout-note
-This course does **not** use Stan, so there is no need to install `cmdstan`.
-(The companion [Nowcasting & $R_t$ estimation course](https://nfidd.github.io/sismid-nowcasting/) does use Stan.)
-:::
-
 ## Accessing the course
 
 If you want to use the local workflow (recommended), you will need a local copy of the course material.
