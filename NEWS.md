@@ -1,4 +1,11 @@
-# nfidd (development version)
+# nfidd.forecasting (development version)
+
+- Split the combined SISMID course into two: this `nfidd.forecasting` package
+  and course covers forecasting & evaluation (second half of the week). The
+  companion `nfidd.nowcasting` package covers nowcasting & Rt estimation.
+- Removed all Stan models and Stan tooling (this course does not use Stan),
+  along with the delay-distribution, renewal-equation and nowcasting material.
+- Renamed the package from `nfidd` to `nfidd.forecasting`.
 
 # nfidd 1.2.0
 

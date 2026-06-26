@@ -1,5 +1,5 @@
 ---
-title: "Nowcasting and forecasting infectious disease dynamics - SISMID"
+title: "Forecasting & evaluation of infectious disease dynamics - SISMID"
 site: distill::distill_website
 comments: false
 about:
@@ -7,18 +7,27 @@ about:
   links:
     - icon: chat-fill
       text: Dive into the course
-      href: sismid/sessions/introduction-and-course-overview.html
+      href: sessions/introduction-and-course-overview.html
     - icon: github
       text: Visit us on GitHub
-      href: https://github.com/nfidd/nfidd
+      href: https://github.com/nfidd/sismid-forecasting
 ---
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
 ```
 
-A course and living resource for learning about nowcasting and forecasting infectious disease dynamics originally developed by the [nfidd](https://nfidd.github.io/nfidd) team and adapted for [SISMID](https://sismid.sph.emory.edu/).
+A course and living resource for learning about **forecasting and evaluation** of infectious disease dynamics, originally developed by the [nfidd](https://nfidd.github.io/nfidd) team and adapted for [SISMID](https://sismid.sph.emory.edu/).
 
-We invite anyone to use the materials here in their own teaching and learning. For questions and discussion of the course or its content, we welcome all users to the [Discussion board](https://github.com/nfidd/sismid/discussions). We welcome all forms of [contributions, additions and suggestions](https://github.com/nfidd/sismid/issues) for improving the materials. 
+This course runs in the **second half of the SISMID week (Wednesday midday to Friday)** and covers forecasting concepts and models, forecast evaluation, ensembles, and collaborative (hubverse) modelling.
 
-All materials here are provided under the permissive [MIT License](https://github.com/nfidd/sismid/blob/main/LICENSE).
+It is one of a pair of SISMID courses:
+
+- [**Nowcasting & $R_t$ estimation**](https://nfidd.github.io/sismid-nowcasting/) — the first half of the week (delay distributions, the renewal equation, and nowcasting).
+- **Forecasting & evaluation** (this course) — the second half of the week.
+
+See the [umbrella SISMID course](https://nfidd.github.io/sismid/) for the combined material.
+
+We invite anyone to use the materials here in their own teaching and learning. For questions and discussion of the course or its content, we welcome all users to the [Discussion board](https://github.com/nfidd/sismid-forecasting/discussions). We welcome all forms of [contributions, additions and suggestions](https://github.com/nfidd/sismid-forecasting/issues) for improving the materials.
+
+All materials here are provided under the permissive [MIT License](https://github.com/nfidd/sismid-forecasting/blob/main/LICENSE).

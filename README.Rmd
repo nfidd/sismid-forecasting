@@ -2,9 +2,10 @@
 output: github_document
 ---
 
-# Nowcasting and forecasting infectious disease dynamics
+# Forecasting and evaluation of infectious disease dynamics
 
-This repository contains the material to create the nfidd sismid course page.
+This repository contains the material to create the SISMID forecasting & evaluation course page.
+It is the second half of the SISMID week; the companion [nowcasting & Rt estimation course](https://github.com/nfidd/sismid-nowcasting) covers the first half.
 
 All the raw material is in the folder `sessions/` and is written in
 `quarto`. Any changes to the quarto files are automatically
@@ -42,22 +43,22 @@ All contributions to this project are gratefully acknowledged using the [`allcon
 ### Code
 
 
-<a href="https://github.com/nfidd/sismid/commits?author=sbfnk">sbfnk</a>, 
-<a href="https://github.com/nfidd/sismid/commits?author=seabbs">seabbs</a>, 
-<a href="https://github.com/nfidd/sismid/commits?author=kathsherratt">kathsherratt</a>, 
-<a href="https://github.com/nfidd/sismid/commits?author=nickreich">nickreich</a>, 
-<a href="https://github.com/nfidd/sismid/commits?author=github-actions[bot]">github-actions[bot]</a>, 
-<a href="https://github.com/nfidd/sismid/commits?author=dependabot[bot]">dependabot[bot]</a>, 
-<a href="https://github.com/nfidd/sismid/commits?author=jamesmbaazam">jamesmbaazam</a>, 
-<a href="https://github.com/nfidd/sismid/commits?author=ManuelStapper">ManuelStapper</a>, 
-<a href="https://github.com/nfidd/sismid/commits?author=zsusswein">zsusswein</a>
+<a href="https://github.com/nfidd/sismid-forecasting/commits?author=sbfnk">sbfnk</a>, 
+<a href="https://github.com/nfidd/sismid-forecasting/commits?author=seabbs">seabbs</a>, 
+<a href="https://github.com/nfidd/sismid-forecasting/commits?author=kathsherratt">kathsherratt</a>, 
+<a href="https://github.com/nfidd/sismid-forecasting/commits?author=nickreich">nickreich</a>, 
+<a href="https://github.com/nfidd/sismid-forecasting/commits?author=github-actions[bot]">github-actions[bot]</a>, 
+<a href="https://github.com/nfidd/sismid-forecasting/commits?author=dependabot[bot]">dependabot[bot]</a>, 
+<a href="https://github.com/nfidd/sismid-forecasting/commits?author=jamesmbaazam">jamesmbaazam</a>, 
+<a href="https://github.com/nfidd/sismid-forecasting/commits?author=ManuelStapper">ManuelStapper</a>, 
+<a href="https://github.com/nfidd/sismid-forecasting/commits?author=zsusswein">zsusswein</a>
 
 
 
 ### Issues
 
 
-<a href="https://github.com/nfidd/sismid/issues?q=is%3Aissue+author%3Atrobacker">trobacker</a>
+<a href="https://github.com/nfidd/sismid-forecasting/issues?q=is%3Aissue+author%3Atrobacker">trobacker</a>
 
 
 <!-- markdownlint-enable -->

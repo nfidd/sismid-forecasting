@@ -30,7 +30,7 @@ The source file of this session is located at `sessions/real-world-forecasts.qmd
 In this session we will use the `nfidd` package to access some stored datasets, the `dplyr` package for data wrangling, the `ggplot2` library for plotting, and the following [hubverse](https://hubverse.io/) packages: `hubData`, `hubUtils`, `hubEvals` and `hubEnsembles`.
 
 ```{r libraries, message = FALSE}
-library("nfidd")
+library("nfidd.forecasting")
 library("dplyr")
 library("ggplot2")
 library("hubData")
