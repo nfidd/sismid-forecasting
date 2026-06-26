@@ -4,165 +4,81 @@ order: 1
 comments: false
 ---
 
-# Day 1: Epidemiological delays
+This is the **Forecasting & evaluation** course, which runs in the **second half of the SISMID week (Wednesday midday to Friday)**.
+The companion [Nowcasting & $R_t$ estimation course](https://nfidd.github.io/sismid-nowcasting/) covers the first half of the week.
 
-**Wednesday - Half day starting at 1:30pm**
+<!-- TODO: confirm timings (Sam/Nick) -->
+The session structure below is a draft. Exact day/time allocations still need to be confirmed by the instructors.
+
+# Day 1: Forecasting concepts and models
+
+**Wednesday afternoon**
+
+<!-- TODO: confirm timings (Sam/Nick) -->
 
 ## Session 0: Introduction and course overview
 
-Wednesday: 13.30-14.00
+-   [Introduction](../sessions/slides/introduction-to-the-course-and-the-instructors): the course and the instructors
+-   [Getting started](../getting-started): getting started with the course
+-   [Introduction to the course](../sessions/introduction-and-course-overview): How is the course taught?
+-   [Motivating the course](../sessions/slides/from-line-list-to-decisions): from an epidemiological line list to informing decisions in real-time
 
--   [Introduction](../sessions/slides/introduction-to-the-course-and-the-instructors): the course and the instructors (10 mins)
--   [Getting started](../getting-started): getting started with the course (5 mins)
--   [Introduction to the course](../sessions/introduction-and-course-overview): How is the course taught? (5 mins)
--   [Motivating the course](../sessions/slides/from-line-list-to-decisions): from an epidemiological line list to informing decisions in real-time (10 mins)
+## Session 1: Forecasting concepts
 
-## Session 1: Delay distributions
+-   [Introduction](../sessions/slides/introduction-to-forecasting): forecasting as an epidemiological problem
+-   [Practice](../sessions/forecasting-concepts): basic forecasting with ARIMA models
+-   Wrap up
 
-Wednesday: 14.00-14.45
+## Session 2: Improving forecasting models
 
--   [Introduction](../sessions/slides/introduction-to-epidemiological-delays): epidemiological delays and how to represent them with probability distributions (10 mins)
--   [Practice](../sessions/delay-distributions): simulate and estimate epidemiological delays (30 mins)
--   Wrap up (5 mins)
+-   [Introduction](../sessions/slides/improving-forecasting-models): ARIMA concepts and transformations
+-   [Practice](../sessions/forecasting-models): ACF plots, transformations, and seasonality
+-   Wrap up
 
-## Session 2: Biases in delay distributions
+# Day 2: Forecast evaluation and ensembles
 
-Wednesday: 14.45-15.30 and 16.00-16.45
+**Thursday**
 
--   [Introduction](../sessions/slides/introduction-to-biases-in-epidemiological-delays): biases in delay distributions (15 mins)
--   [Practice](../sessions/biases-in-delay-distributions): interval censoring - estimating delays from discrete dates (30 mins)
--   [Practice](../sessions/biases-in-delay-distributions): right truncation - estimating delays in real-time with incomplete data (30 mins)
--   Wrap up (5 mins)
+<!-- TODO: confirm timings (Sam/Nick) -->
 
-## Session 3: Using delay distributions to model the data generating process of an epidemic
+## Session 3: Forecast evaluation
 
-Wednesday: 16.45-17.30
+-   [Introduction](../sessions/slides/forecast-evaluation): scoring rules and metrics
+-   [Practice](../sessions/forecast-evaluation): evaluating forecasts with various metrics
+-   Wrap up
 
--   [Introduction](../sessions/slides/convolutions): Using delay distributions to model the data generating process of an epidemic (10 mins)
--   [Practice](../sessions/using-delay-distributions-to-model-the-data-generating-process-of-an-epidemic): implementing a convolution model and identifying potential problems (30 mins)
--   Wrap up (5 mins)
+## Session 4: Forecasting with ensembles
 
-# Day 2: An introduction to nowcasting and forecasting
+-   [Introduction](../sessions/slides/introduction-to-ensembles): strategies for collating and combining models
+-   [Practice](../sessions/forecast-ensembles): evaluating methods for ensemble forecasts
+-   Wrap up
 
-**Thursday - Full day**
+# Day 3: Collaborative forecasting and course summary
 
-Thursday: 09.00-09.15
+**Friday**
 
--   Day 1 review (15 mins)
+<!-- TODO: confirm timings (Sam/Nick) -->
 
-## Session 4: $R_t$ estimation and the renewal equation
+## Session 5: Evaluating real-world outbreak forecasts
 
-Thursday: 09.15-10.00
+-   [Introduction](../sessions/slides/introduction-to-real-world-forecasts): hub concepts and data structures
+-   [Practice](../sessions/real-world-forecasts):
+    -   evaluation example with an existing hub
+    -   ensembles with an existing hub
+-   Wrap up
 
--   [Introduction](../sessions/slides/introduction-to-reproduction-number): the time-varying reproduction number (10 mins)
--   [Practice](../sessions/R-estimation-and-the-renewal-equation): using the renewal equation to estimate R (30 mins)
--   Wrap up (5 mins)
+## Session 6: Local hub playground
 
-## Session 5: Nowcasting concepts
+-   [Introduction](../sessions/slides/hub-playground): Why a local hub?
+-   [Practice](../sessions/hub-playground): getting stuck in with a local hub
+-   Wrap up
 
-Thursday: 10.00-10.30
+## Session 7: Course summary and wrap-up
 
--   [Introduction](../sessions/slides/introduction-to-nowcasting): nowcasting as a right-truncation problem (10 mins)
--   [Practice](../sessions/nowcasting): simulating and basic nowcasting (20 mins)
+-   [Summary](../sessions/slides/closing) of the course
+-   Final discussion and closing
+    -   [Further reading and discussion](../sessions/end-of-course-summary-and-discussion)
 
-## Session 6: Nowcasting with an unknown reporting delay
-
-Thursday: 11.00-12.00
-
--   [Introduction](../sessions/slides/introduction-to-joint-estimation-of-nowcasting-and-reporting-delays): joint estimation of delays and nowcasts (10 mins)
--   [Practice](../sessions/joint-nowcasting):
-    -   joint estimation of delays and nowcasts (20 mins)
-    -   joint estimation of delays, nowcasts and reproduction numbers (20 mins)
--   Wrap up (10 mins)
-
-Thursday: 12.00-13.00
-
--   Lunch
-
-## Session 7: Forecasting concepts
-
-Thursday: 13.00-13.30
-
--   [Introduction](../sessions/slides/introduction-to-forecasting): forecasting as an epidemiological problem (10 mins)
--   [Practice](../sessions/forecasting-concepts): basic forecasting with ARIMA models (20 mins)
-
-## Session 8: Improving forecasting models
-
-Thursday: 13.30-14.15
-
--   [Introduction](../sessions/slides/improving-forecasting-models): ARIMA concepts and transformations (10 mins)
--   [Practice](../sessions/forecasting-models): ACF plots, transformations, and seasonality (30 mins)
--   Wrap up (5 mins)
-
-## Session 9: Forecast evaluation
-
-Thursday: 14.15-15.00
-
--   [Introduction](../sessions/slides/forecast-evaluation): scoring rules and metrics (10 mins)
--   [Practice](../sessions/forecast-evaluation): evaluating forecasts with various metrics (30 mins)
--   Wrap up (5 mins)
-
-## Session 10: Forecasting with ensembles
-
-Thursday: 15.30-17.00
-
--   [Introduction](../sessions/slides/introduction-to-ensembles): strategies for collating and combining models (10 mins)
--   [Practice](../sessions/forecast-ensembles): evaluating methods for ensemble forecasts (75 mins)
--   Wrap up (5 mins)
-
-# Day 3: Forecast hubs, advanced topics and course summary
-
-**Friday - Full day**
-
-Friday: 09.00-09.15
-
--   Day 2 review (15 mins)
-
-## Session 11: Evaluating real-world outbreak forecasts
-
-Friday: 09.15-10.30
-
--   [Introduction](../sessions/slides/forecast-hubs): hub concepts and data structures (10 mins)
--   [Practice](../sessions/forecast-hubs):
-    -   evaluation example with existing hub (30 mins)
-    -   ensembles with existing hub (30 mins)
--   Wrap up (5 mins)
-
-## Session 12: Local hub playground
-
-Friday: 11.00-12.00
-
--   [Introduction](../sessions/slides/hub-playground): Why a local hub? (10 mins)
--   [Practice](../sessions/hub-playground): getting stuck in with a local hub (45 mins)
--   Wrap up (5 mins)
-
-Friday: 12.00-13.00
-
--   Lunch
-
-## Session 13: Combining nowcasting and forecasting
-
-Friday: 13.00-14.00
-
--   [Introduction](../sessions/slides/forecasting-nowcasting): Why combine approaches? (10 mins)
--   [Practice](../sessions/forecasting-nowcasting): connecting nowcasting and forecasting (45 mins)
--   Wrap up (5 mins)
-
-## Session 14: Catch-Up and Deeper Exploration
-
-Friday: 14.00-15.00
-
--   Catch-up and deeper exploration
--   Wrap up (5 mins)
-
-## Session 15: Research talks and wrap-up
-
-Friday: 15.30-17.00
-
--   Research talk 1: Nick (15 mins)
--   Research talk: [Why am I so late?](../sessions/slides/why-am-i-so-late.pdf)
--   Research talk 3: Nick (15 mins)
--   Research talk 4: Nick (15 mins)
--   [Summary](../sessions/slides/closing) of the course (10 mins)
--   Final discussion and closing (20 mins)
-    -   [Further reading](../sessions/end-of-course-summary-and-discussion)
+<!-- Note: the deck
+[Introduction to the spectrum of forecasting models](../sessions/slides/introduction-to-the-spectrum-of-forecasting-models)
+exists in the repository but is not currently scheduled into a session. -->
