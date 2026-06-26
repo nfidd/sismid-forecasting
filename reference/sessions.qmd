@@ -7,78 +7,152 @@ comments: false
 This is the **Forecasting & evaluation** course, which runs in the **second half of the SISMID week (Wednesday midday to Friday)**.
 The companion [Nowcasting & $R_t$ estimation course](https://nfidd.github.io/sismid-nowcasting/) covers the first half of the week.
 
-<!-- TODO: confirm timings (Sam/Nick) -->
-The session structure below is a draft. Exact day/time allocations still need to be confirmed by the instructors.
+::: callout-important
+## Proposed schedule — for Sam/Nick to confirm
+The day/time blocks below are a **concrete proposal** built from the material that currently remains in this course, using the standard SISMID session grid (Wednesday half-day from 13:30; Thursday and Friday full days from 09:00, with a mid-morning break, lunch 12:00–13:00, and a mid-afternoon break).
+Durations and ordering reflect the relative depth of each session's notebook and are offered as a starting point, **not** confirmed timings.
+See [Schedule notes & gaps](#schedule-notes-gaps) for where the content is thin or where assets are missing.
+:::
 
 # Day 1: Forecasting concepts and models
 
-**Wednesday afternoon**
-
-<!-- TODO: confirm timings (Sam/Nick) -->
+**Wednesday — half day, 13:30–17:30** (handing over from the nowcasting half of the week)
 
 ## Session 0: Introduction and course overview
 
--   [Introduction](../sessions/slides/introduction-to-the-course-and-the-instructors): the course and the instructors
--   [Getting started](../getting-started): getting started with the course
--   [Introduction to the course](../sessions/introduction-and-course-overview): How is the course taught?
--   [Motivating the course](../sessions/slides/from-line-list-to-decisions): from an epidemiological line list to informing decisions in real-time
+Wednesday: 13:30–14:00 (30 mins)
+
+-   [Introduction](../sessions/slides/introduction-to-the-course-and-the-instructors): the course and the instructors (10 mins)
+-   Recap and handover from the nowcasting half of the week; where forecasting fits (5 mins)
+-   [Getting started](../getting-started): getting set up for this course (5 mins)
+-   [Introduction to the course](../sessions/introduction-and-course-overview) and [motivation](../sessions/slides/from-line-list-to-decisions): from surveillance data to decisions, and why we forecast (10 mins)
 
 ## Session 1: Forecasting concepts
 
--   [Introduction](../sessions/slides/introduction-to-forecasting): forecasting as an epidemiological problem
--   [Practice](../sessions/forecasting-concepts): basic forecasting with ARIMA models
--   Wrap up
+Wednesday: 14:00–15:00 (60 mins)
+
+-   [Introduction](../sessions/slides/introduction-to-forecasting): forecasting as an epidemiological problem; what makes a good probabilistic forecast (15 mins)
+-   [Practice](../sessions/forecasting-concepts): basic forecasting with ARIMA models (40 mins)
+-   Wrap up (5 mins)
+
+Wednesday: 15:00–15:30 — break
 
 ## Session 2: Improving forecasting models
 
--   [Introduction](../sessions/slides/improving-forecasting-models): ARIMA concepts and transformations
--   [Practice](../sessions/forecasting-models): ACF plots, transformations, and seasonality
--   Wrap up
+Wednesday: 15:30–17:30 (120 mins)
+
+-   [Introduction](../sessions/slides/improving-forecasting-models): ARIMA concepts, ACF/PACF, transformations and seasonality (15 mins)
+-   [Practice](../sessions/forecasting-models): ACF/PACF plots, differencing, transformations and seasonal terms (95 mins)
+-   Wrap up and look-ahead to evaluation (10 mins)
 
 # Day 2: Forecast evaluation and ensembles
 
-**Thursday**
+**Thursday — full day, 09:00–17:00**
 
-<!-- TODO: confirm timings (Sam/Nick) -->
+Thursday: 09:00–09:15
+
+-   Day 1 review (15 mins)
 
 ## Session 3: Forecast evaluation
 
--   [Introduction](../sessions/slides/forecast-evaluation): scoring rules and metrics
--   [Practice](../sessions/forecast-evaluation): evaluating forecasts with various metrics
--   Wrap up
+Thursday: 09:15–12:00 (with the 10:30–11:00 break)
+
+-   [Introduction](../sessions/slides/forecast-evaluation): proper scoring rules, calibration, sharpness, MAE/RMSE/CRPS (20 mins)
+-   [Practice](../sessions/forecast-evaluation): scoring forecasts, time-series cross-validation, comparing models (130 mins, spanning the break)
+-   Wrap up (10 mins)
+
+Thursday: 12:00–13:00 — lunch
 
 ## Session 4: Forecasting with ensembles
 
--   [Introduction](../sessions/slides/introduction-to-ensembles): strategies for collating and combining models
--   [Practice](../sessions/forecast-ensembles): evaluating methods for ensemble forecasts
--   Wrap up
+Thursday: 13:00–15:00 (120 mins)
+
+-   [Introduction](../sessions/slides/introduction-to-ensembles): why ensembles, forecast representations (samples/quantiles), linear opinion pools and Vincent averaging (20 mins)
+-   [Practice](../sessions/forecast-ensembles): building and evaluating ensembles, hubverse formats (95 mins)
+-   Wrap up (5 mins)
+
+Thursday: 15:00–15:30 — break
+
+## Session 4 (cont.): Ensembles, continued / catch-up
+
+Thursday: 15:30–17:00 (90 mins)
+
+-   Continue the [ensembles practical](../sessions/forecast-ensembles) and weighted/trimmed ensemble extensions
+-   Catch-up buffer for evaluation and ensembles
+-   Wrap up (10 mins)
 
 # Day 3: Collaborative forecasting and course summary
 
-**Friday**
+**Friday — full day, 09:00–17:00**
 
-<!-- TODO: confirm timings (Sam/Nick) -->
+Friday: 09:00–09:15
+
+-   Day 2 review (15 mins)
 
 ## Session 5: Evaluating real-world outbreak forecasts
 
--   [Introduction](../sessions/slides/introduction-to-real-world-forecasts): hub concepts and data structures
--   [Practice](../sessions/real-world-forecasts):
-    -   evaluation example with an existing hub
-    -   ensembles with an existing hub
--   Wrap up
+Friday: 09:15–12:00 (with the 10:30–11:00 break)
+
+-   [Introduction](../sessions/slides/introduction-to-real-world-forecasts): forecast hubs, hubverse data structures and roles (20 mins)
+-   [Practice](../sessions/real-world-forecasts): working with a real hub — evaluation, oracle/target data, scoring by horizon and model, ensembles with an existing hub (130 mins, spanning the break)
+-   Wrap up (10 mins)
+
+Friday: 12:00–13:00 — lunch
 
 ## Session 6: Local hub playground
 
--   [Introduction](../sessions/slides/hub-playground): Why a local hub?
--   [Practice](../sessions/hub-playground): getting stuck in with a local hub
--   Wrap up
+Friday: 13:00–14:45 (105 mins)
 
-## Session 7: Course summary and wrap-up
+-   [Introduction](../sessions/slides/hub-playground): why run a local hub? (10 mins)
+-   [Practice](../sessions/hub-playground): building and submitting to a local hub, cross-validation across seasons (90 mins)
+-   Wrap up (5 mins)
 
--   [Summary](../sessions/slides/closing) of the course
--   Final discussion and closing
+Friday: 14:45–15:15 — break
+
+## Session 7: Catch-up and deeper exploration
+
+Friday: 15:15–15:45 (30 mins)
+
+-   Catch-up buffer and optional deeper exploration of any session
+-   Optional: [the spectrum of forecasting models](../sessions/slides/introduction-to-the-spectrum-of-forecasting-models) (currently an unscheduled deck — see notes)
+
+## Session 8: Research talks
+
+Friday: 15:45–16:30 (45 mins)
+
+-   Research talk: [Flusion](../sessions/slides/flusion.pdf) — combining data sources and models for influenza forecasting (Nick, ~20 mins)
+-   Research talk: [Allocation scoring](../sessions/slides/allocation-score.pdf) — evaluating forecasts by the decisions they support (Nick, ~20 mins)
+
+## Session 9: Course summary and wrap-up
+
+Friday: 16:30–17:00 (30 mins)
+
+-   [Summary](../sessions/slides/closing) of the course (10 mins)
+-   Final discussion and closing (20 mins)
     -   [Further reading and discussion](../sessions/end-of-course-summary-and-discussion)
 
-<!-- Note: the deck
-[Introduction to the spectrum of forecasting models](../sessions/slides/introduction-to-the-spectrum-of-forecasting-models)
-exists in the repository but is not currently scheduled into a session. -->
+# Schedule notes & gaps {#schedule-notes-gaps}
+
+The following notes flag where the proposed schedule depends on instructor judgement, and where the remaining content or assets need attention before the course can be taught end to end. **For Sam/Nick to review.**
+
+## Timing / pedagogy proposals to confirm
+
+-   **Whole grid is a proposal.** Start/end times follow the standard SISMID grid (Wed 13:30–17:30; Thu/Fri 09:00–17:00) but the per-session splits are inferred from notebook length, not from how they have actually run. Confirm against the real room schedule.
+-   **Wednesday handover.** Session 0 assumes a short recap handing over from the nowcasting half; agree with the nowcasting instructors how much (if any) recap is needed so participants who only attend the forecasting half are not lost.
+-   **Day 1 is light.** Only two practicals (forecasting-concepts, forecasting-models) fit in the Wednesday half-day. `forecasting-concepts` is the shortest notebook (~280 lines) — there is room to expand it or to start `forecast-evaluation` early.
+-   **Day 2 buffer.** A continuation/catch-up block is proposed for Thursday afternoon because `forecast-evaluation` (~630 lines) and `forecast-ensembles` (~715 lines) are the two densest notebooks and routinely overrun. If they run to time, use the block for the weighted-ensemble extensions.
+
+## Content gaps (thin for the time available)
+
+-   **`forecasting-concepts`** is noticeably shorter than the other practicals. If Wednesday afternoon feels under-filled, candidates for expansion: more on interpreting `fable` output, a short exercise contrasting point vs probabilistic forecasts, or an explicit bridge from the nowcasting half.
+-   **`hub-playground`** has comparatively few exercise/callout markers for its length and currently cannot be run at all (see blocking gap below); if the sandbox is restored, it may still want clearer step-by-step exercises.
+-   **Course recap deck (`closing.qmd`)** is the *shared* deck and still recaps the nowcasting half (delay distributions, $R_t$, nowcasting). For a forecasting-only cohort those slides may need trimming or reframing.
+
+## Blocking asset gaps (prevent teaching as-is)
+
+-   **Missing `sessions/slides/figures/wili_timeseries.png`.** Referenced (currently commented out) in `improving-forecasting-models.qmd`. The intended title-page time-series figure is absent from the repository. Either add the figure or remove/replace the reference before relying on that slide.
+-   **Missing `sismid-ili-forecasting-sandbox/` directory.** `hub-playground.qmd` calls `here::here("sismid-ili-forecasting-sandbox")`, but this directory is **not present** in this fork (nor in the upstream `nfidd/sismid` repository). **The local hub playground session (Session 6) will fail to render/run until this directory is added.** This needs to be sourced or recreated before Friday afternoon can be taught.
+
+## Other notes
+
+-   **Unscheduled deck.** `introduction-to-the-spectrum-of-forecasting-models.qmd` exists but is not linked from any session. It is offered above as optional Friday material; decide whether to schedule it, fold it into Session 1, or drop it.
