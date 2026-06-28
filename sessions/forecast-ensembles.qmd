@@ -6,7 +6,7 @@ bibliography: ../nfidd.bib
 
 # Introduction
 
-As we saw in the sessions on [improving forecasting models](forecasting-models) and [forecast evaluation](forecasting-evaluation), different modelling approaches have different strength and weaknesses, and we do not usually know in advance which one will produce the best forecast in any given situation.
+As we saw in the sessions on [improving forecasting models](forecasting-models) and [forecast evaluation](forecast-evaluation), different modelling approaches have different strength and weaknesses, and we do not usually know in advance which one will produce the best forecast in any given situation.
 One way to attempt to draw strength from a diversity of approaches is the creation of so-called *forecast ensembles* from the forecasts produced by different models.
 
 In this session, we'll start with forecasts from the models we explored in the previous sessions and build ensembles of these models.
