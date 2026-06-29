@@ -21,12 +21,7 @@ A course and living resource for learning about **forecasting and evaluation** o
 
 This course runs in the **second half of the SISMID week (Wednesday midday to Friday)** and covers forecasting concepts and models, forecast evaluation, ensembles, and collaborative (hubverse) modelling.
 
-It is one of a pair of SISMID courses:
-
-- [**Nowcasting & $R_t$ estimation**](https://nfidd.github.io/sismid-nowcasting/) — the first half of the week (delay distributions, the renewal equation, and nowcasting).
-- **Forecasting & evaluation** (this course) — the second half of the week.
-
-See the [umbrella SISMID course](https://nfidd.github.io/sismid/) for the combined material.
+It is one of a pair of SISMID courses: the companion [Nowcasting & $R_t$ estimation](https://nfidd.github.io/sismid-nowcasting/) course covers the first half of the week (delay distributions, the renewal equation, and nowcasting), and this **Forecasting & evaluation** course covers the second half. See the [umbrella SISMID course](https://nfidd.github.io/sismid/) for the combined material.
 
 We invite anyone to use the materials here in their own teaching and learning. For questions and discussion of the course or its content, we welcome all users to the [Discussion board](https://github.com/nfidd/sismid-forecasting/discussions). We welcome all forms of [contributions, additions and suggestions](https://github.com/nfidd/sismid-forecasting/issues) for improving the materials.
 
