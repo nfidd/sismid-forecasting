@@ -7,82 +7,112 @@ comments: false
 This is the **forecasting & evaluation** course, taught in the second half of the SISMID week (**Wednesday midday to Friday**).
 It is paired with the companion [nowcasting course](https://nfidd.github.io/sismid-nowcasting/).
 
-The schedule below is a proposed plan based on previous course runtimes; exact times are to be confirmed.
+The schedule follows the standard SISMID day: modules run 09.00–10.30, 11.00–12.30, 13.30–15.00 and 15.30–17.00, with coffee breaks at 10.30 and 15.00 and lunch 12.30–13.30.
+Session lengths follow the times these sessions took last year; the remaining slots (two on Friday) are held open for new or expanded sessions (see the open issues).
 
-# Day 1 (Wednesday afternoon): Forecasting concepts and models
+# Day 1 — Wednesday 15 July (afternoon): Forecasting concepts and models
+
+The forecasting course begins after the Wednesday-midday handover from the nowcasting course.
 
 ## Session 0: Introduction and course overview
 
-Wednesday: 13.30-14.00
+Wednesday: 13.30–14.00
 
--   [Introduction](../sessions/slides/introduction-to-the-course-and-the-instructors): the course and the instructors (15 mins)
--   [Getting started](../getting-started): getting set up and a recap of the nowcasting course (15 mins)
+-   [Introduction](../sessions/slides/introduction-to-the-course-and-the-instructors): the course and the instructors
+-   [Getting started](../getting-started): getting set up, and a recap of the nowcasting course
 
 ## Session 1: Forecasting concepts
 
-Wednesday: 14.00-14.45
+Wednesday: 14.00–14.45
 
--   [Introduction](../sessions/slides/introduction-to-forecasting): forecasting as an epidemiological problem (10 mins)
--   [Practice](../sessions/forecasting-concepts): extending a model into the future and visualising a forecast (30 mins)
--   Wrap up (5 mins)
+-   [Introduction](../sessions/slides/introduction-to-forecasting): forecasting as an epidemiological problem
+-   [Practice](../sessions/forecasting-concepts): extending a model into the future and visualising a forecast
+-   Wrap up
+
+*Coffee break 15.00–15.30*
 
 ## Session 2: Improving forecasting models
 
-Wednesday: 15.15-16.45
+Wednesday: 15.30–17.00
 
--   [Introduction](../sessions/slides/improving-forecasting-models): ARIMA concepts and transformations (10 mins)
--   [Practice](../sessions/forecasting-models): ACF plots, transformations, and seasonality (60 mins)
--   Wrap up and discussion (20 mins)
+-   [Introduction](../sessions/slides/improving-forecasting-models): ARIMA concepts and transformations
+-   [Practice](../sessions/forecasting-models): ACF plots, transformations, and seasonality
+-   Wrap up
 
-# Day 2 (Thursday): Evaluation and ensembles
+# Day 2 — Thursday 16 July: Evaluation, ensembles and hubs
 
-Thursday: 09.00-09.15
-
--   Day 1 review (15 mins)
+Thursday: 09.00–09.15 — Day 1 review
 
 ## Session 3: Forecast evaluation
 
-Thursday: 09.15-10.30
+Thursday: 09.15–10.30
 
--   [Introduction](../sessions/slides/forecast-evaluation): scoring rules and metrics (10 mins)
--   [Practice](../sessions/forecast-evaluation): evaluating forecasts with a range of metrics (45 mins)
--   Wrap up (5 mins)
+-   [Introduction](../sessions/slides/forecast-evaluation): scoring rules and metrics
+-   [Practice](../sessions/forecast-evaluation): evaluating forecasts with a range of metrics
+-   Wrap up
+
+*Coffee break 10.30–11.00*
 
 ## Session 4: Forecasting with ensembles
 
-Thursday: 11.00-12.30
+Thursday: 11.00–12.30
 
--   [Introduction](../sessions/slides/introduction-to-ensembles): strategies for collating and combining models (10 mins)
--   [Practice](../sessions/forecast-ensembles): evaluating methods for ensemble forecasts (60 mins)
--   Wrap up (10 mins)
+-   [Introduction](../sessions/slides/introduction-to-ensembles): strategies for collating and combining models
+-   [Practice](../sessions/forecast-ensembles): evaluating methods for ensemble forecasts
+-   Wrap up
+
+*Lunch 12.30–13.30*
 
 ## Session 5: Evaluating real-world outbreak forecasts
 
-Thursday: 13.30-15.00
+Thursday: 13.30–15.00
 
--   [Introduction](../sessions/slides/introduction-to-real-world-forecasts): hub concepts and data structures (10 mins)
--   [Practice](../sessions/real-world-forecasts): evaluation and ensembles with an existing hub (60 mins)
--   Wrap up (10 mins)
+-   [Introduction](../sessions/slides/introduction-to-real-world-forecasts): hub concepts and data structures
+-   [Practice](../sessions/real-world-forecasts): evaluation and ensembles with an existing hub
+-   Wrap up
 
-# Day 3 (Friday): Hubs, talks and wrap-up
-
-Friday: 09.00-09.15
-
--   Day 2 review (15 mins)
+*Coffee break 15.00–15.30*
 
 ## Session 6: Local hub playground
 
-Friday: 09.15-10.30
+Thursday: 15.30–17.00
 
--   [Introduction](../sessions/slides/hub-playground): why a local hub? (10 mins)
--   [Practice](../sessions/hub-playground): getting stuck in with a local hub (60 mins)
--   Wrap up (5 mins)
+-   [Introduction](../sessions/slides/hub-playground): why a local hub?
+-   [Practice](../sessions/hub-playground): getting stuck in with a local hub
+-   Wrap up
 
-## Session 7: Research talks and wrap-up
+# Day 3 — Friday 17 July: New material, research talks and wrap-up
 
-Friday: 11.00-12.30
+Friday: 09.00–09.15 — Day 2 review
+
+## Session 7: New session (to be written)
+
+Friday: 09.15–10.30
+
+-   Held open for a new or expanded forecasting session — see the open issues for candidates.
+
+*Coffee break 10.30–11.00*
+
+## Session 8: New session (to be written)
+
+Friday: 11.00–12.30
+
+-   A second new or expanded session slot — see the open issues for candidates.
+
+*Lunch 12.30–13.30*
+
+## Session 9: Research talks
+
+Friday: 13.30–15.00
 
 -   Research talk: [flusion](../sessions/slides/flusion.pdf)
 -   Research talk: [allocation score](../sessions/slides/allocation-score.pdf)
--   [Summary](../sessions/slides/closing) of the course (15 mins)
--   Final discussion and [further reading](../sessions/end-of-course-summary-and-discussion) (20 mins)
+
+*Coffee break 15.00–15.30*
+
+## Session 10: Summary and wrap-up
+
+Friday: 15.30–17.00
+
+-   [Summary](../sessions/slides/closing) of the course
+-   Final discussion and [further reading](../sessions/end-of-course-summary-and-discussion)
