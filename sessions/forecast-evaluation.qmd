@@ -6,7 +6,7 @@ bibliography: ../nfidd.bib
 
 # Introduction
 
-So far we have focused on building and visualisation simple forecasts.
+So far we have focused on building and visualising simple forecasts.
 In this session you will get to know several ways of assessing different aspects of forecast performance.
 One of these approaches involves visualising forecasts in the context of eventually observed data.
 Another approach involves summarising performance quantitatively.

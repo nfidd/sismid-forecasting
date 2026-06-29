@@ -15,7 +15,7 @@ We will then compare the performance of these ensembles to the individual models
 ::: {.callout-note collapse="false"}
 ## Representations of probabilistic forecasts
 
-Probabilistic predictions can be described as coming from a probabilistic probability distributions.
+Probabilistic predictions can be described as coming from probability distributions.
 In general, it is not safe to assume that these distributions can be expressed in a simple mathematical form as we can do if, e.g., talking about common probability distributions such as the normal or gamma distributions.
 (Although some of the `fable` models, like ARIMA can express forecasts as normal distributions.)
 
@@ -23,7 +23,7 @@ It can be helpful to have a model-agnostic way to represent probabilistic distri
 
 -   One common way is to use a limited number (say, between 100 and 1000) of **samples** generated from Monte Carlo methods to represent the predictive distribution.
 
--   Another approach uses values that corresponds to a specific set of **quantile** levels of the predictive distribution distribution.
+-   Another approach uses values that corresponds to a specific set of **quantile** levels of the predictive distribution.
     For example, the median is the 50th quantile of a distribution, meaning that 50% of the values in the distribution are less than the median and 50% are greater.
     Similarly, the 90th quantile is the value that corresponds to 90% of the distribution being less than this value.
     If we characterise a predictive distribution by its quantiles, we specify these values at a range of specific quantile levels, e.g. from 5% to 95% in 5% steps.
