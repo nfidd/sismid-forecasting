@@ -108,9 +108,9 @@ Friday: 13.30–15.00
 
 *Coffee break 15.00–15.30*
 
-## Session 10: Summary and wrap-up
+## Session 10: Research talks and course wrap-up
 
 Friday: 15.30–17.00
 
--   [Summary](../sessions/slides/closing) of the course
--   Final discussion and [further reading](../sessions/end-of-course-summary-and-discussion)
+-   Further research talk(s)
+-   [Summary](../sessions/slides/closing) of the course, final discussion and [further reading](../sessions/end-of-course-summary-and-discussion)
