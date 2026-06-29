@@ -28,6 +28,7 @@ Suggests:
     fable,
     feasts,
     ggplot2,
+    ggtime,
     gridExtra,
     here,
     hubData,

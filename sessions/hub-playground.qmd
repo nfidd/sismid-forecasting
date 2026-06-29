@@ -33,7 +33,7 @@ The source file of this session is located at `sessions/hub-playground.qmd`.
 
 ## Libraries used
 
-In this session we will use the `dplyr` package for data wrangling, the `ggplot2` library for plotting, the `fable` package for building forecasting models, and the `epidatr` package for downloading epidemiological surveillance data.
+In this session we will use the `dplyr` package for data wrangling, the `ggplot2` and `ggtime` packages for plotting (`ggtime` provides the time-series and forecast plotting functions that were previously part of `fabletools`/`feasts`), the `fable` package for building forecasting models, and the `epidatr` package for downloading epidemiological surveillance data.
 
 Additionally, we will use some [hubverse](https://hubverse.io/) packages such as `hubEvals`, `hubUtils`, `hubData`, `hubVis`, `hubEnsembles` packages for building ensembles.
 
@@ -44,6 +44,7 @@ library("dplyr")
 library("ggplot2")
 library("epidatr")
 library("fable")
+library("ggtime")
 library("hubUtils")
 library("hubEvals")
 library("hubVis")
