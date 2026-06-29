@@ -21,3 +21,4 @@ site_libs
 # Quarto freeze directory
 _freeze/
 
+NOTES.md
