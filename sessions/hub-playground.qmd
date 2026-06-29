@@ -35,7 +35,7 @@ The source file of this session is located at `sessions/hub-playground.qmd`.
 
 In this session we will use the `dplyr` package for data wrangling, the `ggplot2` library for plotting, the `fable` package for building forecasting models, and the `epidatr` package for downloading epidemiological surveillance data.
 
-Additionally, we will use some [hubverse](https://hubverse.io/) packages such as `hubEvals`, `hubUtils`, `hubData`, `hubVis`, hubEnsembles` packages for building ensembles.
+Additionally, we will use some [hubverse](https://hubverse.io/) packages such as `hubEvals`, `hubUtils`, `hubData`, `hubVis`, `hubEnsembles` packages for building ensembles.
 
 
 ```{r libraries, message = FALSE}
@@ -112,7 +112,7 @@ Our sandbox hub is set up to accept forecasts for the US level and the 10 Health
 
 ![A map showing the 10 HHS Regions.](slides/figures/hhs-regions.png)
 
-A forecast will produce quantile predictions of *1- through 4-week ahead* forecasts of the estimated percentage of outpatient doctors office visits that are for IL.
+A forecast will produce quantile predictions of *1- through 4-week ahead* forecasts of the estimated percentage of outpatient doctors office visits that are for ILI.
 This target is given the label "ili perc" in the hub.
 Forecasts can be submitted for any week during the 2015/2016, 2016/2017, 2018/2019 or 2019/2020 influenza seasons.
 
