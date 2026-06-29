@@ -11,7 +11,6 @@ The schedule follows the standard SISMID day: modules run 09.00–10.30, 11.00�
 
 # Day 1 — Wednesday 15 July (afternoon): Forecasting concepts and models
 
-The forecasting course begins after the Wednesday-midday handover from the nowcasting course.
 
 ## Session 0: Introduction and course overview
 
