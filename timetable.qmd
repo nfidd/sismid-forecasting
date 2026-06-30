@@ -1,0 +1,35 @@
+---
+title: "Timetable"
+comments: false
+toc: false
+---
+
+This is the **Forecasting & evaluation** course, taught July 15-17 (the second half of the [SISMID](https://sismid.sph.emory.edu/) week, Wednesday midday to Friday).
+It is paired with the companion [nowcasting course](https://nfidd.github.io/sismid-nowcasting/) which runs from Monday through Wednesday morning, July 13-15.
+
+::: {.column-page .timetable}
+| Day | Time | Session / activity | Content |
+|---|---|---|---|
+| **Wed 15 Jul** | 13.30–14.00 | Session 0 · Introduction & course overview | [Slides](sessions/slides/introduction-to-the-course-and-the-instructors), [Getting started](getting-started) |
+| | 14.00–15.00 | Session 1 · Forecasting concepts | [Slides](sessions/slides/introduction-to-forecasting), [Practice](sessions/forecasting-concepts) |
+| | 15.00–15.30 | *Coffee break* | |
+| | 15.30–17.00 | Session 2 · Improving forecasting models | [Slides](sessions/slides/improving-forecasting-models), [Practice](sessions/forecasting-models) |
+| **Thu 16 Jul** | 09.00–09.15 | Day 1 review | |
+| | 09.15–10.30 | Session 3 · Forecast evaluation | [Slides](sessions/slides/forecast-evaluation), [Practice](sessions/forecast-evaluation) |
+| | 10.30–11.00 | *Coffee break* | |
+| | 11.00–12.30 | Session 4 · Forecasting with epidemiological insights | TBD |
+| | 12.30–13.30 | *Lunch* | |
+| | 13.30–15.00 | Session 5 · Evaluating real-world outbreak forecasts | [Slides](sessions/slides/introduction-to-real-world-forecasts), [Practice](sessions/real-world-forecasts) |
+| | 15.00–15.30 | *Coffee break* | |
+| | 15.30–17.00 | Session 6 · Local hub playground | [Slides](sessions/slides/hub-playground), [Practice](sessions/hub-playground) |
+| **Fri 17 Jul** | 09.00–09.15 | Day 2 review | |
+| | 09.15–10.30 | Session 7 · Advanced forecast evaluation | TBD |
+| | 10.30–11.00 | *Coffee break* | |
+| | 11.00–12.30 | Session 8 · Forecasting with ensembles | [Slides](sessions/slides/introduction-to-ensembles), [Practice](sessions/forecast-ensembles) |
+| | 12.30–13.30 | *Lunch* | |
+| | 13.30–14.00 | Session 9 · Model importance | TBD |
+| | 14.00–15.00 | Session 10 · Local hub playground | TBD |
+| | 15.00–15.30 | *Coffee break* | |
+| | 15.30–16.30 | Session 11 · Research talks | TBD |
+| | 16.30–17.00 | Session 12 · Course wrap-up | [Summary](sessions/slides/closing), [further reading](sessions/end-of-course-summary-and-discussion) |
+:::
