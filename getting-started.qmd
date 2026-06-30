@@ -4,7 +4,7 @@ title: "Getting started"
 
 ## What is NFIDD?
 
-NFIDD (Nowcasting and Forecasting Infectious Disease Dynamics) is an MIT-licensed library of [sessions](reference/sessions) for learning about nowcasting and forecasting of infectious disease surveillance data.
+NFIDD (Nowcasting and Forecasting Infectious Disease Dynamics) is an MIT-licensed library of [sessions](timetable) for learning about nowcasting and forecasting of infectious disease surveillance data.
 This is the **Forecasting & evaluation** course, covering the second half of the SISMID week.
 A companion [Nowcasting & $R_t$ estimation course](https://nfidd.github.io/sismid-nowcasting/) covers the first half.
 This course, in both its original and SISMID versions, is a living resource designed to help epidemiologists, public health professionals, and researchers understand and apply real-time analysis methods to infectious disease surveillance data.
