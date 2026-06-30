@@ -33,7 +33,7 @@ Often, what motivates one's modeling choices are the *trends* and *patterns* obs
 ```{r, echo=FALSE}
 #![](figures/wili_timeseries.png){fig-align="center"}
 library("nfidd.forecasting")
-library("feasts")
+library("ggtime")
 library("fable")
 library("dplyr")
 library("tidyr")
@@ -64,7 +64,7 @@ Autocorrelation and Partial Autocorrelation (ACF/PACF) plots measure the linear
 relationship between *lagged values* of a time series. 
 
 ```{r}
-pacf_plot <- gg_tsdisplay(flu_data, y = wili, plot_type='partial', lag_max = 104)
+pacf_plot <- ggtime::gg_tsdisplay(flu_data, y = wili, plot_type='partial', lag_max = 104)
 pacf_plot
 ```
 
@@ -75,7 +75,7 @@ ACF plots correlation of $y_t$ and $y_{t-k}$ as a function of k.
 *Correlations show periodicity of ~52 weeks.*
 
 ```{r}
-pacf_plot <- feasts::gg_tsdisplay(flu_data, y = wili, plot_type='partial', lag_max = 104)
+pacf_plot <- ggtime::gg_tsdisplay(flu_data, y = wili, plot_type='partial', lag_max = 104)
 pacf_plot
 ```
 
@@ -104,8 +104,8 @@ Seasonality can make a disease more *predictable*, but also means it's not *stat
 
 
 ```{r, echo = FALSE}
-flu_data |> 
-  gg_season(wili, 
+flu_data |>
+  ggtime::gg_season(wili,
             period = "year",
             labels = "none") +
   ggtitle("Seasonality in ILI")

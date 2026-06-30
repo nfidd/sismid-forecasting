@@ -35,7 +35,7 @@ The source file of this session is located at `sessions/forecasting-models.qmd`.
 
 ## Libraries used
 
-In this session we will use `nfidd` package for some flu data, the `fable` package to fit and forecast ARIMA models, the `dplyr` and `tidyr` packages for data wrangling, `ggplot2` library for plotting, and the `epidatr` package for loading epidemiological data.
+In this session we will use `nfidd` package for some flu data, the `fable` package to fit and forecast ARIMA models, the `dplyr` and `tidyr` packages for data wrangling, the `ggplot2` and `ggtime` packages for plotting (`ggtime` provides the time-series and forecast plotting functions, such as `gg_tsdisplay()`, that were previously part of `fabletools`/`feasts`), and the `epidatr` package for loading epidemiological data.
 
 ```{r libraries, message = FALSE}
 library("nfidd.forecasting")
@@ -43,6 +43,7 @@ library("fable")
 library("dplyr")
 library("tidyr")
 library("ggplot2")
+library("ggtime")
 library("epidatr")
 ```
 
@@ -86,10 +87,10 @@ data(flu_data)
 ```
 
 ## ACF plots
-We will now use the function `gg_tsdisplay()` from [the `feasts` R package](https://feasts.tidyverts.org/) to give a unique view into our dataset.
+We will now use the function `gg_tsdisplay()` from [the `ggtime` R package](https://pkg.mitchelloharawild.com/ggtime/) to give a unique view into our dataset.
 
 ```{r}
-feasts::gg_tsdisplay(flu_data, y = wili, plot_type='partial', lag_max = 104)
+ggtime::gg_tsdisplay(flu_data, y = wili, plot_type='partial', lag_max = 104)
 ```
 
 In the above plot, the top panel shows the time-series.
@@ -120,7 +121,7 @@ What can you take away from the ACF and PCF plots of the data?
 :::
 
 ```{r, echo=FALSE}
-feasts::gg_tsdisplay(flu_data, y = wili, plot_type='partial', lag_max = 104)
+ggtime::gg_tsdisplay(flu_data, y = wili, plot_type='partial', lag_max = 104)
 ```
 
 ::: {.callout-note collapse="true"}
@@ -263,14 +264,14 @@ We are going to demonstrate one path.
 Let's look at our data again.
 
 ```{r}
-feasts::gg_tsdisplay(flu_data, y = wili, plot_type='partial', lag_max = 104)
+ggtime::gg_tsdisplay(flu_data, y = wili, plot_type='partial', lag_max = 104)
 ```
 
 The time-series is clearly non-stationary, with a clear periodicity that depends on the week of the season.
 Let's try first differencing and looking at the data again.
 
 ```{r, warning=FALSE}
-feasts::gg_tsdisplay(flu_data, y = difference(wili), plot_type='partial', lag_max = 104)
+ggtime::gg_tsdisplay(flu_data, y = difference(wili), plot_type='partial', lag_max = 104)
 ```
 
 It's not stationary (there still are seasonal trends, we will do more to deal with this soon), but it's at least a little bit better.

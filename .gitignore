@@ -21,3 +21,6 @@ site_libs
 # Quarto freeze directory
 _freeze/
 
+# Local scratch notes
+NOTES.md
+
