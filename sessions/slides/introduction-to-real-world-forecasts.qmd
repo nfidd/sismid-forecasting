@@ -17,7 +17,7 @@ format:
 -- Chretien et al., PLOS ONE, 2014
 
 ::: {.fragment}
-![[Scenario Modeling Hub](https://covid19scenariomodelinghub.org/)](figures/history-of-hubs-2023.png){width=75%}
+!(figures/modeling-hubs-timeline.png){width=75%}
 :::
 
 ### [The US COVID-19 Forecast Hub](https://covid19forecasthub.org/) {.smaller}
