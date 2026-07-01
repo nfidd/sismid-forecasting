@@ -28,7 +28,7 @@ The source file of this session is located at `sessions/forecast-evaluation.qmd`
 
 ## Libraries used
 
-In this session we will use the `fable` package for fitting and evaluating simple forecasting models, the `dplyr` package for data wrangling, the `ggplot2` and `ggtime` packages for plotting (`ggtime` provides the time-series and forecast plotting functions that were previously part of `fabletools`/`feasts`) and the `epidatr` package for accessing and downloading versions of epidemiological surveillance data from the [Delphi EpiData API](https://cmu-delphi.github.io/delphi-epidata/).
+In this session we will use the `fable` package for fitting and evaluating simple forecasting models, the `dplyr` package for data wrangling, the `ggplot2` and `ggtime` packages for plotting and the `epidatr` package for accessing and downloading versions of epidemiological surveillance data from the [Delphi EpiData API](https://cmu-delphi.github.io/delphi-epidata/).
 
 ```{r libraries, message = FALSE}
 library("nfidd.forecasting")
@@ -142,7 +142,7 @@ forecast_fourier_ar2 |>
        y="% of visits")
 ```
 
-For the first time in the forecasting part of this course, we have confronted a model with the eventually observed data.
+For the first time, we have confronted a model with the eventually observed data.
 And... well, what do you think?
 
 ::: callout-tip
@@ -158,8 +158,9 @@ Share notes with your neighbor.
 
 Once again, there isn't an exact correct answer here, but here are a few observations.
 
--   The model seems to do fairly well at the tails of the season.
--   The model's predictions for the epidemiologically important part (the peak!) is not very good - it's much too low. The observed data are outside the 95% PI intervals for many weeks in a row.
+-   In general, the trend of the forecasts for the first few horizons match the recent trend in the observed data.
+-   The model seems to do fairly well at the tails of the season. This is likely because at the "shoulders" of the season the patterns are more consistent and don't vary as much from one season to the other.
+-   The model's predictions for the epidemiologically important part (the peak!) are not very good - it's much too low. The observed data are outside the 95% PI intervals for many weeks in a row.
 
 But, maybe this isn't the end of the world.
 It is a lot, afterall, to ask a model to predict several months into the future.

@@ -33,7 +33,7 @@ The source file of this session is located at `sessions/forecasting-concepts.qmd
 
 ## Libraries used
 
-In this session we will use the `fable` package for fitting simple forecasting models, the `dplyr` package for data wrangling, the `ggplot2` and `ggtime` packages for plotting (`ggtime` provides the time-series and forecast plotting functions that were previously part of `fabletools`/`feasts`) and the `epidatr` package for accessing and downloading versions of epidemiological surveillance data from the [Delphi EpiData API](https://cmu-delphi.github.io/delphi-epidata/).
+In this session we will use the `fable` package for fitting simple forecasting models, the `dplyr` package for data wrangling, the `ggplot2` and `ggtime` packages for plotting and the `epidatr` package for accessing and downloading versions of epidemiological surveillance data from the [Delphi EpiData API](https://cmu-delphi.github.io/delphi-epidata/).
 
 ```{r libraries, message = FALSE}
 library("nfidd.forecasting")
@@ -68,9 +68,8 @@ In the context of infectious disease epidemiology, forecasting is usually the pr
 In this session we focus on forecasting one particular outcome for influenza surveillance but forecasts can also be made for other quantities of interest such as the number of infections, the reproduction number, or the number of deaths.
 Epidemiological forecasting is closely related to nowcasting and, when using mechanistic approaches, estimation of the reproduction number.
 
-In previous sessions, the focus was on a setting where only limited data from a single outbreak was available.
-Starting with this session, we will focus on a setting where you have multiple prior "seasons" of data to model.
-This introduces new and different opportunities and complexities for modeling.
+In this class, we will largely focus on settings where you have multiple prior "seasons" of data to model.
+Especially when using a mechanistic model that makes assumptions about the biological mechanisms of disease transmissions, is can also be possible to generate forecasts for emerging outbreaks. Although great care is needed to ensure that appropriate validation is being performed in these settings.
 
 # Getting acquainted with ILI
 

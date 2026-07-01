@@ -12,7 +12,7 @@ format:
 
 ### Which Model to Use?
 
-There are *many* types of models available to us, (you've already seen a lot now):
+There are *many* types of models available to us:
 
 -   A range of choices from mechanistic to purely statistical.
 

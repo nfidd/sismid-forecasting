@@ -52,7 +52,7 @@ The source file of this session is located at `sessions/forecast-ensembles.qmd`.
 
 ## Libraries used
 
-In this session we will use the `fable` package for fitting simple forecasting models, the `dplyr` package for data wrangling, the `ggplot2` and `ggtime` packages for plotting (`ggtime` provides the time-series and forecast plotting functions that were previously part of `fabletools`/`feasts`) and the `epidatr` package for accessing and downloading versions of epidemiological surveillance data from the [Delphi EpiData API](https://cmu-delphi.github.io/delphi-epidata/).
+In this session we will use the `fable` package for fitting simple forecasting models, the `dplyr` package for data wrangling, the `ggplot2` and `ggtime` packages for plotting and the `epidatr` package for accessing and downloading versions of epidemiological surveillance data from the [Delphi EpiData API](https://cmu-delphi.github.io/delphi-epidata/).
 
 Additionally, we will use some [hubverse](https://hubverse.io/) packages such as `hubEvals`, `hubUtils`, `hubEnsembles` packages for building ensembles.
 
@@ -377,7 +377,7 @@ However, the median ensemble remains close to the three other models that have c
 #### Evaluation
 
 As in the [forecast evaluation session](forecast-evaluation), we can evaluate the accuracy of the ensembles.
-Here, instead of using the `fable` utilities, we will start to use the hubverse `hubEvals` package which relies on the `scoringutils` package under the hood.
+Here, instead of using the `fable` utilities, we will start to use the hubverse [`hubEvals` package](https://hubverse-org.github.io/hubEvals/) which relies on [the `scoringutils` package](https://epiforecasts.io/scoringutils/index.html) under the hood.
 
 In the hubverse, there is a representation of observations called [`oracle output` data](https://docs.hubverse.io/en/latest/user-guide/target-data.html#oracle-output).
 This is a way of representing an observed data point as if it were a prediction from an oracle model, that is, one that knows the future before it happens.
@@ -398,7 +398,7 @@ oracle_output <- flu_data |>
 The **weighted interval score (WIS)** is a proper scoring rule for quantile forecasts that approximates the **Continuous Ranked Probability Score (CRPS)** by considering a weighted sum of multiple prediction intervals.
 As the number of intervals increases, the WIS converges to the CRPS, combining sharpness and penalties for over- and under-prediction.[@bracherEvaluatingEpidemicForecasts2021]
 
-We see it here as we are scoring quantiles and known distributions hence we cannot use CRPS as we did before.
+We use WIS here as we are scoring forecasts represented by quantiles, and therefore the WIS is the natural way to approximate CRPS.
 :::
 
 Again we start with a high level overview of the scores by model.

@@ -65,7 +65,7 @@ But...
 
 ![](figures/cdc_flu_forecast_use.png)
 
-[CDC: About Flu Forecasting](https://www.cdc.gov/flu/weekly/flusight/how-flu-forecasting.htm)
+[CDC: About Flu Forecasting](https://www.cdc.gov/flu-forecasting/about/index.html)
 
 ### Forecasting: relationship with $R_t$ estimation {.smaller}
 

@@ -35,7 +35,7 @@ The source file of this session is located at `sessions/forecasting-models.qmd`.
 
 ## Libraries used
 
-In this session we will use `nfidd` package for some flu data, the `fable` package to fit and forecast ARIMA models, the `dplyr` and `tidyr` packages for data wrangling, the `ggplot2` and `ggtime` packages for plotting (`ggtime` provides the time-series and forecast plotting functions, such as `gg_tsdisplay()`, that were previously part of `fabletools`/`feasts`), and the `epidatr` package for loading epidemiological data.
+In this session we will use `nfidd` package for some flu data, the `fable` package to fit and forecast ARIMA models, the `dplyr` and `tidyr` packages for data wrangling, the `ggplot2` and `ggtime` packages for plotting, and the `epidatr` package for loading epidemiological data.
 
 ```{r libraries, message = FALSE}
 library("nfidd.forecasting")
@@ -386,7 +386,7 @@ In the next session, we will start to think about how these different models and
 # End-of-session reflection: Bayesian vs. Frequentist modeling
 
 The statistical models we've discussed in this session represent just a subset of available forecasting approaches.
-These models offer a different workflow for thinking about modeling than the generative models from the nowcasting sessions in the first day of the course.
+These models offer a different workflow for thinking about modeling than generative models. There are some good examples of generative models in [the companion nowcasting course](https://nfidd.github.io/sismid-nowcasting/) that we taught earlier this week.
 Whilst Bayesian approaches work forward from domain knowledge to specify data-generating processes, traditional time series methods such as these ARIMA models work backward from observed patterns using standard toolkits (transformations, differencing, residual analysis) to achieve stationarity and improve predictions.
 Both approaches ultimately aim to capture the same underlying data-generating process but from different perspectives.
 Something to think about!
