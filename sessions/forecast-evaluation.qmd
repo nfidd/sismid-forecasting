@@ -346,6 +346,17 @@ Which of the additional dimensions mentioned at the top of the lesson would you 
 -   The forecast errors are strongly associated with the seasonality of the data.
 :::
 
+::: {.callout-tip .optional collapse="true"}
+## Interactive: the CRPS
+
+```{=html}
+<iframe class="nfidd-embed" src="../interactive/forecast-evaluation.html?embed=crps" title="CRPS interactive" loading="lazy" style="width:100%;height:760px;border:1px solid #e5e7eb;border-radius:10px;background:#fff"></iframe>
+<script>(function(){if(window.__nfiddEmbedInit)return;window.__nfiddEmbedInit=1;window.addEventListener('message',function(ev){var h=ev&&ev.data&&ev.data.nfiddEmbedHeight;if(!h)return;document.querySelectorAll('iframe.nfidd-embed').forEach(function(f){if(f.contentWindow===ev.source)f.style.height=(h+24)+'px';});});})();</script>
+```
+
+Drag the observation and the forecast spread to watch the CRPS area — and its dispersion / over-prediction / under-prediction breakdown.
+:::
+
 # Comparing three models at multiple time-points
 
 Let's run a real-life forecasting experiment now, comparing three different models.
