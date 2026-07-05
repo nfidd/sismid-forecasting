@@ -1,6 +1,6 @@
 ---
-title: "Improving forecasting models"
-order: 8
+title: "Time series forecasting 101"
+order: 2
 bibliography: ../nfidd.bib
 ---
 
@@ -15,7 +15,7 @@ It is a common pitfall to just start throwing models at data, without really loo
 
 ## Slides
 
--   [Improving forecasting models](slides/improving-forecasting-models)
+-   [Time series forecasting 101](slides/time-series-101)
 
 ## Objectives
 
@@ -31,7 +31,7 @@ None of the models introduced in this section are designed for real-world use!
 
 ## Source file
 
-The source file of this session is located at `sessions/forecasting-models.qmd`.
+The source file of this session is located at `sessions/time-series-101.qmd`.
 
 ## Libraries used
 
@@ -341,55 +341,6 @@ Once again, there is not exactly a "right" answer here, but here are a few thing
 
 Again, all of these forecasts are not very good, but they are progress.
 :::
-
-# Doing something about seasonality
-
-The seasonality feature is a critical part of these data.
-Let's do something to model it!
-
-There is a whole part of ARIMA modeling that accounts for seasonality (they are called Seasonal ARIMA or SARIMA models).
-However, using seasonal ARIMA models with weekly data is complicated, because some years have 52 weeks and some have 53.
-Here are two relatively straight-forward ways that you could address this:
-
-1.  Define a "season-year" where "week 1" is the start of each season (maybe the first week of September) and count to 52 from there. If there is a 53rd week, drop it. Model with a periodicity of 52.
-2.  Include [Fourier series terms](https://en.wikipedia.org/wiki/Fourier_series#Synthesis) (sums of sine and cosine terms with a fixed periodicity of 365 days) to fit annual periodic trends.
-
-We're going to try approach 2 because it's a bit easier to get up and running in `fable`.
-You can read more about this approach in [FPP3 Chapter 12.1](https://otexts.com/fpp3/complexseasonality.html#dynamic-harmonic-regression-with-multiple-seasonal-periods).
-The model we will fit below will be an AR(2) model plus some harmonic terms.
-We can define it mathematically like this: 
-$$ y_t = \phi_1 y_{t-1} + \phi_2 y_{t-2} + \sum_{k=1}^{3} \left[ \alpha_k \cos\left( \frac{2\pi \cdot k \cdot d(t)}{365} \right) + \beta_k \sin\left( \frac{2\pi \cdot k \cdot d(t)}{365} \right) \right] + \varepsilon_t $$ 
-where $\alpha_k$ and $\beta_k$ are the Fourier coefficients for the sine and cosine terms, and $d(t)$ is a function that returns the integer day of the year representing the first day of week $t$.
-The coefficients scale up and down the sine and cosine waves.
-Different linear combinations of sine and cosine waves of these varying frequencies can be constructed to make many smooth shapes.
-The number of sine and cosine terms chosen here ($k=3$) is arbitrary, and this could be adjusted or other values tried out.
-
-Note that you can just add a `fourier()` term to your model equation and this will add the Fourier Series terms shown in the equation above to the model predictors.
-Here is the new fitted set of models, using just the transformed data, and only using the Fourier Series on the undifferenced data, since we are assuming that this periodic function will model the stationarity directly.
-
-```{r}
-fits <- flu_data |>
-  model(
-    arima200_trans = ARIMA(my_fourth_root(wili) ~ pdq(2,0,0)),
-    arima110_trans = ARIMA(my_fourth_root(wili) ~ pdq(1,1,0)),
-    arima200_fourier = ARIMA(my_fourth_root(wili) ~ pdq(2,0,0) + fourier(period = "year", K=3)))
-forecast(fits, h=40) |>
-  autoplot(flu_data |> filter(epiweek >= as.Date("2015-09-01"))) +
-  facet_wrap(~.model) +
-  labs(title = "WILI, US level",
-       y="% of visits")
-```
-
-Well, that `arima200_fourier` model can likely be improved, but we have finally arrived at a forecast model that at least passes a visual sanity check, in the sense that it captures the seasonality that we know is present in the data.
-In the next session, we will start to think about how these different models and forecasts can be evaluated carefully.
-
-# End-of-session reflection: Bayesian vs. Frequentist modeling
-
-The statistical models we've discussed in this session represent just a subset of available forecasting approaches.
-These models offer a different workflow for thinking about modeling than generative models. There are some good examples of generative models in [the companion nowcasting course](https://nfidd.github.io/sismid-nowcasting/) that we taught earlier this week.
-Whilst Bayesian approaches work forward from domain knowledge to specify data-generating processes, traditional time series methods such as these ARIMA models work backward from observed patterns using standard toolkits (transformations, differencing, residual analysis) to achieve stationarity and improve predictions.
-Both approaches ultimately aim to capture the same underlying data-generating process but from different perspectives.
-Something to think about!
 
 # Going further
 
