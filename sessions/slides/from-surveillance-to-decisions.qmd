@@ -1,5 +1,5 @@
 ---
-title: "From public health surveillance data to real-time decision support"
+title: "SISMID 2026: Forecasting and evaluation"
 author: "Nowcasting and forecasting of infectious disease dynamics"
 engine: knitr
 format:
@@ -10,6 +10,8 @@ format:
     slide-level: 3
 ---
 
+## Introductions {background-color="#447099"}
+
 ```{=html}
 <style>
 .shadow-page {
@@ -19,6 +21,49 @@ format:
 }
 </style>
 ```
+
+
+```{r instructors}
+instructors <- c("seabbs", "mariahcboudreau", "nickreich")
+```
+
+```{r get_contributors}
+library("dplyr")
+library("gh")
+library("jsonlite")
+whoarewe <- lapply(sort(instructors), \(instructor) {
+  gh(paste0("GET /users/{username}"), username = instructor)[
+    c("login", "avatar_url", "html_url", "name")
+  ]
+})
+```
+
+### Who are we?
+
+```{r whoarewe, results='asis'}
+cat(":::: {.columns}\n")
+for (instructor in seq_along(whoarewe)) {
+  cat(
+    "::: {.column width=\"", floor(100 / length(whoarewe)), "%\"}\n",
+    "![](", whoarewe[[instructor]]$avatar_url, ")\n",
+    "[", whoarewe[[instructor]]$name, "](",
+    whoarewe[[instructor]]$html_url, ")\n",
+    ":::\n", sep = ""
+  )
+}
+cat("::::\n")
+```
+
+### Who are you?
+
+Introduce yourself with:
+
+- name
+- where you travelled from
+- why you're here
+
+
+## From public health surveillance data to real-time decision support {background-color="#447099"}
 
 ### Predictive modeling for public health
 
@@ -68,12 +113,15 @@ How can we use data typically collected for public health surveillance purposes 
 in real time.
 
 
-### Some of the tensions
+### Some of the central themes we will keep coming back to
 
-- Stats vs mechanism
-- Frequentist vs. Bayesian
-- Data-led vs data generating?
-
+::: {.incremental}
+  1. **Mechanistic or phenomenological?** — do model parameters have epidemiological meaning? 
+  2. **Generative or data-led?** — can we write the model as a data-generating process we can simulate and get a likelihood from?
+  3. **Frequentist or Bayesian?** — how do we estimate and propagate uncertainty in the model?
+  4. **Simple or complex?** — can we encode epidemiological complexity without sacrificing predictive accuracy? Model complexity ≠ skill.
+  
+:::
 
 ### Different types of models {.smaller}
 
