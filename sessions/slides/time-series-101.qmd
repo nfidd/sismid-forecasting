@@ -25,7 +25,7 @@ How should we decide which model(s) to incorporate for nowcasting and forecastin
 What outputs and features do we require of these models?
 
 
-### Using Data to Help Inform your Modeling Choices
+### Using Data to Inform Modeling Choices
 
 Often, what motivates one's modeling choices are the *trends* and *patterns* observed in the data.
 
@@ -90,11 +90,18 @@ pacf_plot
 
 ### Stationarity
 
+
+::: {.callout-note title="Definition"}
 A time series is stationary if the mean and variance of the data do not change over time.
-<br>
+:::
+
+::: {.callout-important title="Implications in practice"}
 Stationarity means that there are *no long-term predictable patterns* in a time-series, but there can still be predictability in the short term.
-<br>
+:::
+
+::: {.callout-warning title="Assumption"}
 ARIMA (and other models) assume data are stationary (won't work as well if data are not).
+:::
 
 ### Seasonality
 

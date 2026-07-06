@@ -65,10 +65,8 @@ Broadly, the intended order of content is:
 
 Let's get started!
 
--   Have a more detailed look at the [learning objectives](../reference/learning_objectives)
+-   Have a more detailed look at the [learning objectives](../reference/learning_objectives) or the [class timetable](../timetable)
 
--   [Introduction to the course and the instructors](slides/introduction-to-the-course-and-the-instructors)
-
--   If you haven't already, start with [getting started with the course](../getting-started)
+-   If you haven't already, install the needed software with [getting started with the course](../getting-started)
 
 -   Once you're all set up, let's start with the first session on [forecasting concepts](forecasting-concepts).

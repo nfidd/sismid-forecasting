@@ -76,9 +76,16 @@ Introduce yourself with:
 ![](figures/forecast-use-2.png){.absolute .fragment .shadow-page top="165" left="215" width="620"}
 ![](figures/forecast-use-3.png){.absolute .fragment .shadow-page top="190" left="315" width="620"}
 
-### What do epidemic models predict?
 
-![](figures/nowcast-forecast-project.png)
+### Different ways of modelling the future {.smaller}
+
+-   **Nowcasts** make statements about current trends based on partial data
+
+-   **Forecasts** are *unconditional* statements about the future: what *will happen*
+
+-   **Scenarios** state what *would* happen under certain conditions
+
+![Figure credit: [Scenario Modeling Hub](https://covid19scenariomodelinghub.org/)](figures/nowcast-forecast-project.png)
 
 
 ### Public health surveillance data {.smaller}
