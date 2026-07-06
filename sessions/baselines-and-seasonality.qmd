@@ -12,7 +12,7 @@ options(width=100)
 
 In the [previous session](time-series-101.qmd) we built some simple ARIMA models and used a fourth-root transformation to keep our forecasts positive.
 Before we try to build *better* models, though, we need something to compare them against.
-In this session we introduce **baseline** (reference) models — deliberately simple, naive forecasts — and then treat **seasonality** as one more reference point before combining it with recent dynamics to (hopefully) improve on all of them.
+In this session we introduce the idea of **baseline** (reference) models — deliberately simple, naive forecasts — and then treat **seasonality** as one more reference point before combining it with recent dynamics to (hopefully) improve on all of them.
 
 ## Slides
 
@@ -51,11 +51,13 @@ The best way to interact with the material is via the [Visual Editor](https://do
 
 ## Initialisation
 
-We set a random seed for reproducibility, load the same flu data as in the previous session, and re-create the fourth-root transformation we defined there.
+We set a random seed for reproducibility, load the same flu data as in the previous session (filtered to end at the start of 2018), and re-create the fourth-root transformation we defined there.
 
 ```{r}
 set.seed(123)
 data(flu_data)
+flu_data <- flu_data |> 
+  filter(epiweek <= as.Date("2018-01-01"))
 
 fourth_root <- function(x) x^0.25
 inv_fourth_root <- function(x) x^4
@@ -69,30 +71,61 @@ Before we ask "is my model any good?", we have to ask "good *compared to what*?"
 A **baseline** (or **reference**) model is a deliberately simple, naive forecast that any genuinely useful model ought to beat.
 Baselines are worth taking seriously because:
 
--   they set a floor — if a complicated model can't beat a one-line baseline, something is wrong;
--   they are transparent, fast, and hard to overfit;
+-   they set a floor — if a complicated model can't beat a simple baseline, something is wrong;
+-   they make simple and transparent assumptions, can be fit quickly, and are hard to overfit;
 -   in collaborative forecasting (later in the course) a *shared* baseline lets everyone measure their "skill" against the same yardstick.
 
-Three simple ideas come up again and again:
+::: {.callout-note}
+"Despite its importance, there is no consensus on what constitutes a 'good' baseline model."
+
+[@stapper_mind_2025]
+:::
+
+Here are three different simple ideas that are sometimes used for baselines:
 
 -   **Persistence** ("nothing changes"): forecast every future week as the *most recent observation*.
--   **Mean** ("it reverts to normal"): forecast every future week as the *long-run average* of the data.
--   **Seasonal** ("this time of year looks like it usually does"): forecast the *typical seasonal pattern*, ignoring recent wiggles.
+-   **Mean** ("it reverts to normal"): forecast every future week as the *long-run average* of the data. (This is sometimes also called a **Marginal** model.)
+-   **Seasonal** ("this time of year looks like it usually does"): forecast the *typical seasonal pattern*, ignoring recent trends.
 
 We'll build all three, keeping the fourth-root transformation from the last session so that every model is on the same footing (and none of them can predict a negative percentage).
 
 ## Persistence and mean baselines
 
-The two simplest baselines don't need any notion of season at all:
+The two simplest baselines don't need any notion of season at all, and both are implemented natively in `fable`:
 
--   **Persistence** is `NAIVE()`: carry the last observed value forward.
--   **Mean** is `MEAN()`: forecast the average of all past values.
+### Mean 
+This is equivalent to the `MEAN()` model in `fable`: it forecasts the average of all past values.
+It is also equivalent to a trivial `ARIMA(0,0,0)` model with a constant.
+  $$y_t = C + \varepsilon_t.$$
+  
+::: {.callout-note}
+The mean model has a constant variance since the variance of any $y_t$ is always the same $\sigma_2$.
+:::
+
+### Persistence
+This is equivalent to the `NAIVE()` or `RW()` (random walk) model in `fable`: it carries the last observed value forward. 
+It is also equivalent to an `ARIMA(0,1,0)` model.
+  $$y_t - y_{t-1} = \varepsilon_t \qquad\Longleftrightarrow\qquad y_t = y_{t-1} + \varepsilon_t$$
+where $\epsilon_t \sim N(0, \sigma^2)$.
+
+::: {.callout-note}
+Note that the variance of the forecasts for an $h$ step-ahead forecast in this model compoound, where $y_{t+h} = y_{t+h-1} + \varepsilon_{t+h} = \cdots = y_t + \sum_{j=1}^{h}\varepsilon_{t+j}.$ This shows that the variance of the Persistence models will grow at larger horizons.
+:::
+
+
+### Examples in practice
+
+Here we fit persistent (random walk) and mean models to the data to show equivalences between different simple models. The figures below show mean predictions (line) and 80% and 95% prediction intervals.
 
 ```{r fit-simple-baselines}
 simple_baselines <- flu_data |>
   model(
-    persistence = NAIVE(my_fourth_root(wili)),
-    mean        = MEAN(my_fourth_root(wili))
+    persistence_raw = RW(wili),
+    ar010_raw       = ARIMA(wili ~ pdq(0,1,0)),
+    persistence     = RW(my_fourth_root(wili)),
+    mean            = MEAN(my_fourth_root(wili)),
+    ar000           = ARIMA(my_fourth_root(wili) ~ 1 + pdq(0,0,0)),
+    ar010           = ARIMA(my_fourth_root(wili) ~ pdq(0,1,0))
   )
 
 forecast(simple_baselines, h = 40) |>
@@ -101,12 +134,25 @@ forecast(simple_baselines, h = 40) |>
   labs(title = "Two simple baselines", y = "% of visits")
 ```
 
-Neither is a *good* forecast of a flu season — persistence just extends the last value in a flat line, and the mean ignores where we currently are entirely — but they are exactly the kind of honest reference points we want to beat.
+::: callout-tip
+## Take 5 minutes
 
-::: callout-note
-A **random walk** (`RW()`) produces the *same point forecast* as persistence — the last observed value — and differs only in how quickly its prediction intervals fan out over the forecast horizon.
-Here we use `NAIVE()` for the persistence point forecast and `MEAN()` for the "reverts to the average" baseline; you'll meet the random walk again as a baseline in the [forecast evaluation session](forecast-evaluation.qmd).
+Look at the panels in the figure above. What observations do you make about the models? For the `persistence` and `ar010` models, why is the line of mean predictions not flat?
 :::
+
+::: {.callout-note collapse="true"}
+## Solution
+
+Key points to note here:
+
+1. The `1+ARIMA(0,0,0)` (`ar000`) and `mean` models are identical.
+2. The `ar010` and `persistence` models are identical.
+3. The `ar010_raw` and `persistence_raw` models are identical.
+4. When the `RW()` model is fit on transformed data, the mean forecasts are not a flat line. This is due to the asymmetry of the transformation, as the larger values are inflated more by moving the values to the 4th power and this impacts the mean. The median forecasts are flat for these models.
+:::
+
+None of the above models is a *good* forecast of a flu season — persistence just extends the last value in a flat/straight line, and the mean ignores where we currently are entirely. But this is what makes them honest reference points. Any forecast that we would want to trust should be able to have forecasts that are more consistently accurate than any of these.
+
 
 ## A seasonal baseline
 
@@ -122,11 +168,13 @@ Here are two relatively straight-forward ways you could address this:
 We're going to use approach 2 because it's a bit easier to get up and running in `fable`: you can just add a `fourier()` term to the model equation and `fable` will add the sine and cosine predictors for you.
 You can read more about this approach in [FPP3 Chapter 12.1](https://otexts.com/fpp3/complexseasonality.html#dynamic-harmonic-regression-with-multiple-seasonal-periods).
 
+### ARIMA + Fourier terms
+
 A model with *only* Fourier terms and no ARIMA dynamics (`pdq(0, 0, 0)`) is a **harmonic regression**: a regression of the (transformed) data on sine and cosine curves with an annual period.
 
 $$ g(y_t) = \sum_{k=1}^{3} \left[ \alpha_k \cos\left( \frac{2\pi \cdot k \cdot d(t)}{365} \right) + \beta_k \sin\left( \frac{2\pi \cdot k \cdot d(t)}{365} \right) \right] + \varepsilon_t $$
 
-where $g(\cdot)$ is the fourth-root transformation, $d(t)$ returns the day of the year of the first day of week $t$, $\alpha_k$ and $\beta_k$ are the Fourier coefficients that `fable` estimates, and the number of harmonics $K = 3$ is chosen (somewhat arbitrarily) to allow a flexible but smooth annual shape.
+where $g(\cdot)$ is a chosen transformation function (in our case we are using the fourth-root), $d(t)$ returns the day of the year of the first day of week $t$, $\alpha_k$ and $\beta_k$ are the Fourier coefficients that `fable` estimates, and the number of harmonics $K = 3$ is chosen (somewhat arbitrarily) to allow a flexible but smooth annual shape.
 
 ```{r fit-fourier}
 fit_fourier <- flu_data |>
@@ -136,11 +184,12 @@ report(fit_fourier)
 forecast(fit_fourier, h = 40) |>
   autoplot(flu_data |> filter(epiweek >= as.Date("2015-09-01"))) +
   labs(title = "Seasonal baseline (harmonic regression)",
-       y = "% of visits")
+       y = "% of visits due to ILIquarto ")
 ```
 
-Because it has no auto-regressive, differencing, or moving-average terms, this model's forecast is driven *entirely* by the estimated seasonal curve: it is essentially a smooth "seasonal climatology" that repeats the average shape of a season.
-Like the other baselines, it pays no attention to the most recent observations — its forecast for next week would be the same whether the last few weeks were unusually high or low.
+Because it has no auto-regressive, differencing, or moving-average terms, this model's forecast is driven *entirely* by the estimated seasonal curve: it is essentially a smooth "seasonal climatology" that repeats the average shape of a season. 
+(Climatology is a term weather forecasters use for the expected conditions — and their typical variability — at a given location and time of year, based on long-term historical averages, without using current conditions.)
+Like the `MEAN` baseline, the seasonal baseline pays no attention to the most recent observations — its forecast for next week would be the same whether the last few weeks were unusually high or low.
 
 ::: callout-tip
 We will re-use this exact `fourier` model later in the course as a simple **seasonal baseline** to compare more sophisticated models against.
@@ -161,7 +210,7 @@ Let's put the three baselines and our combined model side by side:
 ```{r fit-all}
 fits <- flu_data |>
   model(
-    persistence      = NAIVE(my_fourth_root(wili)),
+    persistence      = RW(my_fourth_root(wili)),
     mean             = MEAN(my_fourth_root(wili)),
     fourier          = ARIMA(my_fourth_root(wili) ~ pdq(0, 0, 0) + fourier(period = "year", K = 3)),
     arima200_fourier = ARIMA(my_fourth_root(wili) ~ pdq(2, 0, 0) + fourier(period = "year", K = 3))
@@ -174,7 +223,7 @@ forecast(fits, h = 40) |>
 ```
 
 The combined `arima200_fourier` model captures the seasonal shape *and* starts from roughly the right recent level — visually an improvement over all three baselines.
-But "looks better" is not good enough: in the next session we'll learn to *measure* forecast performance with proper scoring rules, and put the "did we actually beat the baselines?" question on a firm footing.
+But "looks better" is not good enough: in the next session we'll learn to *measure* forecast performance with proper scoring rules, and put the "did we actually beat the baselines?" question on firmer footing.
 
 ::: callout-tip
 ## Take 5 minutes
@@ -188,26 +237,42 @@ A visual sanity check of the forecast is a good start, but a more rigorous quest
 If it has, then what's left over — the model **residuals** (technically the one-step-ahead "innovation" residuals) — should look like white noise: no trend, roughly constant variance, and no left-over autocorrelation.
 Any pattern remaining in the residuals is signal the model failed to use.
 
-`ggtime::gg_tsresiduals()` gives us the three standard diagnostic views at once. Let's look at our combined model:
+`ggtime::gg_tsresiduals()` gives us the three standard diagnostic views at once. Let's look at the residuals for first the fourier-only model and then the combined model:
 
-```{r residuals}
+```{r residuals-fourier}
+fits |>
+  select(fourier) |>
+  gg_tsresiduals(lag_max = 55) +
+  ggtitle("residuals for fourier model")
+```
+
+```{r residuals-combined}
 fits |>
   select(arima200_fourier) |>
-  gg_tsresiduals()
+  gg_tsresiduals(lag_max = 55) +
+  ggtitle("residuals for arima2000+fourier model")
 ```
 
 ::: callout-tip
 ## Take 5 minutes
 
-Look at the three panels. Do the residuals look like white noise? In particular, is there any left-over autocorrelation in the ACF panel — especially around lag 52 (one year)?
+Look at the three panels. Do the residuals look like white noise? In particular, is there any left-over autocorrelation in the ACF panel? Interpret any values exceeding the dashed line thresholds.
 :::
 
 ::: {.callout-note collapse="true"}
 ## Solution
 
--   The **top panel** (residuals over time) should hover around zero, but you'll likely still see that the variance is larger during the winter peaks — a sign that our constant-variance assumption isn't perfect even after the fourth-root transform.
--   The **ACF panel** (bottom-left) is the key one: some bars still poke outside the dashed significance bounds (at short lags and near the seasonal lag), which tells us the model has *not* captured all the autocorrelation — there is still structure that a better model could exploit.
--   The **histogram** (bottom-right) should be roughly bell-shaped and centred on zero.
+**fourier**
+
+- The **top panel** (residuals over time) should randomly scatter around zero: these residuals do not look like white noise.
+- The **ACF panel** (bottom-left) shows a lot of significant correlations.
+- The **histogram** (bottom-right) should be roughly bell-shaped and centred on zero. This one has a heavy right (positive) tail.
+
+**ARIMA(2,0,0) + fourier**
+
+-   The **top panel** (residuals over time) should hover around zero, but the variance is larger during the winter peaks — a sign that our constant-variance assumption isn't perfect even after the fourth-root transform.
+-   The **ACF panel** (bottom-left) is the key one: some bars still poke outside the dashed significance bounds (at short lags and near the seasonal lag), which tells us the model has *not* captured all the autocorrelation — there is still structure that a better model could exploit. In particular we see a positive correlation at lag = 52, implying that $\varepsilon_t$ and $\varepsilon_{t-52}$ have positive correlation, or that the a higher error at one time point suggests that the time point at +/- 52 weeks from that one will also have higher errors. 
+-   The **histogram** (bottom-right) should be roughly bell-shaped and centred on zero. It looks roughly normal. There is one large positive outlier.
 
 So the model is a clear improvement on the baselines, but the residual diagnostics show it is still not "done" — exactly the kind of clue that guides the next round of model building.
 :::
@@ -226,6 +291,7 @@ Something to think about!
 -   The other approach to seasonality mentioned above (a "season-year" re-indexing, i.e. a genuine seasonal ARIMA / SARIMA model) — try implementing it and compare it to the Fourier approach.
 -   We fixed $K = 3$ Fourier harmonics somewhat arbitrarily. Try $K = 1, 2, 4$ and compare the fits (e.g. with `glance()` and the reported information criteria). What happens to the seasonal shape as $K$ grows?
 -   Read about [dynamic harmonic regression](https://otexts.com/fpp3/dhr.html) and [residual diagnostics](https://otexts.com/fpp3/diagnostics.html) in the FPP3 textbook.
+-   Read recent papers about the choice of baselines.[@stapper_mind_2025; @suez_basic_2026] A key insight from this paper is that the choice of baselines can impact the resulting conclusions and generalizability of the results.
 
 # Wrap up
 

@@ -175,6 +175,36 @@ Notation is $ARIMA(p, d, q).$
 
 Figuring out which $(p,d,q)$ to use is tricky!
 
+
+### A Lag-1 model: ARIMA(p=1,d=0,q=0)
+
+Here is the equation for an ARIMA(1,0,0) model: 
+$$ y_t = \mu_t + \phi_1 y_{t-1} + \varepsilon_t $$ 
+
+ - $\mu_t$ is a constant (like an intercept term in the regression)
+ - $\phi_1$ is a coefficient for the auto-regressive term
+ - $\varepsilon_t$ is a random error term with mean zero and constant variance
+
+::: {.callout-warning}
+Note the constant variance assumption!
+:::
+
+### A Random Walk model: ARIMA(p=0,d=1,q=0)
+
+Here is the equation for an ARIMA(0,1,0) model: 
+  $$y_t - y_{t-1} = \varepsilon_t \qquad\Longleftrightarrow\qquad y_t = y_{t-1} + \varepsilon_t$$
+
+::: {.callout-tip}
+No AR terms ($p=0$), one difference ($d=1$), no MA terms ($q=0$). The model sees the first differences as white noise.
+:::
+
+### ARIMA(p=1,d=1,q=0)
+
+Here is an equation for an ARIMA(1,1,0) model: $$ y_t - y_{t-1} = \phi_1 (y_{t-1} - y_{t-2}) + \varepsilon_t.$$ 
+
+::: {.callout-note}
+This model is the same as the last slide but here both the "outcome" variable and predictor variable is now a first-order difference of $y_t$, corresponding to the second "1" in (1,1,0).
+:::
 ## `r fontawesome::fa("laptop-code", "white")` Your Turn {background-color="#447099" transition="fade-in"}
 
 1.  Explore the influenza dataset, focusing on assessing observed patterns qualitatively and quantitatively.
