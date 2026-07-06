@@ -122,4 +122,4 @@ Exhibit from Camp A:
 
 # 
 
-[Return to the session](../forecasting-concepts)
+[Return to the session](../forecasting-concepts.qmd)

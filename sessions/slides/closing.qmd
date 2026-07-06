@@ -94,4 +94,4 @@ in real time.
 
 # Thank you for attending!
 
-[Return to the session](../end-of-course-summary-and-discussion)
+[Return to the session](../end-of-course-summary-and-discussion.qmd)

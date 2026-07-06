@@ -182,4 +182,4 @@ Figuring out which $(p,d,q)$ to use is tricky!
 
 # 
 
-[Return to the session](../time-series-101)
+[Return to the session](../time-series-101.qmd)

@@ -294,8 +294,8 @@ Throughout the course we will
 
 ### Schedule of the course
 
-See more detail on [the full course timetable](../../timetable)
+See more detail on [the full course timetable](../../timetable.qmd)
 
 #
 
-[Return to the session](../introduction-and-course-overview)
+[Return to the session](../introduction-and-course-overview.qmd)

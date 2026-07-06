@@ -105,7 +105,7 @@ Average of multiple predictions is often (not always) more performant than any i
 
 #
 
-[Return to the session](../forecast-ensembles)
+[Return to the session](../forecast-ensembles.qmd)
 
 ### References
 

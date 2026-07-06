@@ -135,4 +135,4 @@ fit_ar2f |> gg_tsresiduals()
 
 #
 
-[Return to the session](../baselines-and-seasonality)
+[Return to the session](../baselines-and-seasonality.qmd)

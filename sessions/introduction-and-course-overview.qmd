@@ -11,7 +11,7 @@ The companion [Nowcasting & $R_t$ estimation course](https://nfidd.github.io/sis
 
 # Slides for this session
 
- - [From public health surveillance data to real-time decision support](slides/introduction-and-course-overview)
+ - [From public health surveillance data to real-time decision support](slides/introduction-and-course-overview.qmd)
 
 # Aim of the course
 
@@ -65,8 +65,8 @@ Broadly, the intended order of content is:
 
 Let's get started!
 
--   Have a more detailed look at the [learning objectives](../reference/learning_objectives) or the [class timetable](../timetable)
+-   Have a more detailed look at the [learning objectives](../reference/learning_objectives.qmd) or the [class timetable](../timetable.qmd)
 
--   If you haven't already, install the needed software with [getting started with the course](../getting-started)
+-   If you haven't already, install the needed software with [getting started with the course](../getting-started.qmd)
 
--   Once you're all set up, let's start with the first session on [forecasting concepts](forecasting-concepts).
+-   Once you're all set up, let's start with the first session on [forecasting concepts](forecasting-concepts.qmd).

@@ -51,6 +51,6 @@ Here is a summary of the forecasting workflow that we have covered in previous s
 
 # 
 
-[Return to the session](../hub-playground)
+[Return to the session](../hub-playground.qmd)
 
 

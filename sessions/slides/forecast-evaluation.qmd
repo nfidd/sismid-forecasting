@@ -71,4 +71,4 @@ For any retrospective experiment, you should always look for evidence that an an
 
 #
 
-[Return to the session](../forecast-evaluation)
+[Return to the session](../forecast-evaluation.qmd)

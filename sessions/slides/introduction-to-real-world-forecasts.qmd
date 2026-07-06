@@ -84,4 +84,4 @@ Use COVID-19 Forecast Hub forecasts to ...
 
 #
 
-[Return to the session](../real-world-forecasts)
+[Return to the session](../real-world-forecasts.qmd)

@@ -15,7 +15,7 @@ Parts of this session will be more open-ended than other sessions, enabling you 
 
 ## Slides
 
--   [Why use a local hub?](slides/hub-playground)
+-   [Why use a local hub?](slides/hub-playground.qmd)
 
 ## Objectives
 

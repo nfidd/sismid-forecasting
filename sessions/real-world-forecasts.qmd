@@ -12,7 +12,7 @@ This will expose many of the challenges involved with real-time forecasting, as 
 
 ## Slides
 
--   [Real-world forecasts](slides/introduction-to-real-world-forecasts)
+-   [Real-world forecasts](slides/introduction-to-real-world-forecasts.qmd)
 
 ## Objectives
 
@@ -557,7 +557,7 @@ Note, this is a nice example of a model (`CMU-climate_baseline`) being well cali
 
 ## Model comparison by horizon and forecast date
 
-As we discussed in the [session on evaluating forecasts](forecast-evaluation), overall comparisons can miss details about ways that models perform across different forecast dimensions.
+As we discussed in the [session on evaluating forecasts](forecast-evaluation.qmd), overall comparisons can miss details about ways that models perform across different forecast dimensions.
 Let's run an analysis looking at the performance of model by horizon and then by forecast date.
 For now, we will keep the focus on the 10 models that made at least 60% of possible predictions, and we will only evaluate state-level forecasts.
 
@@ -921,7 +921,7 @@ It is interesting to note how while the LOP ensembles did slightly worse overall
 
 # Wrap up
 
--   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives)
+-   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives.qmd)
 
 # References
 

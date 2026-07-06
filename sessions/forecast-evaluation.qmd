@@ -13,7 +13,7 @@ Another approach involves summarising performance quantitatively.
 
 ## Slides
 
--   [Forecast evaluation](slides/forecast-evaluation)
+-   [Forecast evaluation](slides/forecast-evaluation.qmd)
 
 ## Objectives
 
@@ -623,7 +623,7 @@ What do these results this tell you about the models?
 
 # Wrap up
 
--   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives)
+-   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives.qmd)
 
 ::: {#refs}
 :::
