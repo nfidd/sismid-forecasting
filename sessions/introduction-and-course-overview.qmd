@@ -11,7 +11,7 @@ The companion [Nowcasting & $R_t$ estimation course](https://nfidd.github.io/sis
 
 # Slides for this session
 
- - [From public health surveillance data to real-time decision support](slides/from-surveillance-to-decisions)
+ - [From public health surveillance data to real-time decision support](slides/introduction-and-course-overview)
 
 # Aim of the course
 
