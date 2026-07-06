@@ -20,7 +20,7 @@ theme_set(theme_bw())
 
 data(flu_data)
 flu_data <- flu_data |>
-  filter(epiweek <= "2017-08-27") # start of the 2017/2018 season
+  filter(epiweek <= "2018-01-01") # middle of the 2017/2018 season
 
 fourth_root <- function(x) x^0.25
 inv_fourth_root <- function(x) x^4
@@ -53,14 +53,14 @@ Before asking "is my model any good?", ask **"good compared to what?"**
 A **baseline** (reference) model is a deliberately simple, naive forecast that a useful model ought to beat.
 
 - Sets a floor — beat it, or something's wrong
-- Transparent, cheap, hard to overfit
+- Simple assumptions, computationally cheap, hard to overfit
 - A *shared* baseline lets everyone measure "skill" on the same yardstick
 
 ### Three simple baselines
 
-- **Persistence** — "nothing changes": the most recent observation
-- **Mean** — "it reverts to normal": the long-run average
-- **Seasonal** — "this time of year looks like it usually does": the typical seasonal pattern
+- **Persistence** — "nothing changes", predicts the most recent observation
+- **Mean** — "reverts to normal", predicts the long-run average
+- **Seasonal** — "this time of year looks like it usually does", predicts the typical seasonal pattern
 
 We keep the fourth-root transformation so every model is on the same footing.
 
@@ -75,7 +75,7 @@ forecast(simple_fits, h = 40) |>
 
 Persistence extends the last value; the mean ignores where we are. Honest, but beatable.
 
-### The data is seasonal
+### The data are seasonal
 
 ```{r season-plot, echo=FALSE, message=FALSE, warning=FALSE, fig.height=3.2}
 flu_data |>
@@ -124,13 +124,21 @@ The combined model captures the seasonal shape *and* starts from the right level
 If a model captured the structure, its residuals should look like **white noise** — flat ACF, especially at the seasonal lag ~52.
 
 ```{r resid, echo=FALSE, message=FALSE, warning=FALSE, fig.height=3.2}
-fit_ar2f |> gg_tsresiduals()
+fit_ar2f |> gg_tsresiduals(lag_max=55)
 ```
+
+::: {.callout-note title="What we want to see"}
+
+ - top panel: white noise in the residuals
+ - bottom left: no significant residual autocorrelation
+ - bottom right: Normal, symmetric distrbution of residuals
+
+:::
 
 ## `r fontawesome::fa("laptop-code", "white")` Your Turn {background-color="#447099" transition="fade-in"}
 
-1.  Build the three baselines: `NAIVE()`, `MEAN()`, and a `fourier()` seasonal model.
-2.  Add recent dynamics with an AR + `fourier()` model and compare against the baselines.
+1.  Build the three baselines: `RW()`, `MEAN()`, and an `fourier()` seasonal model.
+2.  Add recent dynamics with an `ARIMA() + fourier()` model and compare against the baselines.
 3.  Use `gg_tsresiduals()` to check whether the model captured the structure.
 
 #
