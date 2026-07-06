@@ -1,0 +1,199 @@
+---
+title: "Forecasting with epidemiological insights"
+order: 10
+bibliography: ../nfidd.bib
+---
+
+```{r echo=FALSE}
+options(width = 100)
+```
+
+# Introduction
+
+The statistical models so far (ARIMA, seasonal baselines) know nothing about disease transmission.
+Here we build a **semi-mechanistic** forecast: estimate the time-varying reproduction number $R_t$ from the renewal equation, then simulate incidence forward — letting $R_t$ take a random walk and adding negative-binomial observation noise.
+We wrap it as a **`fable` model**, so students use it exactly like `NAIVE()` or `ARIMA()`.
+This builds on the renewal-equation material in the companion [nowcasting course](https://nfidd.github.io/sismid-nowcasting/).
+
+::: callout-caution
+Prototype session — minimal prose. The `RENEWAL()` model is defined inline here; in the real course it would move to the package's `R/` and be exported.
+:::
+
+::: {.callout-note collapse="true"}
+## Setup
+
+```{r libraries, message = FALSE}
+library("dplyr")
+library("ggplot2")
+library("epidatr")
+library("tsibble")
+library("fabletools")
+library("fable")          # NAIVE() and statistical baselines
+library("distributional")
+library("EpiEstim")
+library("ggtime")
+## NB: MASS is used via MASS::glm.nb() (not attached — it masks dplyr::select)
+set.seed(123)
+```
+
+### The `RENEWAL()` model (prototype)
+
+```{r renewal-model}
+## one simulated renewal trajectory of length h from a fitted RENEWAL object
+.renewal_path <- function(object, h) {
+  w <- object$gi[-1]; K <- length(w)
+  r0 <- EpiEstim::sample_posterior_R(object$rt, 1)
+  rtj <- exp(log(r0) + cumsum(rnorm(h, 0, object$sigma_rw)))   # Rt random walk
+  series <- object$y; out <- numeric(h)
+  for (k in seq_len(h)) {
+    foi <- sum(rev(utils::tail(series, K)) * w)                # renewal force of infection
+    out[k] <- rnbinom(1, size = object$theta, mu = rtj[k] * foi)  # negbin observation
+    series <- c(series, out[k])
+  }
+  out
+}
+
+train_renewal <- function(.data, specials, gi = c(0, 0.65, 0.30, 0.05),
+                          window = 4L, sigma_rw = 0.1, n_sim = 2000, ...) {
+  mv <- tsibble::measured_vars(.data); y <- .data[[mv]]; n <- length(y)
+  t_start <- 2:(n - window + 1); t_end <- t_start + (window - 1)
+  rt <- suppressMessages(EpiEstim::estimate_R(
+    y, method = "non_parametric_si",
+    config = EpiEstim::make_config(list(si_distr = gi, t_start = t_start, t_end = t_end))))
+  dat <- data.frame(y = y, t = seq_len(n))
+  theta <- tryCatch(suppressWarnings(MASS::glm.nb(y ~ splines::ns(t, df = 10), data = dat)$theta),
+                    error = function(e) 50)
+  structure(list(y = y, gi = gi, rt = rt, theta = theta,
+                 sigma_rw = sigma_rw, n_sim = n_sim),
+            class = "RENEWAL")
+}
+
+RENEWAL <- function(formula, ...) {
+  md <- new_model_class("RENEWAL", train = train_renewal, specials = new_specials())
+  new_model_definition(md, !!rlang::enquo(formula), ...)
+}
+
+forecast.RENEWAL <- function(object, new_data, specials = NULL, ...) {
+  h <- nrow(new_data)
+  sims <- replicate(object$n_sim, .renewal_path(object, h))         # h x n_sim
+  distributional::dist_sample(lapply(seq_len(h), function(k) sims[k, ]))
+}
+
+generate.RENEWAL <- function(x, new_data, specials = NULL, ...) {
+  new_data |>
+    dplyr::group_by(.data$.rep) |>
+    dplyr::mutate(.sim = .renewal_path(x, dplyr::n())) |>
+    dplyr::ungroup()
+}
+
+## one-step-ahead fitted mean = Rhat_t * (force of infection)_t
+fitted.RENEWAL <- function(object, ...) {
+  y <- object$y; n <- length(y); w <- object$gi[-1]; K <- length(w)
+  lambda <- rep(NA_real_, n)
+  for (t in seq_len(n)) if (t > K) lambda[t] <- sum(rev(y[(t - K):(t - 1)]) * w)
+  out <- rep(NA_real_, n); R <- object$rt$R
+  for (i in seq_along(R$t_end)) {
+    tt <- R$t_end[i]
+    if (!is.na(lambda[tt])) out[tt] <- R$`Median(R)`[i] * lambda[tt]
+  }
+  out
+}
+
+residuals.RENEWAL <- function(object, ...) object$y - fitted.RENEWAL(object)
+
+model_sum.RENEWAL <- function(x) sprintf("RENEWAL(theta=%.0f)", x$theta)
+```
+:::
+
+# Data: ILINet counts
+
+Mechanistic models need **case counts** (not the weighted-ILI percentage): the Poisson/negbin renewal machinery only makes sense for integer event counts.
+We use ILINet `num_ili` (ILI patient visits).
+
+```{r load-data}
+raw <- pub_fluview(regions = "nat", epiweeks = epirange(201335, 201820))
+flu_all <- raw |> transmute(region, epiweek, cases = num_ili) |>
+  as_tsibble(index = epiweek, key = region)
+
+origin  <- as.Date("2017-12-30")
+horizon <- 4L
+train   <- flu_all |> filter(epiweek <= origin)
+```
+
+# Fit and forecast — like any `fable` model
+
+```{r fit}
+fit <- train |>
+  model(persistence = NAIVE(cases), renewal = RENEWAL(cases))
+fit
+
+fc <- fit |> forecast(h = horizon)
+fc |> hilo(90)
+```
+
+```{r forecast-plot}
+obs_window <- flu_all |> filter(epiweek >= origin - 7 * 20, epiweek <= origin + 7 * horizon)
+fc |> autoplot(obs_window) +
+  facet_wrap(~.model) +
+  labs(title = "Semi-mechanistic RENEWAL vs. a persistence baseline",
+       subtitle = "line continues into the forecast period = what actually happened",
+       y = "ILI patient visits", x = NULL) +
+  theme_bw()
+```
+
+# Estimated vs. projected $R_t$
+
+The forecast works by carrying $R_t$ forward as a random walk. We can show both the $R_t$ the model **estimated** from the data and the $R_t$ it **projects** into the future.
+
+```{r rt-plot}
+m <- (fit |> pull(renewal))[[1]]$fit          # recover the fitted RENEWAL object
+
+estimated <- m$rt$R |>
+  transmute(epiweek = train$epiweek[t_end], kind = "estimated",
+            median = `Median(R)`, lower = `Quantile.0.025(R)`, upper = `Quantile.0.975(R)`)
+
+r0   <- EpiEstim::sample_posterior_R(m$rt, 2000)
+Rmat <- sapply(seq_along(r0), \(s) exp(log(r0[s]) + cumsum(rnorm(horizon, 0, m$sigma_rw))))
+projected <- tibble(
+  epiweek = max(train$epiweek) + 7 * seq_len(horizon), kind = "projected",
+  median = apply(Rmat, 1, median),
+  lower  = apply(Rmat, 1, quantile, 0.025),
+  upper  = apply(Rmat, 1, quantile, 0.975))
+
+bind_rows(estimated, projected) |>
+  filter(epiweek >= origin - 7 * 20) |>
+  ggplot(aes(epiweek, median, colour = kind, fill = kind)) +
+  geom_hline(yintercept = 1, linetype = "dashed") +
+  geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.2, colour = NA) +
+  geom_line() +
+  labs(title = "Rt: estimated (from data) vs. projected (random walk)",
+       y = expression(R[t]), x = NULL, colour = NULL, fill = NULL) +
+  theme_bw()
+```
+
+# Sample trajectories and accuracy
+
+Because it's a generative model, `generate()` draws whole future trajectories (this is what the ensemble/hub sessions consume), and `fitted()`/`residuals()` make `accuracy()` work.
+
+```{r generate}
+sims <- fit |> select(renewal) |> generate(h = horizon, times = 50)
+
+ggplot() +
+  geom_line(data = obs_window |> filter(epiweek <= origin), aes(epiweek, cases)) +
+  geom_line(data = sims, aes(epiweek, .sim, group = .rep), colour = "steelblue", alpha = 0.2) +
+  labs(title = "50 simulated renewal trajectories", y = "ILI patient visits", x = NULL) +
+  theme_bw()
+
+accuracy(fit)
+```
+
+Tuning knobs pass straight through: `RENEWAL(cases, sigma_rw = 0.2)` (faster $R_t$ drift), `sigma_rw = 0` (constant $R_t$), `gi = ...` (generation interval).
+
+# Wrap up
+
+-   Review what you've learned with the [learning objectives](../reference/learning_objectives.qmd)
+
+## References
+
+::: {#refs}
+:::
