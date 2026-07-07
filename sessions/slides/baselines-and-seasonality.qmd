@@ -73,7 +73,7 @@ forecast(simple_fits, h = 40) |>
   labs(y = "% of visits")
 ```
 
-Persistence extends the last value; the mean ignores where we are. Honest, but beatable.
+Persistence extends the last value; the mean ignores where we are. 
 
 ### The data are seasonal
 
@@ -117,7 +117,7 @@ forecast(all_fits, h = 40) |>
   labs(y = "% of visits")
 ```
 
-The combined model captures the seasonal shape *and* starts from the right level — but "looks better" isn't proof. That's next session.
+The combined model captures the seasonal shape *and* starts from the right level — but "looks better" isn't proof. 
 
 ### Did it work? Check the residuals
 
