@@ -13,7 +13,7 @@ Another approach involves summarising performance quantitatively.
 
 ## Slides
 
--   [Forecast evaluation](slides/forecast-evaluation)
+-   [Forecast evaluation](slides/forecast-evaluation.qmd)
 
 ## Objectives
 
@@ -382,7 +382,7 @@ Knowing what we know about public health surveillance datasets, this is an optim
 To increase realism in an experiment like this, we could use `epidatr` to extract specific versions of data as they were available in real-time and forecast from those datasets.
 :::
 
-The image below (generated with some code extracted from ChatGPT, with just a few very small tweaks) shows the experimental set-up.
+The image below shows the experimental set-up.
 Each row of tiles corresponds to one "split" of the data, or one week where we are making a forecast.
 Blue tiles correspond to "training set" weeks (weeks of data the model is able train on).
 There are actually many more weeks of training data, but they are omitted so we can focus on the red weeks.
@@ -458,8 +458,8 @@ The resulting dataset (the top of which is shown above), now has many more rows 
 For this experiment, let's define four models:
 
 1.  a random walk: this is what it sounds like. Each forecast takes a random walk from the last observed value. This is equivalent to an ARIMA(0,1,0) model.
-2.  the AR(2) model that we fit earlier.
-3.  a model that just has fourier terms and no ARIMA terms (you have to specify `pdq(0,0,0)` otherwise `fable` will insert some auto-selected terms in there for you).
+2.  the ARIMA(2,0,0), also sometimes just shortened into AR(2), model that we fit earlier.
+3.  a seasonal baseline model that just has fourier terms and no ARIMA terms.
 4.  a model that has both the AR(2) and fourier terms.
 
 The following code generates the forecasts for each cross-validation split and for all horizons.
@@ -634,7 +634,7 @@ What do these results this tell you about the models?
 
 # Wrap up
 
--   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives)
+-   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives.qmd)
 
 ::: {#refs}
 :::
