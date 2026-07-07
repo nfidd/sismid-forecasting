@@ -436,6 +436,7 @@ What other scoring breakdowns might you want to look at?
 -   There might be variation over forecast dates or horizons between the different ensemble methods
 :::
 
+
 ### Unweighted ensembles of filtered models
 
 A simple method that is often used to improve ensemble performance is to prune out models that perform very poorly.
@@ -617,6 +618,17 @@ lop_ensemble_filtered <- sampled_forecasts_hub |>
   )   
 ```
 
+::: {.callout-tip .optional collapse="true"}
+## Interactive: opinion pool vs quantile averaging
+
+```{=html}
+<iframe class="nfidd-embed" src="../interactive/forecast-ensembles.html?embed=headtohead" title="opinion pool vs quantile averaging interactive" loading="lazy" style="width:100%;height:900px;border:1px solid #e5e7eb;border-radius:10px;background:#fff"></iframe>
+<script>(function(){if(window.__nfiddEmbedInit)return;window.__nfiddEmbedInit=1;window.addEventListener('message',function(ev){var h=ev&&ev.data&&ev.data.nfiddEmbedHeight;if(!h)return;document.querySelectorAll('iframe.nfidd-embed').forEach(function(f){if(f.contentWindow===ev.source)f.style.height=(h+24)+'px';});});})();</script>
+```
+
+Average probabilities (opinion pool) vs quantiles (Vincent) — and watch them diverge.
+:::
+
 ### Visualize sample-based forecasts
 
 To facilitate visual and quantitative comparisons with the earlier ensemble forecasts, we convert the new ensemble forecasts to quantiles and then plot them.
@@ -689,6 +701,7 @@ However, in forecasting COVID-19 cases and hospitalizations, where model perform
 
 However, estimating weights for a model adds parameters and uncertainty to the ensemble, and there are theoretical reasons to prefer a simple ensemble approach.[@clemen_combining_1989; @claeskens_forecast_2016]
 :::
+
 
 # Going further
 
