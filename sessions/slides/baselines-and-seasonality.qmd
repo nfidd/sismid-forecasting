@@ -1,0 +1,146 @@
+---
+title: "Baselines and seasonality"
+author: "Nowcasting and forecasting of infectious disease dynamics"
+engine: knitr
+format:
+  revealjs:
+    output: slides/baselines-and-seasonality.html
+    footer: "Baselines and seasonality"
+    chalkboard: true
+    slide-level: 3
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+library("nfidd.forecasting")
+library("fable")
+library("dplyr")
+library("ggplot2")
+library("ggtime")
+theme_set(theme_bw())
+
+data(flu_data)
+flu_data <- flu_data |>
+  filter(epiweek <= "2018-01-01") # middle of the 2017/2018 season
+
+fourth_root <- function(x) x^0.25
+inv_fourth_root <- function(x) x^4
+my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
+
+simple_fits <- flu_data |>
+  model(
+    persistence = NAIVE(my_fourth_root(wili)),
+    mean        = MEAN(my_fourth_root(wili))
+  )
+fit_fourier <- flu_data |>
+  model(fourier = ARIMA(my_fourth_root(wili) ~ pdq(0, 0, 0) + fourier(period = "year", K = 3)))
+fit_ar2f <- flu_data |>
+  model(arima200_fourier = ARIMA(my_fourth_root(wili) ~ pdq(2, 0, 0) + fourier(period = "year", K = 3)))
+all_fits <- flu_data |>
+  model(
+    persistence      = NAIVE(my_fourth_root(wili)),
+    mean             = MEAN(my_fourth_root(wili)),
+    fourier          = ARIMA(my_fourth_root(wili) ~ pdq(0, 0, 0) + fourier(period = "year", K = 3)),
+    arima200_fourier = ARIMA(my_fourth_root(wili) ~ pdq(2, 0, 0) + fourier(period = "year", K = 3))
+  )
+
+recent <- flu_data |> filter(epiweek >= as.Date("2015-09-01"))
+```
+
+### Good — compared to *what*?
+
+Before asking "is my model any good?", ask **"good compared to what?"**
+
+A **baseline** (reference) model is a deliberately simple, naive forecast that a useful model ought to beat.
+
+- Sets a floor — beat it, or something's wrong
+- Simple assumptions, computationally cheap, hard to overfit
+- A *shared* baseline lets everyone measure "skill" on the same yardstick
+
+### Three simple baselines
+
+- **Persistence** — "nothing changes", predicts the most recent observation
+- **Mean** — "reverts to normal", predicts the long-run average
+- **Seasonal** — "this time of year looks like it usually does", predicts the typical seasonal pattern
+
+We keep the fourth-root transformation so every model is on the same footing.
+
+### Persistence & mean
+
+```{r fc-simple, echo=FALSE, fig.height=3.2}
+forecast(simple_fits, h = 40) |>
+  autoplot(recent) +
+  facet_wrap(~.model) +
+  labs(y = "% of visits")
+```
+
+Persistence extends the last value; the mean ignores where we are. 
+
+### The data are seasonal
+
+```{r season-plot, echo=FALSE, message=FALSE, warning=FALSE, fig.height=3.2}
+flu_data |>
+  gg_season(wili, period = "year", labels = "none") +
+  ggtitle("Every season has a similar winter-peaked shape")
+```
+
+### A seasonal baseline: harmonic regression
+
+`ARIMA(y ~ pdq(0,0,0) + fourier(period = "year", K = 3))`
+
+- **No** AR / differencing / MA — *only* sine & cosine curves with a 1-year period
+- Forecast = a smooth "seasonal climatology"; still ignores the most recent weeks
+
+```{r fc-fourier, echo=FALSE, fig.height=2.8}
+forecast(fit_fourier, h = 40) |>
+  autoplot(recent) +
+  labs(y = "% of visits")
+```
+
+### Improving on the baselines
+
+`ARIMA(y ~ pdq(2,0,0) + fourier(period = "year", K = 3))`
+
+- AR(2) anchors to recent values; Fourier pulls toward the seasonal shape
+
+```{r fc-ar2f, echo=FALSE, fig.height=2.8}
+forecast(fit_ar2f, h = 40) |>
+  autoplot(recent) +
+  labs(y = "% of visits")
+```
+
+### All together
+
+```{r fc-all, echo=FALSE, fig.height=3.4}
+forecast(all_fits, h = 40) |>
+  autoplot(recent) +
+  facet_wrap(~.model) +
+  labs(y = "% of visits")
+```
+
+The combined model captures the seasonal shape *and* starts from the right level — but "looks better" isn't proof. 
+
+### Did it work? Check the residuals
+
+If a model captured the structure, its residuals should look like **white noise** — flat ACF, especially at the seasonal lag ~52.
+
+```{r resid, echo=FALSE, message=FALSE, warning=FALSE, fig.height=3.2}
+fit_ar2f |> gg_tsresiduals(lag_max=55)
+```
+
+::: {.callout-note title="What we want to see"}
+
+ - top panel: white noise in the residuals
+ - bottom left: no significant residual autocorrelation
+ - bottom right: Normal, symmetric distrbution of residuals
+
+:::
+
+## `r fontawesome::fa("laptop-code", "white")` Your Turn {background-color="#447099" transition="fade-in"}
+
+1.  Build the three baselines: `RW()`, `MEAN()`, and an `fourier()` seasonal model.
+2.  Add recent dynamics with an `ARIMA() + fourier()` model and compare against the baselines.
+3.  Use `gg_tsresiduals()` to check whether the model captured the structure.
+
+#
+
+[Return to the session](../baselines-and-seasonality.qmd)

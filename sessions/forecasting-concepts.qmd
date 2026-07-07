@@ -1,6 +1,6 @@
 ---
 title: "Forecasting concepts"
-order: 7
+order: 1
 bibliography: ../nfidd.bib
 ---
 
@@ -18,7 +18,7 @@ We will see how we can visualise and interpret such forecasts.
 
 ## Slides
 
--   [Introduction to forecasting](slides/introduction-to-forecasting)
+-   [Introduction to forecasting](slides/introduction-to-forecasting.qmd)
 
 ## Objectives
 
@@ -273,8 +273,8 @@ ARIMA models that meet certain regularity conditions will have forecasts that co
 
 # Wrap up
 
--   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives)
--   Share your [questions and thoughts](../reference/help)
+-   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives.qmd)
+-   Share your [questions and thoughts](../reference/help.qmd)
 
 
 # References

@@ -3,14 +3,17 @@ title: "Introduction and course overview"
 order: 0
 ---
 
-[From an epidemiological line list to informing decisions in real-time](slides/from-line-list-to-decisions)
 
-::: callout-note
-This is the **Forecasting & evaluation** course, the second half of the SISMID week.
-The companion [Nowcasting & $R_t$ estimation course](https://nfidd.github.io/sismid-nowcasting/) covers the first half (delay distributions, the renewal equation, and nowcasting).
-:::
+# Introduction
 
-### Aim of the course
+This is the **Forecasting & evaluation** course, designed for SISMID in 2026.
+The companion [Nowcasting & $R_t$ estimation course](https://nfidd.github.io/sismid-nowcasting/) covers additional content on delay distributions, the renewal equation, and nowcasting.
+
+# Slides for this session
+
+ - [From public health surveillance data to real-time decision support](slides/introduction-and-course-overview.qmd)
+
+# Aim of the course
 
 In this course we will address how we can use data typically collected in an outbreak, or in routine surveillance, to answer questions like
 
@@ -18,19 +21,19 @@ In this course we will address how we can use data typically collected in an out
 -   How good are our predictions, and how can we tell (*forecast evaluation*)?
 -   How can we combine predictions from multiple models (*ensembles*), and contribute them to a shared forecasting effort (*collaborative modelling / hubs*)?
 
-To answer these questions, we need to understand the epidemiological processes that create the kinds of data that we typically have available for outbreak analysis and infectious disease surveillance, and the principles of good probabilistic prediction.
+To answer these questions, we need to understand the kinds of data that we typically have available for outbreak analysis and infectious disease surveillance and the principles of good probabilistic prediction. Ideally, we'd also layer in some understanding of the epidemiological processes that give rise to outbreaks.
 
 There are particular challenges when trying to do these analyses *in real time* (i.e. whilst transmission and data collection is ongoing) rather than retrospectively, which we will address in turn.
 
 In this course, we focus on predicting the future (forecasting), evaluating how good those predictions are, combining models into ensembles, and contributing forecasts to collaborative modelling hubs.
 
-### Why this course?
+# Why this course?
 
--   These are common questions in outbreak response and disease surveillance
--   Accounting for underlying processes can get surprisingly complicated quickly ^[Time travel is [messy stuff](https://youtu.be/q2nNzNo_Xps)], and it's easy to make mistakes
+-   Forecasts are becoming increasingly sought-after during outbreaks
+-   It's easy to make bad forecasts and hard to make good ones: this class will teach you how to distinguish between them and a bit about best practices for building epidemic forecasts 
 -   There's currently (at the time of devising this course) no comprehensive training resource that links these common questions and challenges
 
-### Approach
+# Approach
 
 Throughout the course we will
 
@@ -54,18 +57,16 @@ For those attending the in-person version the course also:
 ### Timeline for the course
 
 This forecasting & evaluation course runs over the second half of the SISMID week (Wednesday midday to Friday), but of course if you are studying this on your own using the web site you can go through the material at your own pace and in your own time.
-Broadly, the intended timeline is:
+Broadly, the intended order of content is:
 
--   forecasting concepts and models (day 1)
--   forecast evaluation and ensembles (day 2)
--   collaborative forecasting with hubs and course wrap-up (day 3)
+-   forecasting concepts and models
+-   forecast evaluation and ensembles
+-   collaborative forecasting with hubs and course wrap-up
 
 Let's get started!
 
--   Have a more detailed look at the [learning objectives](../reference/learning_objectives)
+-   Have a more detailed look at the [learning objectives](../reference/learning_objectives.qmd) or the [class timetable](../timetable.qmd)
 
--   [Introduction to the course and the instructors](slides/introduction-to-the-course-and-the-instructors)
+-   If you haven't already, install the needed software with [getting started with the course](../getting-started.qmd)
 
--   If you haven't already, start with [getting started with the course](../getting-started)
-
--   Once you're all set up, let's start with the first session on [forecasting concepts](forecasting-concepts).
+-   Once you're all set up, let's start with the first session on [forecasting concepts](forecasting-concepts.qmd).

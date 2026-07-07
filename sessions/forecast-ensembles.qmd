@@ -6,7 +6,7 @@ bibliography: ../nfidd.bib
 
 # Introduction
 
-As we saw in the sessions on [improving forecasting models](forecasting-models) and [forecast evaluation](forecast-evaluation), different modelling approaches have different strength and weaknesses, and we do not usually know in advance which one will produce the best forecast in any given situation.
+As we saw in the sessions on [baselines and seasonality](baselines-and-seasonality.qmd) and [forecast evaluation](forecast-evaluation.qmd), different modelling approaches have different strength and weaknesses, and we do not usually know in advance which one will produce the best forecast in any given situation.
 One way to attempt to draw strength from a diversity of approaches is the creation of so-called *forecast ensembles* from the forecasts produced by different models.
 
 In this session, we'll start with forecasts from the models we explored in the previous sessions and build ensembles of these models.
@@ -37,7 +37,7 @@ Quantiles are also better than a bin-based representation when the range of poss
 
 ## Slides
 
--   [Introduction to ensembles](slides/introduction-to-ensembles)
+-   [Introduction to ensembles](slides/introduction-to-ensembles.qmd)
 
 ## Objectives
 
@@ -108,7 +108,7 @@ my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
 
 # Individual forecast models
 
-In this session we will use the forecasts from the models we explored in the session on [forecast evaluation](forecast-evaluation).
+In this session we will use the forecasts from the models we explored in the session on [forecast evaluation](forecast-evaluation.qmd).
 These were:
 
 -   A random walk model
@@ -116,7 +116,7 @@ These were:
 -   An AR(2) autoregressive model + Fourier terms for seasonality
 -   Only Fourier terms for seasonality
 
-As in the session on [forecast evaluation](forecast-evaluation), we will fit these models to a range of forecast dates.
+As in the session on [forecast evaluation](forecast-evaluation.qmd), we will fit these models to a range of forecast dates.
 
 ```{r load_forecasts}
 ## make the time-series cross validation splits
@@ -376,7 +376,7 @@ However, the median ensemble remains close to the three other models that have c
 
 #### Evaluation
 
-As in the [forecast evaluation session](forecast-evaluation), we can evaluate the accuracy of the ensembles.
+As in the [forecast evaluation session](forecast-evaluation.qmd), we can evaluate the accuracy of the ensembles.
 Here, instead of using the `fable` utilities, we will start to use the hubverse [`hubEvals` package](https://hubverse-org.github.io/hubEvals/) which relies on [the `scoringutils` package](https://epiforecasts.io/scoringutils/index.html) under the hood.
 
 In the hubverse, there is a representation of observations called [`oracle output` data](https://docs.hubverse.io/en/latest/user-guide/target-data.html#oracle-output).
@@ -720,8 +720,8 @@ However, estimating weights for a model adds parameters and uncertainty to the e
 
 # Wrap up
 
--   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives)
--   Share your [questions and thoughts](../reference/help)
+-   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives.qmd)
+-   Share your [questions and thoughts](../reference/help.qmd)
 
 ## References
 

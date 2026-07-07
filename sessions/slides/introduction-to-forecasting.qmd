@@ -50,17 +50,6 @@ But...
 :::
 
 
-### Different ways of modelling the future {.smaller}
-
--   **Nowcasts** make statements about current trends based on partial data
-
--   **Forecasts** are *unconditional* statements about the future: what *will happen*
-
--   **Scenarios** state what *would* happen under certain conditions
-
-![Figure credit: [Scenario Modeling Hub](https://covid19scenariomodelinghub.org/)](figures/nowcast-forecast-project.png)
-
-
 ### CDC use of influenza forecasts
 
 ![](figures/cdc_flu_forecast_use.png)
@@ -133,4 +122,4 @@ Exhibit from Camp A:
 
 # 
 
-[Return to the session](../forecasting-concepts)
+[Return to the session](../forecasting-concepts.qmd)

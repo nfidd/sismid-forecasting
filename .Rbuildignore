@@ -14,3 +14,4 @@ sessions/
 \.nojekyll
 \.lintr
 LICENSE.md
+^\.claude$
