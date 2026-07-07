@@ -300,6 +300,18 @@ where $X$ and $X'$ are independent random variables sampled from the distributio
 To calculate this we simply replace $X$ and $X'$ by samples from our posterior distribution and sum over all possible combinations.
 :::
 
+::: {.callout-tip .optional collapse="true"}
+## Interactive: the CRPS
+
+```{=html}
+<iframe class="nfidd-embed" src="../interactive/forecast-evaluation.html?embed=crps" title="CRPS interactive" loading="lazy" style="width:100%;height:760px;border:1px solid #e5e7eb;border-radius:10px;background:#fff"></iframe>
+<script>(function(){if(window.__nfiddEmbedInit)return;window.__nfiddEmbedInit=1;window.addEventListener('message',function(ev){var h=ev&&ev.data&&ev.data.nfiddEmbedHeight;if(!h)return;document.querySelectorAll('iframe.nfidd-embed').forEach(function(f){if(f.contentWindow===ev.source)f.style.height=(h+24)+'px';});});})();</script>
+```
+
+Drag the observation and the forecast spread to watch the CRPS area — and its dispersion / over-prediction / under-prediction breakdown.
+:::
+
+
 ## Looking at the scores by horizon
 
 Whilst the metrics described above are very useful they can be difficult to interpret in isolation.
@@ -346,6 +358,7 @@ Which of the additional dimensions mentioned at the top of the lesson would you 
 -   The forecast errors are strongly associated with the seasonality of the data.
 :::
 
+
 # Comparing three models at multiple time-points
 
 Let's run a real-life forecasting experiment now, comparing three different models.
@@ -371,7 +384,7 @@ Knowing what we know about public health surveillance datasets, this is an optim
 To increase realism in an experiment like this, we could use `epidatr` to extract specific versions of data as they were available in real-time and forecast from those datasets.
 :::
 
-The image below (generated with some code extracted from ChatGPT, with just a few very small tweaks) shows the experimental set-up.
+The image below shows the experimental set-up.
 Each row of tiles corresponds to one "split" of the data, or one week where we are making a forecast.
 Blue tiles correspond to "training set" weeks (weeks of data the model is able train on).
 There are actually many more weeks of training data, but they are omitted so we can focus on the red weeks.
@@ -447,8 +460,8 @@ The resulting dataset (the top of which is shown above), now has many more rows 
 For this experiment, let's define four models:
 
 1.  a random walk: this is what it sounds like. Each forecast takes a random walk from the last observed value. This is equivalent to an ARIMA(0,1,0) model.
-2.  the AR(2) model that we fit earlier.
-3.  a model that just has fourier terms and no ARIMA terms (you have to specify `pdq(0,0,0)` otherwise `fable` will insert some auto-selected terms in there for you).
+2.  the ARIMA(2,0,0), also sometimes just shortened into AR(2), model that we fit earlier.
+3.  a seasonal baseline model that just has fourier terms and no ARIMA terms.
 4.  a model that has both the AR(2) and fourier terms.
 
 The following code generates the forecasts for each cross-validation split and for all horizons.
