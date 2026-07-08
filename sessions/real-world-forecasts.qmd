@@ -1,6 +1,6 @@
 ---
 title: "Evaluating real-world outbreak forecasts"
-order: 12
+order: 6
 bibliography: ../nfidd.bib
 ---
 

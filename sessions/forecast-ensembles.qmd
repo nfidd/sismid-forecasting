@@ -1,39 +1,16 @@
 ---
 title: "Forecast ensembles"
-order: 11
+order: 7
 bibliography: ../nfidd.bib
 ---
 
 # Introduction
 
-As we saw in the sessions on [baselines and seasonality](baselines-and-seasonality.qmd) and [forecast evaluation](forecast-evaluation.qmd), different modelling approaches have different strength and weaknesses, and we do not usually know in advance which one will produce the best forecast in any given situation.
+As we saw in the sessions on [baselines and seasonality](baselines-and-seasonality.qmd), [forecast evaluation](forecast-evaluation.qmd), and [real-world forecasts](real-world-forecasts.qmd), different modelling approaches have different strength and weaknesses, and we do not usually know in advance which one will produce the best forecast in any given situation.
 One way to attempt to draw strength from a diversity of approaches is the creation of so-called *forecast ensembles* from the forecasts produced by different models.
 
 In this session, we'll start with forecasts from the models we explored in the previous sessions and build ensembles of these models.
 We will then compare the performance of these ensembles to the individual models and to each other.
-
-::: {.callout-note collapse="false"}
-## Representations of probabilistic forecasts
-
-Probabilistic predictions can be described as coming from probability distributions.
-In general, it is not safe to assume that these distributions can be expressed in a simple mathematical form as we can do if, e.g., talking about common probability distributions such as the normal or gamma distributions.
-(Although some of the `fable` models, like ARIMA can express forecasts as normal distributions.)
-
-It can be helpful to have a model-agnostic way to represent probabilistic distributions.
-
--   One common way is to use a limited number (say, between 100 and 1000) of **samples** generated from Monte Carlo methods to represent the predictive distribution.
-
--   Another approach uses values that corresponds to a specific set of **quantile** levels of the predictive distribution.
-    For example, the median is the 50th quantile of a distribution, meaning that 50% of the values in the distribution are less than the median and 50% are greater.
-    Similarly, the 90th quantile is the value that corresponds to 90% of the distribution being less than this value.
-    If we characterise a predictive distribution by its quantiles, we specify these values at a range of specific quantile levels, e.g. from 5% to 95% in 5% steps.
-
--   Another approach might be to define **bins** (intervals) that an outcome might fall into and assign probabilities to those bins
-
-Deciding how to represent forecasts depends on many things, for example the method used (and whether it produces samples by default) but also logistical considerations.
-Many collaborative forecasting projects and so-called forecasting hubs use quantile-based representations of forecasts in the hope to be able to characterise both the centre and tails of the distributions more reliably and with less demand on storage space than a sample-based representation.
-Quantiles are also better than a bin-based representation when the range of possible outcomes is large.
-:::
 
 ## Slides
 
@@ -83,11 +60,33 @@ set.seed(42) ## for Douglas Adams!
 ```
 :::
 
+
+## Representations of probabilistic forecasts
+
+Probabilistic predictions can be described as coming from probability distributions.
+In general, it is not safe to assume that these distributions can be expressed in a simple mathematical form as we can do if, e.g., talking about common probability distributions such as the normal or gamma distributions.
+(Although some of the `fable` models, like ARIMA can express forecasts as normal distributions.)
+
+It can be helpful to have a model-agnostic way to represent probabilistic distributions.
+
+-   One common way is to use a limited number (say, between 100 and 1000) of **samples** generated from Monte Carlo methods to represent the predictive distribution.
+
+-   Another approach uses values that corresponds to a specific set of **quantile** levels of the predictive distribution.
+    For example, the median is the 50th quantile of a distribution, meaning that 50% of the values in the distribution are less than the median and 50% are greater.
+    Similarly, the 90th quantile is the value that corresponds to 90% of the distribution being less than this value.
+    If we characterise a predictive distribution by its quantiles, we specify these values at a range of specific quantile levels, e.g. from 5% to 95% in 5% steps.
+
+-   Another approach might be to define **bins** (intervals) that an outcome might fall into and assign probabilities to those bins
+
+Deciding how to represent forecasts depends on many things, for example the method used (and whether it produces samples by default) but also logistical considerations.
+Many collaborative forecasting projects and so-called forecasting hubs use quantile-based representations of forecasts in the hope to be able to characterise both the centre and tails of the distributions more reliably and with less demand on storage space than a sample-based representation.
+Quantiles are also better than a bin-based representation when the range of possible outcomes is large.
+
 # Loading data
 
 As we have done in previous sessions, we will load some ILI data using the `epidatr` package,
 
-```{r load-epidata}
+```{r load-epidata, eval = FALSE}
 flu_data <- epidatr::pub_fluview(regions = c("nat"),
                                  epiweeks = epirange(200335, 201831)) |> 
   select(region, epiweek, wili) |> 
