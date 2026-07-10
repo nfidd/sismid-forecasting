@@ -622,6 +622,11 @@ There is much more variability by date, although it still seems that with a few 
 
 ## Methods in practice
 
+There are lots of papers that provide templates for analyzing and comparing lots of forecasts. Here are a few that we recommend:
+
+- One of the very first papers comparing forecasts from the CDC FluSight challenge.[@biggerstaff_results_2016]
+- A paper describing an open forecasting challenge for dengue fever. [@johansson_open_2019]
+- Papers describing forecasts for cases [@lopezChallengesCOVID19Case2024] and deaths [@cramer_evaluation_2022] in the COVID-19 pandemic.
 
 # Wrap up
 
