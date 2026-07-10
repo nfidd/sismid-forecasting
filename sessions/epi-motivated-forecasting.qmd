@@ -19,7 +19,8 @@ The key idea is the **renewal equation**: a model of incidence that is, mathemat
 This gives the forecast access to information that a pure time-series model cannot use — for example, that exponential growth must end when susceptibles run out.
 
 We will also account for the delay between infection and case report, and for susceptible depletion that bends the epidemic curve over at the peak.
-To see why mechanism matters, we will deliberately give one model the *wrong* population size and watch its forecast fail in a predictable direction.
+The backtest asks a question about parsimony and identification: does the model that matches the data-generating process win, and do unnecessary parameters hurt?
+We then deliberately break the mechanism with a wrong population size to see the cost of a wrong model up close.
 Throughout, we use the EpiNow2 R package as our tool [@abbottEpiNow2EstimateRealtime2025]; the focus is on the model structure, not the software.
 
 ## Slides
@@ -101,9 +102,10 @@ stan_config <- stan_opts(method = "pathfinder", backend = "cmdstanr")
 For full MCMC (best-calibrated, slowest):
 
 ```r
-stan_config <- stan_opts(samples = 1000, chains = 2, method = "sampling", backend = "rstan")
+stan_config <- stan_opts(samples = 1000, chains = 2, warmup = 300, method = "sampling", backend = "rstan")
 ```
 
+In a real-world analysis you would use more warmup and sampling iterations for better-calibrated uncertainty; we use reduced settings here to keep the session runtime manageable.
 Every fit in the session picks up the change automatically.
 :::
 
@@ -227,11 +229,11 @@ arima_fc_sum <- generate(arima_default, h = 14, times = 1000) |>
   as_tibble() |>
   group_by(date) |>
   summarise(
-    median = median(.sim),
-    lower_50 = quantile(.sim, 0.25),
-    lower_90 = quantile(.sim, 0.05),
-    upper_50 = quantile(.sim, 0.75),
-    upper_90 = quantile(.sim, 0.95),
+    median = median(.sim, na.rm = TRUE),
+    lower_50 = quantile(.sim, 0.25, na.rm = TRUE),
+    lower_90 = quantile(.sim, 0.05, na.rm = TRUE),
+    upper_50 = quantile(.sim, 0.75, na.rm = TRUE),
+    upper_90 = quantile(.sim, 0.95, na.rm = TRUE),
     .groups = "drop"
   ) |>
   mutate(model = "arima")
@@ -259,8 +261,8 @@ ggplot(single_fc_sum, aes(x = date, fill = model, colour = model)) +
 ```
 
 Neither model knows that the epidemic is about to turn over.
-The ARIMA projects the recent trend forward; the renewal model does the same, because the default model has no mechanism for susceptible depletion.
-Both over-shoot the peak — foreshadowing the backtest, where we give one model the ability to see the turnover coming.
+The ARIMA projects the recent trend forward; the renewal model does the same, because this model has no mechanism for susceptible depletion.
+Both over-shoot the peak — foreshadowing the backtest, where we give the EpiNow2 models the ability to see the turnover coming.
 
 ::: callout-tip
 ## Take 5 minutes
@@ -272,21 +274,25 @@ What single piece of information would either model need to predict the turning 
 
 # The models we will compare
 
-We compare four models that differ in how much epidemiological mechanism they include.
+We compare four models that differ in how much epidemiological mechanism and flexibility they include.
+This is a story about parsimony and identification: the data-generating process has constant $R_t$ and a known population, so the model that matches it should win.
+Unnecessary flexibility (a random walk on $R_t$) and an unidentified parameter (estimating the population) should hurt.
 
 - **ARIMA** — `ARIMA(my_fourth_root(confirm))` with auto-ARIMA, so fable selects the order automatically from the data. Auto-ARIMA may select different orders at different forecast dates — this is a feature of a fair statistical baseline, not a bug.
-- **default** — renewal + delays, no depletion. Projects recent growth through the peak, so we expect it to over-shoot.
-- **fixed_pop** — adds depletion with the *true* population size. Should turn over at the right time.
-- **wrong_pop** — depletion with a population 10× too small. Depletion bites early, so we expect premature turnover and under-shoot. This is the "wrong mechanism" demo.
+- **constant_rt_fixed** — constant reproduction number (the default `rw = 0`) with the *true* population size. This matches the data-generating process: constant $R_t$ plus susceptible depletion. Should win.
+- **rw_fixed** — adds a weekly random walk on $R_t$ (`rw = 7`) with the true population. The random walk is unnecessary flexibility — the DGP has constant $R_t$.
+- **rw_estimated** — weekly random walk on $R_t$ with an estimated population (`Normal(mean = pop_size, sd = pop_size / 2)`). The population is weakly identified from a single outbreak, so estimating it adds uncertainty without benefit.
 
-The EpiNow2 models share the same renewal structure; they differ only in the `pop` argument to `rt_opts()`.
+The EpiNow2 models share the same renewal structure; they differ only in the `rt_opts()` arguments.
 The ARIMA baseline is fit separately with `fable`, using the same fourth-root transformation as in earlier sessions.
+
+The wrong-population model is deliberately left out of the backtest — it appears later as a standalone demonstration.
 
 ```{r model-specs}
 epi_models <- list(
-  default   = rt_opts(rw = 7),
-  fixed_pop = rt_opts(rw = 7, pop = Fixed(pop_size),       future = "latest"),
-  wrong_pop = rt_opts(rw = 7, pop = Fixed(pop_size / 10), future = "latest")
+  constant_rt_fixed = rt_opts(pop = Fixed(pop_size), future = "latest", pop_period = "all"),
+  rw_fixed          = rt_opts(rw = 7, pop = Fixed(pop_size), future = "latest", pop_period = "all"),
+  rw_estimated      = rt_opts(rw = 7, pop = Normal(mean = pop_size, sd = pop_size / 2), future = "latest", pop_period = "all")
 )
 ```
 
@@ -365,11 +371,11 @@ trajectory_summary <- all_forecasts |>
   filter(horizon > 0) |>
   group_by(model, forecast_date, date) |>
   summarise(
-    median = median(predicted),
-    lower_50 = quantile(predicted, 0.25),
-    lower_90 = quantile(predicted, 0.05),
-    upper_50 = quantile(predicted, 0.75),
-    upper_90 = quantile(predicted, 0.95),
+    median = median(predicted, na.rm = TRUE),
+    lower_50 = quantile(predicted, 0.25, na.rm = TRUE),
+    lower_90 = quantile(predicted, 0.05, na.rm = TRUE),
+    upper_50 = quantile(predicted, 0.75, na.rm = TRUE),
+    upper_90 = quantile(predicted, 0.95, na.rm = TRUE),
     .groups = "drop"
   )
 
@@ -399,7 +405,7 @@ ggplot(trajectory_summary, aes(x = date)) +
 ```
 
 During growth the models agree and all track the data.
-Around the peak the default model keeps climbing while the fixed-population model bends over with the observations; the wrong-population model turns over too early.
+Around the peak the three EpiNow2 models bend over with the observations because they all include susceptible depletion, while the ARIMA projects recent growth forward.
 In the decline the recent downturn is already visible in the data, so all models project a fall and the gap between them narrows again.
 
 ::: callout-tip
@@ -412,8 +418,9 @@ Does your prediction change if we score on the natural scale versus the log scal
 ::: {.callout-note collapse="true"}
 ## Solution
 
-The fixed-population model should score best overall, because it is the only one that both knows the turnover is coming and times it correctly.
-The models should differ most around the peak, where depletion is decisive; during growth and decline the data already contain the trend, so the models converge.
+The constant-RT fixed-population model should score best overall if the parsimony story holds, because it matches the data-generating process.
+But the results may surprise us — a constant $R_t$ estimated from limited data may be too rigid to adapt as the peak passes.
+The models should differ most around the peak and decline, where the changing trend is decisive; during early growth the data already contain the stable trend, so the models converge.
 :::
 
 # Scoring
@@ -456,24 +463,31 @@ overall |>
   select(model, scale, crps, bias, dispersion, underprediction, overprediction)
 ```
 
-On the natural scale the fixed-population model scores best on CRPS, even though its bias is not the smallest.
-On the log scale the ARIMA model edges ahead, because log scoring down-weights the large counts near the peak where the epidemiological models excel.
-CRPS rewards being close and well-calibrated across the whole predictive distribution, not just unbiased on average.
-The default model has a large positive bias: it over-predicts, because it projects growth through the peak.
-The wrong-population model under-predicts, because depletion bites too early — its underprediction component is high, though its average bias is near zero because the errors balance across dates.
-The ARIMA model has a low average bias — but only because its errors point in different directions on different dates, which its mid-pack natural-scale CRPS exposes.
-As we discussed in the [session on evaluating forecasts](forecast-evaluation.qmd), bias and CRPS measure different aspects of a probabilistic forecast, so a near-zero bias can mask a model that is wrong in both directions.
+The results now match the parsimony story we expected.
+On the natural scale, `constant_rt_fixed` — the model that matches the data-generating process — wins on CRPS.
+The two random-walk models, `rw_fixed` and `rw_estimated`, sit in the middle: both pay for flexibility the DGP does not require, and `rw_estimated` pays a little more because the population is weakly identified from a single outbreak.
+Their exact order can swap between runs under variational Bayes, but both are clearly worse than the correctly specified model and clearly better than the ARIMA.
+The ARIMA, with no epidemiological mechanism at all, is worst — it cannot see the susceptible depletion that turns the curve over.
+This is the parsimony and identification story in action: the correctly specified model wins, unnecessary parameters hurt, and removing mechanism entirely hurts most.
+On the log scale the ranking is the same but the gaps are smaller, because log scoring down-weights the large peak counts that dominate the natural scale.
+As we discussed in the [session on evaluating forecasts](forecast-evaluation.qmd), matching the data-generating process matters most when the mechanism shapes the forecast — here, the susceptible depletion that bends the curve at the peak.
+But `constant_rt_fixed` and `rw_fixed` use the true population size — information we would not have in the real world.
+In the real world you never know the population at risk precisely, and you cannot rule out the reproduction number changing over time — interventions shift it, behaviour shifts it, seasonality shifts it.
+The model that estimates the population and lets $R_t$ vary — `rw_estimated` — is the one you would use.
+The backtest shows the cost of that choice: `rw_estimated` is competitive except near the peak, where the weakly identified population struggles, and its overall CRPS is worse than the fixed-population models.
+That is the price of not assuming you know things you do not.
 
 ::: callout-tip
 ## Take 5 minutes
 
-On the natural scale, the fixed-population model wins on CRPS, but the ARIMA has a smaller average bias.
+`constant_rt_fixed` wins on both CRPS and bias — the correctly specified model is also the best-calibrated.
+But the ARIMA, despite having the worst CRPS, has relatively small bias because its errors are symmetric — it misses the magnitude of the peak but does not systematically over- or under-predict.
 Recall from the [forecast evaluation session](forecast-evaluation.qmd) what CRPS and bias each measure: which metric should you trust when they disagree, and why?
 :::
 
 ## Scores by forecast date
 
-Breaking the natural-scale CRPS down by forecast date shows how the ranking shifts across the epidemic's phases.
+Breaking the CRPS down by forecast date shows how the ranking shifts across the epidemic's phases, on both the natural and log scales.
 
 ```{r scores-by-date}
 by_date <- summarise_scores(
@@ -482,9 +496,8 @@ by_date <- summarise_scores(
   as_tibble()
 
 by_date |>
-  filter(scale == "natural") |>
-  arrange(forecast_date, crps) |>
-  select(forecast_date, model, crps) |>
+  arrange(forecast_date, scale, crps) |>
+  select(forecast_date, model, scale, crps) |>
   mutate(crps = round(crps, 1))
 ```
 
@@ -492,11 +505,11 @@ We can also visualise this as a plot, with the observed case curve below for con
 
 ```{r plot-scores-by-date}
 scores_plot <- by_date |>
-  filter(scale == "natural") |>
   ggplot(aes(x = forecast_date, y = crps, colour = model)) +
   geom_point() +
   geom_line() +
-  labs(x = "Forecast date", y = "CRPS (natural scale)", colour = "Model") +
+  facet_wrap(~scale, scales = "free_y") +
+  labs(x = "Forecast date", y = "CRPS", colour = "Model") +
   theme_bw() +
   theme(legend.position = "bottom")
 
@@ -510,9 +523,12 @@ obs_plot <- reported |>
 gridExtra::grid.arrange(scores_plot, obs_plot)
 ```
 
-During growth (early dates) the models are close.
-Around the peak (late March) the fixed-population model pulls well ahead as the default over-projects the turnover.
-In the decline (April) the models converge again, because the downturn is already in the data by the time the forecast is made.
+On the natural scale the pattern follows the epidemic phases.
+During early growth (mid-February) `constant_rt_fixed` does best — the correctly specified model wins when the trend is stable.
+Around the peak (March) `rw_fixed` pulls ahead, because the random walk lets $R_t$ adapt as the data show the turnover.
+During the decline (April) `constant_rt_fixed` does poorly, because its single $R_t$ is stuck too high; `rw_fixed` and the ARIMA, which can adapt to the downward trend, do much better.
+On the log scale the same pattern appears but is less pronounced, because log scoring down-weights the large counts near the peak that dominate the natural scale.
+The natural scale is dominated by the peak counts, where the cost of a wrong mechanism is largest; the log scale spreads the error more evenly across growth, peak, and decline.
 
 ## Scores by horizon
 
@@ -545,10 +561,10 @@ Interval coverage is not returned by `score()` for sample forecasts, so we compu
 coverage_data <- score_data |>
   group_by(model, forecast_date, date, horizon) |>
   summarise(
-    in_50 = observed[1] >= quantile(predicted, 0.25) &
-            observed[1] <= quantile(predicted, 0.75),
-    in_90 = observed[1] >= quantile(predicted, 0.05) &
-            observed[1] <= quantile(predicted, 0.95),
+    in_50 = observed[1] >= quantile(predicted, 0.25, na.rm = TRUE) &
+            observed[1] <= quantile(predicted, 0.75, na.rm = TRUE),
+    in_90 = observed[1] >= quantile(predicted, 0.05, na.rm = TRUE) &
+            observed[1] <= quantile(predicted, 0.95, na.rm = TRUE),
     .groups = "drop"
   ) |>
   group_by(model) |>
@@ -565,21 +581,41 @@ coverage_data
 Well-calibrated models should hit approximately 50% and 90% coverage.
 Variational Bayes gives approximate posteriors, so coverage may deviate from nominal levels; the relative ranking between models is more informative than the absolute values.
 
-# What goes wrong with the wrong mechanism
+# When the mechanism is wrong: a demonstration
 
-To see the cost of a wrong mechanism clearly, we isolate the `wrong_pop` and `fixed_pop` models at a forecast date just before the peak.
-These two models are identical except for one number: the population size.
+The backtest showed that knowing the population matters: the models with the fixed, correct population forecast the turnover well, while the model that estimates the population pays a cost near the peak.
+Here we go further and deliberately give the model a population 10× too small, to see the cost of a wrong mechanism up close.
+We fit two models at the peak forecast date, both with constant $R_t$ (`rw = 0`): one with the correct population and one with a population 10× too small.
 
-```{r wrong-mechanism}
-peak_date <- as.Date("2023-03-15")
+```{r mechanism-demo, warning = FALSE, message = FALSE}
+demo_date <- as.Date("2023-03-18")
+demo_train <- reported |> filter(date <= demo_date)
 
-mechanism_compare <- all_forecasts |>
-  filter(forecast_date == peak_date, model %in% c("fixed_pop", "wrong_pop"), horizon > 0) |>
+demo_correct <- fit_epinow2(
+  rt_opts(pop = Fixed(pop_size), future = "latest", pop_period = "all"),
+  demo_train
+)
+
+demo_wrong <- fit_epinow2(
+  rt_opts(pop = Fixed(pop_size / 10), future = "latest", pop_period = "all"),
+  demo_train
+)
+
+mechanism_compare <- bind_rows(
+  get_predictions(demo_correct, format = "sample") |>
+    as_tibble() |>
+    filter(horizon > 0) |>
+    mutate(model = "correct_pop"),
+  get_predictions(demo_wrong, format = "sample") |>
+    as_tibble() |>
+    filter(horizon > 0) |>
+    mutate(model = "wrong_pop")
+) |>
   group_by(model, date) |>
   summarise(
-    median = median(predicted),
-    lower_90 = quantile(predicted, 0.05),
-    upper_90 = quantile(predicted, 0.95),
+    median = median(predicted, na.rm = TRUE),
+    lower_90 = quantile(predicted, 0.05, na.rm = TRUE),
+    upper_90 = quantile(predicted, 0.95, na.rm = TRUE),
     .groups = "drop"
   )
 
@@ -587,30 +623,32 @@ ggplot(mechanism_compare, aes(x = date, fill = model, colour = model)) +
   geom_ribbon(aes(ymin = lower_90, ymax = upper_90), alpha = 0.2) +
   geom_line(aes(y = median)) +
   geom_point(
-    data = reported |> filter(date > peak_date - 14, date <= peak_date + 14),
+    data = reported |> filter(date > demo_date - 14, date <= demo_date + 14),
     aes(x = date, y = confirm),
     inherit.aes = FALSE
   ) +
-  geom_vline(xintercept = peak_date, linetype = "dashed") +
+  geom_vline(xintercept = demo_date, linetype = "dashed") +
+  scale_fill_manual(values = c("correct_pop" = "#4292C6", "wrong_pop" = "#E6550D")) +
+  scale_colour_manual(values = c("correct_pop" = "#4292C6", "wrong_pop" = "#E6550D")) +
   labs(
     x = "Date", y = "Reported cases",
-    title = "Right vs wrong population size, forecast from 2023-03-15"
+    title = "Correct vs wrong population size, forecast from 2023-03-18"
   ) +
   theme_bw() +
   theme(legend.position = "bottom")
 ```
 
-The `fixed_pop` model (correct population) bends over with the observations.
-The `wrong_pop` model (population 10× too small) turns over far too early — it predicts the epidemic is already ending when it is still growing.
-The only difference between these two models is one number, and it moves the turning point by weeks.
-This is the cost of a wrong mechanism: not noise, but a *systematic* error in a predictable direction.
+The correct-population model bends over with the observations.
+The wrong-population model is told the population is 10× too small, so susceptible depletion bites at the wrong time — EpiNow2 even warns that the population is smaller than cumulative cases.
+The only difference is one number, and it produces a systematically wrong forecast.
+This is the cost of a wrong mechanism: not noise, but a directional error.
 
 # Going further
 
 ## Challenge
 
--   Re-run the backtest with an *uncertain* population, `pop = Normal(mean = pop_size, sd = pop_size / 2)`. Does estimating the population recover the fixed-pop performance, or does the data fail to identify it?
--   Add a fifth EpiNow2 model with a Gaussian process (`gp = gp_opts()`, from EpiNow2) instead of the random walk. Does the smoother $R_t$ change the peak forecast?
+-   Add a Gaussian process (`gp = gp_opts()`, from EpiNow2) instead of constant $R_t$. Does smoothing $R_t$ change the peak forecast?
+-   Re-run the backtest with full MCMC (`stan_config <- stan_opts(samples = 1000, chains = 2, warmup = 300, method = 'sampling', backend = 'rstan')`). Do the rankings change with better-calibrated uncertainty?
 -   Extend the forecast horizon to 28 days. Which model degrades fastest?
 
 ## Methods in practice
