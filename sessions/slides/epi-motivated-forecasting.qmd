@@ -1,0 +1,129 @@
+---
+title: "Epi-motivated forecasting"
+author: "Nowcasting and forecasting of infectious disease dynamics"
+engine: knitr
+bibliography: ../../nfidd.bib
+format:
+  revealjs:
+    output: slides/epi-motivated-forecasting.html
+    footer: "Epi-motivated forecasting"
+    chalkboard: true
+    slide-level: 3
+---
+
+### Forecasting so far
+
+In earlier sessions we used ARIMA, baselines, and ensembles — all *statistical* models that find patterns in counts and project them forward.
+
+:::: {.columns}
+
+::: {.column width="50%"}
+#### What we model
+
+-   Reported case counts
+-   Trends and seasonality
+-   Autocorrelation in the data
+:::
+
+::: {.column width="50%"}
+#### What we ignore
+
+-   How infections arise
+-   Generation time / transmission
+-   Susceptible depletion
+-   Why growth must end
+:::
+
+::::
+
+### The missing ingredient: epidemiological mechanism
+
+Reported cases are the tail of a transmission process.
+
+If we model that process, the forecast can "know" things a pure time-series model cannot — for example, that exponential growth must end when susceptibles run out.
+
+### A renewal equation is an epi-informed autoregression {.smaller}
+
+:::: {.columns}
+
+::: {.column width="48%"}
+#### ARIMA
+
+$$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
+
+- Weights $\phi_s$: free parameters
+- No epidemiological meaning
+:::
+
+::: {.column width="48%"}
+#### Renewal
+
+$$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s}\right) $$
+
+- Weights $w_s$: generation-time PMF
+- Scale: $R_t$ (reproduction number)
+:::
+
+::::
+
+Same autoregressive shape — but the weights are the generation-time distribution and the scale is $R_t$.
+
+### From infections to reported cases
+
+We don't observe infections; we observe *reported cases*.
+
+Delays — incubation period plus reporting delay — convolve infections into reports.
+
+EpiNow2 jointly estimates and deconvolves these delays.
+
+The nowcasting companion course covers delays in depth.
+
+### Adding mechanism: susceptible depletion
+
+The population at risk is finite.
+
+With `pop = Fixed(N)`, the renewal forecast bends over as susceptibles run out.
+
+It can predict a **peak** that a pure AR model cannot.
+
+### What goes wrong with the wrong mechanism
+
+:::: {.columns}
+
+::: {.column width="50%"}
+#### Too-small population
+
+- Depletion bites too early
+- Forecast turns over prematurely
+- **Under-shoots** the peak
+:::
+
+::: {.column width="50%"}
+#### No depletion (default)
+
+- Model keeps growing
+- Forecast sails past the peak
+- **Over-shoots** the peak
+:::
+
+::::
+
+A wrong mechanism is a *systematic* error, in a *predictable* direction — not noise.
+
+### EpiNow2 — a tool, not the point
+
+EpiNow2 = renewal equation + delays + optional susceptible depletion, estimated in Stan.
+
+The engine is incidental; the **model structure** is what carries the forecast.
+
+We use variational Bayes (fast, ships with EpiNow2) instead of full MCMC — seconds per fit, not minutes.
+
+## `r fontawesome::fa("laptop-code", "white")` Your turn {background-color="#447099" transition="fade-in"}
+
+### Back to the backtest
+
+Compare four models — ARIMA, renewal default, fixed population, wrong population — across 10 forecast dates and score them.
+
+Where in the epidemic does mechanism matter most?
+
+[Return to the session](../epi-motivated-forecasting.qmd)

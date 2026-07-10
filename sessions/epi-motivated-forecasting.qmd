@@ -1,0 +1,640 @@
+---
+title: "Epi-motivated forecasting"
+order: 5
+bibliography: ../nfidd.bib
+---
+
+```{r echo=FALSE}
+options(width=100)
+```
+
+# Introduction
+
+In earlier sessions we built forecasts from purely statistical models — ARIMA, baselines, and ensembles.
+These models find patterns in reported counts and project those patterns forward.
+They do not know anything about *how* infections arise, how they are transmitted, or why an epidemic must eventually decline.
+
+In this session we add epidemiological mechanism to the forecast.
+The key idea is the **renewal equation**: a model of incidence that is, mathematically, an autoregression whose coefficients are the generation-time distribution and whose scale is the reproduction number $R_t$ [@bhattSemiMechanisticBayesianModeling2020; @coriNewFrameworkSoftware2013].
+This gives the forecast access to information that a pure time-series model cannot use — for example, that exponential growth must end when susceptibles run out.
+
+We will also account for the delay between infection and case report, and for susceptible depletion that bends the epidemic curve over at the peak.
+To see why mechanism matters, we will deliberately give one model the *wrong* population size and watch its forecast fail in a predictable direction.
+Throughout, we use the EpiNow2 R package as our tool [@abbottEpiNow2EstimateRealtime2025]; the focus is on the model structure, not the software.
+
+## Slides
+
+-   [Epi-motivated forecasting](slides/epi-motivated-forecasting.qmd)
+
+## Objectives
+
+The aim of this session is to introduce epidemiologically-motivated forecasting using renewal equations, to connect the renewal model to the autoregressive models from earlier sessions, and to backtest models with different levels of epidemiological mechanism against each other.
+
+::: {.callout-note collapse="true"}
+# Setup
+
+## Source file
+
+The source file of this session is located at `sessions/epi-motivated-forecasting.qmd`.
+
+## Libraries used
+
+In this session we will use the `EpiNow2` package for renewal-equation forecasting, the `fable` package for the ARIMA baseline, the `dplyr`, `tidyr`, `tibble`, and `purrr` packages for data wrangling, the `ggplot2` and `gridExtra` packages for plotting, and the `scoringutils` package for forecast evaluation.
+
+```{r libraries, message = FALSE}
+library("nfidd.forecasting")
+library("EpiNow2")
+library("fable")
+library("dplyr")
+library("tidyr")
+library("tibble")
+library("purrr")
+library("ggplot2")
+library("gridExtra")
+library("scoringutils")
+theme_set(theme_bw())
+```
+
+::: callout-tip
+The best way to interact with the material is via the [Visual Editor](https://docs.posit.co/ide/user/ide/guide/documents/visual-editor.html) of RStudio.
+:::
+
+## Initialisation
+
+We set a random seed for reproducibility.
+Setting this ensures that you should get exactly the same results on your computer as we do.
+This is not strictly necessary but will help us talk about the models.
+
+```{r}
+set.seed(7321)
+```
+
+We also define the fourth-root transformation used in earlier sessions, so that our ARIMA baseline is the same model family students already know.
+
+```{r}
+fourth_root <- function(x) x^0.25
+inv_fourth_root <- function(x) x^4
+my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
+```
+:::
+
+# From autoregression to the renewal equation
+
+An ARIMA model, as we saw in earlier sessions, predicts the next value of a time series as a weighted sum of past values:
+$$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
+The weights $\phi_s$ are free parameters, estimated from the data with no constraints beyond stationarity.
+
+A renewal equation has the same autoregressive shape, but every piece is given epidemiological meaning:
+$$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s}\right) $$
+Here $I_t$ is the number of new infections, $R_t$ is the reproduction number, and $w_s$ is the **generation-time distribution** — the probability that an infection caused $s$ days ago transmits now [@wallingaDifferentEpidemicCurves2004].
+The weights are not free: they must form a valid probability distribution, and they are typically estimated from data on serial intervals or generation times, not from the incidence curve itself.
+
+:::: {.columns}
+::: {.column width="48%"}
+#### ARIMA
+
+$$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
+
+- Weights $\phi_s$: free, estimated from the data
+- Scale: implicit in the weights
+- No epidemiological meaning
+:::
+
+::: {.column width="48%"}
+#### Renewal
+
+$$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s}\right) $$
+
+- Weights $w_s$: generation-time PMF
+- Scale: $R_t$ (reproduction number)
+- Every term is an epidemiological quantity
+:::
+::::
+
+This is the conceptual bridge: **a renewal equation is an epidemiologically-informed autoregression**.
+The structure is familiar, but the coefficients now carry mechanistic meaning that constrains what the model can say about the future.
+
+# Simulating an outbreak
+
+We simulate a single outbreak to forecast, using `simulate_infections()` from EpiNow2.
+We set a constant reproduction number above 1 and a fixed population size, which produces an epidemic that grows, peaks, and then declines as susceptibles are depleted.
+Setting `pop_period = "all"` applies the depletion across the whole simulated period, so the turnover is built into the data-generating process.
+The generation time and delays are the example distributions supplied with EpiNow2, fixed to point values with `fix_parameters()` because simulation requires known parameters.
+
+```{r simulate}
+gen_time <- fix_parameters(example_generation_time)
+delays <- fix_parameters(example_incubation_period + example_reporting_delay)
+pop_size <- 100000
+dates <- seq.Date(as.Date("2023-01-01"), by = "day", length.out = 170)
+R <- data.frame(date = dates, R = 1.25)
+
+sim <- simulate_infections(
+  R = R,
+  initial_infections = 20,
+  generation_time = gt_opts(gen_time),
+  delays = delay_opts(delays),
+  obs = obs_opts(family = "poisson"),
+  pop = Fixed(pop_size),
+  pop_period = "all"
+)
+
+reported <- sim |>
+  as_tibble() |>
+  filter(variable == "reported_cases") |>
+  transmute(date, confirm = value)
+```
+
+The simulated series of reported cases rises to a peak in late March before declining.
+
+```{r plot-outbreak}
+ggplot(reported, aes(x = date, y = confirm)) +
+  geom_col(fill = "#4292C6") +
+  labs(x = "Date", y = "Reported cases", title = "Simulated outbreak") +
+  theme_bw()
+```
+
+The decline happens because susceptibles are running out — the population at risk is finite, and once enough people have been infected, the effective reproduction number drops below 1 even though the underlying $R_t$ is still 1.25.
+This is the mechanism we want our forecasts to capture.
+
+# A single forecast
+
+To forecast we truncate the series at a forecast date and fit only to the data available up to that point.
+We choose a date shortly before the peak, where the epidemic is still growing and the turnover has not yet been observed.
+
+```{r truncate}
+forecast_date <- as.Date("2023-03-18")
+train <- reported |> filter(date <= forecast_date)
+```
+
+We fit two models: the EpiNow2 default renewal model and the ARIMA baseline from earlier sessions.
+Both use a 14-day forecast horizon.
+
+```{r single-forecast, warning = FALSE, message = FALSE}
+en2_default <- estimate_infections(
+  train,
+  generation_time = gt_opts(example_generation_time),
+  delays = delay_opts(example_incubation_period + example_reporting_delay),
+  rt = rt_opts(rw = 7),
+  gp = NULL,
+  forecast = forecast_opts(horizon = 14),
+  stan = stan_opts(method = "vb", backend = "rstan", samples = 1000)
+)
+
+arima_default <- train |>
+  as_tsibble(index = date) |>
+  model(ar2 = ARIMA(my_fourth_root(confirm)))
+```
+
+We plot both forecasts against the data that were later observed.
+The shaded ribbons are the 50% and 90% credible intervals, the lines are the posterior medians, and the points are the observations split into the data used for fitting and the held-out truth.
+
+```{r plot-single-forecast}
+en2_fc_sum <- summary(en2_default, type = "parameters") |>
+  as_tibble() |>
+  filter(variable == "reported_cases", type == "forecast") |>
+  transmute(date, model = "epi_default", median, lower_50, lower_90, upper_50, upper_90)
+
+arima_fc_sum <- generate(arima_default, h = 14, times = 1000) |>
+  as_tibble() |>
+  group_by(date) |>
+  summarise(
+    median = median(.sim),
+    lower_50 = quantile(.sim, 0.25),
+    lower_90 = quantile(.sim, 0.05),
+    upper_50 = quantile(.sim, 0.75),
+    upper_90 = quantile(.sim, 0.95),
+    .groups = "drop"
+  ) |>
+  mutate(model = "arima")
+
+single_fc_sum <- bind_rows(en2_fc_sum, arima_fc_sum)
+
+ggplot(single_fc_sum, aes(x = date, fill = model, colour = model)) +
+  geom_ribbon(aes(ymin = lower_90, ymax = upper_90), alpha = 0.15) +
+  geom_ribbon(aes(ymin = lower_50, ymax = upper_50), alpha = 0.3) +
+  geom_line(aes(y = median)) +
+  geom_point(
+    data = reported |> filter(date > forecast_date - 21, date <= forecast_date + 14),
+    aes(x = date, y = confirm),
+    inherit.aes = FALSE
+  ) +
+  geom_vline(xintercept = forecast_date, linetype = "dashed") +
+  scale_fill_manual(values = c("epi_default" = "#4292C6", "arima" = "#E6550D")) +
+  scale_colour_manual(values = c("epi_default" = "#4292C6", "arima" = "#E6550D")) +
+  labs(
+    x = "Date", y = "Reported cases",
+    title = "14-day forecast from just before the peak"
+  ) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+Neither model knows that the epidemic is about to turn over.
+The ARIMA projects the recent trend forward; the renewal model does the same, because the default model has no mechanism for susceptible depletion.
+Both over-shoot the peak — foreshadowing the backtest, where we give one model the ability to see the turnover coming.
+
+::: callout-tip
+## Take 5 minutes
+
+Look at the two forecast ribbons against the held-out observations.
+Which model looks closer to the truth over the first few days, and which drifts further off as the horizon grows?
+What single piece of information would either model need to predict the turning point?
+:::
+
+## Scoring the single forecast
+
+To score the forecast we convert the EpiNow2 fit to a `forecast_sample` object with `as_forecast_sample()`, supplying the full observed series.
+We set `horizon = 1` so only genuinely out-of-sample predictions (one day ahead or more) are scored; the cutoff day itself (horizon 0) was used for fitting and would not be a fair test.
+
+```{r score-single}
+single_fc <- as_forecast_sample(en2_default, observations = reported, horizon = 1)
+single_scores <- score(single_fc)
+summarise_scores(single_scores, by = "forecast_date") |>
+  as_tibble() |>
+  select(forecast_date, crps, bias) |>
+  mutate(across(where(is.numeric), \(x) round(x, 2)))
+```
+
+CRPS summarises the whole predictive distribution against the observation (lower is better), and bias is positive when the forecast sits above the observations.
+A single number is hard to interpret on its own; scores are most useful when comparing models, which is what we do next.
+
+# The models we will compare
+
+We compare four models that differ in how much epidemiological mechanism they include.
+
+- **ARIMA** — `ARIMA(my_fourth_root(confirm))` with auto-ARIMA, so fable selects the order automatically from the data. Auto-ARIMA may select different orders at different forecast dates — this is a feature of a fair statistical baseline, not a bug.
+- **default** — renewal + delays, no depletion. Projects recent growth through the peak, so we expect it to over-shoot.
+- **fixed_pop** — adds depletion with the *true* population size. Should turn over at the right time.
+- **wrong_pop** — depletion with a population 10× too small. Depletion bites early, so we expect premature turnover and under-shoot. This is the "wrong mechanism" demo.
+
+The EpiNow2 models share the same renewal structure; they differ only in the `pop` argument to `rt_opts()`.
+The ARIMA baseline is fit separately with `fable`, using the same fourth-root transformation as in earlier sessions.
+
+```{r model-specs}
+epi_models <- list(
+  default   = rt_opts(rw = 7),
+  fixed_pop = rt_opts(rw = 7, pop = Fixed(pop_size),       future = "latest"),
+  wrong_pop = rt_opts(rw = 7, pop = Fixed(pop_size / 10), future = "latest")
+)
+```
+
+# Backtesting across forecast dates
+
+We backtest each model from 10 forecast dates, one week apart, spanning the growth phase, the peak, and the decline.
+Contrasting phases matters because susceptible depletion only shapes the forecast near and after the peak; early in the growth phase it is almost irrelevant.
+
+```{r forecast-dates}
+forecast_dates <- seq.Date(
+  from = as.Date("2023-02-15"), to = as.Date("2023-04-19"), by = "week"
+)
+length(forecast_dates)
+```
+
+::: {.callout-note collapse="true"}
+## Why variational Bayes, and how to use better inference instead
+
+EpiNow2 fits a Bayesian model in Stan.
+Full Markov-chain Monte Carlo (MCMC) sampling gives the most honest posterior but takes ~1-2 minutes per fit, and here we refit 40 times across forecast dates and models.
+Variational Bayes (vb, via the rstan backend that ships with EpiNow2) gives an approximate posterior in seconds — the right trade-off for a teaching backtest where we care about relative model behaviour, not calibrated uncertainty.
+
+To use pathfinder instead, swap the `stan` argument (needs the cmdstanr package + CmdStan install):
+
+```r
+stan = stan_opts(method = "pathfinder", backend = "cmdstanr")
+```
+
+For full MCMC, use:
+
+```r
+stan = stan_opts(samples = 1000, chains = 2, method = "sampling", backend = "rstan")
+```
+
+Both give better-calibrated uncertainty at the cost of much longer runtimes.
+:::
+
+We define a helper that fits an EpiNow2 model with variational Bayes and returns sample-level predictions, and another that does the same for the ARIMA baseline via `fable::generate()`.
+
+```{r fit-helpers}
+fit_epinow2 <- function(rt, data) {
+  estimate_infections(
+    data,
+    generation_time = gt_opts(example_generation_time),
+    delays = delay_opts(example_incubation_period + example_reporting_delay),
+    rt = rt, gp = NULL,
+    forecast = forecast_opts(horizon = 14),
+    stan = stan_opts(method = "vb", backend = "rstan", samples = 1000)
+  )
+}
+
+forecast_arima_samples <- function(train, horizon = 14, times = 1000) {
+  fit <- train |>
+    as_tsibble(index = date) |>
+    model(ar2 = ARIMA(my_fourth_root(confirm)))
+  generate(fit, h = horizon, times = times) |>
+    as_tibble() |>
+    transmute(
+      forecast_date = max(train$date),
+      date,
+      horizon = as.integer(date - max(train$date)),
+      sample = as.integer(.rep),
+      predicted = .sim,
+      model = "arima"
+    )
+}
+```
+
+We loop over the forecast dates, fitting all four models at each date and combining the sample-level predictions into a single tibble.
+
+```{r backtest, results = "hide", warning = FALSE, message = FALSE}
+backtest_one <- function(fdate) {
+  train <- reported |> filter(date <= fdate)
+  en2 <- map_dfr(names(epi_models), function(m) {
+    fit <- fit_epinow2(epi_models[[m]], train)
+    get_predictions(fit, format = "sample") |>
+      as_tibble() |>
+      transmute(
+        forecast_date = fdate,
+        date, horizon, sample, predicted, model = m
+      )
+  })
+  arm <- forecast_arima_samples(train)
+  bind_rows(en2, arm)
+}
+
+all_forecasts <- map_dfr(forecast_dates, backtest_one) |>
+  filter(!is.na(predicted))
+```
+
+## Visualising the backtested forecasts
+
+Before scoring, we look at the forecast trajectories themselves.
+Each panel is a forecast date; the ribbons are the 50% and 90% credible intervals, the lines are the posterior medians, and the points are the observed data.
+
+```{r plot-backtests, fig.height = 10}
+trajectory_summary <- all_forecasts |>
+  filter(horizon > 0) |>
+  group_by(model, forecast_date, date) |>
+  summarise(
+    median = median(predicted),
+    lower_50 = quantile(predicted, 0.25),
+    lower_90 = quantile(predicted, 0.05),
+    upper_50 = quantile(predicted, 0.75),
+    upper_90 = quantile(predicted, 0.95),
+    .groups = "drop"
+  )
+
+obs_windows <- map_dfr(forecast_dates, function(fd) {
+  reported |>
+    filter(date >= fd - 28, date <= fd + 14) |>
+    mutate(forecast_date = fd)
+})
+
+ggplot(trajectory_summary, aes(x = date)) +
+  geom_ribbon(aes(ymin = lower_90, ymax = upper_90, fill = model), alpha = 0.15) +
+  geom_ribbon(aes(ymin = lower_50, ymax = upper_50, fill = model), alpha = 0.3) +
+  geom_line(aes(y = median, colour = model)) +
+  geom_point(data = obs_windows, aes(y = confirm), size = 0.5) +
+  geom_vline(
+    data = tibble(forecast_date = forecast_dates),
+    aes(xintercept = forecast_date),
+    linetype = "dashed"
+  ) +
+  facet_wrap(~forecast_date, scales = "free", ncol = 1) +
+  labs(
+    x = "Date", y = "Reported cases", colour = "Model", fill = "Model",
+    title = "Backtested forecasts by forecast date"
+  ) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+During growth the models agree and all track the data.
+Around the peak the default model keeps climbing while the fixed-population model bends over with the observations; the wrong-population model turns over too early.
+In the decline the recent downturn is already visible in the data, so all models project a fall and the gap between them narrows again.
+
+::: callout-tip
+## Take 5 minutes
+
+Before reading on, predict which model you expect to score best overall, and at which forecast dates you expect the models to differ most.
+Does your prediction change if we score on the natural scale versus the log scale?
+:::
+
+::: {.callout-note collapse="true"}
+## Solution
+
+The fixed-population model should score best overall, because it is the only one that both knows the turnover is coming and times it correctly.
+The models should differ most around the peak, where depletion is decisive; during growth and decline the data already contain the trend, so the models converge.
+:::
+
+# Scoring
+
+We merge the forecasts with the observed values and build a single `forecast_sample` object, keeping only out-of-sample horizons (`horizon > 0`).
+
+```{r build-forecast-sample}
+obs <- reported |> transmute(date, observed = confirm)
+
+score_data <- all_forecasts |>
+  filter(horizon > 0) |>
+  left_join(obs, by = "date")
+
+fc <- as_forecast_sample(
+  score_data,
+  forecast_unit = c("model", "forecast_date", "date", "horizon"),
+  observed = "observed",
+  predicted = "predicted",
+  sample_id = "sample"
+)
+```
+
+Reported cases span several orders of magnitude over an epidemic, so a score on the natural scale is dominated by the largest counts near the peak.
+As in the [forecast evaluation session](forecast-evaluation.qmd), we score on both the natural and the log scale; we use `transform_forecasts()` with `log_shift` to add log-transformed forecasts alongside the originals, which `score()` then scores together, labelling each with a `scale` column.
+
+```{r score}
+fc <- transform_forecasts(fc, fun = log_shift, offset = 1)
+scores <- score(fc)
+```
+
+## Overall scores by model
+
+```{r scores-by-model}
+overall <- summarise_scores(scores, by = c("model", "scale")) |>
+  as_tibble() |>
+  mutate(across(where(is.numeric), \(x) signif(x, 3))) |>
+  arrange(scale, crps)
+
+overall |>
+  select(model, scale, crps, bias, dispersion, underprediction, overprediction)
+```
+
+On the natural scale the fixed-population model scores best on CRPS, even though its bias is not the smallest.
+On the log scale the ARIMA model edges ahead, because log scoring down-weights the large counts near the peak where the epidemiological models excel.
+CRPS rewards being close and well-calibrated across the whole predictive distribution, not just unbiased on average.
+The default model has a large positive bias: it over-predicts, because it projects growth through the peak.
+The wrong-population model under-predicts, because depletion bites too early — its underprediction component is high, though its average bias is near zero because the errors balance across dates.
+The ARIMA model has a low average bias — but only because its errors point in different directions on different dates, which its mid-pack natural-scale CRPS exposes.
+As we discussed in the [session on evaluating forecasts](forecast-evaluation.qmd), bias and CRPS measure different aspects of a probabilistic forecast, so a near-zero bias can mask a model that is wrong in both directions.
+
+::: callout-tip
+## Take 5 minutes
+
+On the natural scale, the fixed-population model wins on CRPS, but the ARIMA has a smaller average bias.
+Recall from the [forecast evaluation session](forecast-evaluation.qmd) what CRPS and bias each measure: which metric should you trust when they disagree, and why?
+:::
+
+## Scores by forecast date
+
+Breaking the natural-scale CRPS down by forecast date shows how the ranking shifts across the epidemic's phases.
+
+```{r scores-by-date}
+by_date <- summarise_scores(
+  scores, by = c("model", "forecast_date", "scale")
+) |>
+  as_tibble()
+
+by_date |>
+  filter(scale == "natural") |>
+  arrange(forecast_date, crps) |>
+  select(forecast_date, model, crps) |>
+  mutate(crps = round(crps, 1))
+```
+
+We can also visualise this as a plot, with the observed case curve below for context.
+
+```{r plot-scores-by-date}
+scores_plot <- by_date |>
+  filter(scale == "natural") |>
+  ggplot(aes(x = forecast_date, y = crps, colour = model)) +
+  geom_point() +
+  geom_line() +
+  labs(x = "Forecast date", y = "CRPS (natural scale)", colour = "Model") +
+  theme_bw() +
+  theme(legend.position = "bottom")
+
+obs_plot <- reported |>
+  filter(date >= min(forecast_dates), date <= max(forecast_dates) + 14) |>
+  ggplot(aes(x = date, y = confirm)) +
+  geom_col(fill = "#4292C6") +
+  labs(x = "Date", y = "Reported cases") +
+  theme_bw()
+
+gridExtra::grid.arrange(scores_plot, obs_plot)
+```
+
+During growth (early dates) the models are close.
+Around the peak (late March) the fixed-population model pulls well ahead as the default over-projects the turnover.
+In the decline (April) the models converge again, because the downturn is already in the data by the time the forecast is made.
+
+## Scores by horizon
+
+```{r scores-by-horizon}
+by_horizon <- summarise_scores(
+  scores, by = c("model", "horizon", "scale")
+) |>
+  as_tibble()
+
+ggplot(by_horizon, aes(x = horizon, y = crps, colour = model)) +
+  geom_line() +
+  geom_point(size = 1) +
+  facet_wrap(~scale, scales = "free_y") +
+  labs(
+    x = "Forecast horizon (days)", y = "Mean CRPS", colour = "Model",
+    title = "Forecast error by horizon and scale"
+  ) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+On the natural scale the gap between models opens at longer horizons, where the forecasts run into the peak.
+On the log scale the differences are smaller and steadier, because log scoring down-weights the large counts that dominate the natural scale.
+
+## Coverage
+
+Interval coverage is not returned by `score()` for sample forecasts, so we compute it manually: for each forecast, we check whether the observation falls within the 50% and 90% prediction intervals, then average across all forecasts for each model.
+
+```{r coverage}
+coverage_data <- score_data |>
+  group_by(model, forecast_date, date, horizon) |>
+  summarise(
+    in_50 = observed[1] >= quantile(predicted, 0.25) &
+            observed[1] <= quantile(predicted, 0.75),
+    in_90 = observed[1] >= quantile(predicted, 0.05) &
+            observed[1] <= quantile(predicted, 0.95),
+    .groups = "drop"
+  ) |>
+  group_by(model) |>
+  summarise(
+    interval_coverage_50 = mean(in_50),
+    interval_coverage_90 = mean(in_90)
+  ) |>
+  mutate(across(where(is.numeric), \(x) round(x, 2))) |>
+  arrange(model)
+
+coverage_data
+```
+
+Well-calibrated models should hit approximately 50% and 90% coverage.
+Variational Bayes gives approximate posteriors, so coverage may deviate from nominal levels; the relative ranking between models is more informative than the absolute values.
+
+# What goes wrong with the wrong mechanism
+
+To see the cost of a wrong mechanism clearly, we isolate the `wrong_pop` and `fixed_pop` models at a forecast date just before the peak.
+These two models are identical except for one number: the population size.
+
+```{r wrong-mechanism}
+peak_date <- as.Date("2023-03-15")
+
+mechanism_compare <- all_forecasts |>
+  filter(forecast_date == peak_date, model %in% c("fixed_pop", "wrong_pop"), horizon > 0) |>
+  group_by(model, date) |>
+  summarise(
+    median = median(predicted),
+    lower_90 = quantile(predicted, 0.05),
+    upper_90 = quantile(predicted, 0.95),
+    .groups = "drop"
+  )
+
+ggplot(mechanism_compare, aes(x = date, fill = model, colour = model)) +
+  geom_ribbon(aes(ymin = lower_90, ymax = upper_90), alpha = 0.2) +
+  geom_line(aes(y = median)) +
+  geom_point(
+    data = reported |> filter(date > peak_date - 14, date <= peak_date + 14),
+    aes(x = date, y = confirm),
+    inherit.aes = FALSE
+  ) +
+  geom_vline(xintercept = peak_date, linetype = "dashed") +
+  labs(
+    x = "Date", y = "Reported cases",
+    title = "Right vs wrong population size, forecast from 2023-03-15"
+  ) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+The `fixed_pop` model (correct population) bends over with the observations.
+The `wrong_pop` model (population 10× too small) turns over far too early — it predicts the epidemic is already ending when it is still growing.
+The only difference between these two models is one number, and it moves the turning point by weeks.
+This is the cost of a wrong mechanism: not noise, but a *systematic* error in a predictable direction.
+
+# Going further
+
+## Challenge
+
+-   Re-run the backtest with an *uncertain* population, `pop = Normal(mean = pop_size, sd = pop_size / 2)`. Does estimating the population recover the fixed-pop performance, or does the data fail to identify it?
+-   Add a fifth EpiNow2 model with a Gaussian process (`gp = gp_opts()`, from EpiNow2) instead of the random walk. Does the smoother $R_t$ change the peak forecast?
+-   Extend the forecast horizon to 28 days. Which model degrades fastest?
+
+## Methods in practice
+
+-   @abbottEpiNow2EstimateRealtime2025 — EpiNow2.
+-   @bhattSemiMechanisticBayesianModeling2020 — renewal models in practice.
+-   @gosticPracticalConsiderationsMeasuring2020 — practical $R_t$.
+
+# Wrap up
+
+-   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives.qmd)
+-   Share your [questions and thoughts](../reference/help.qmd)
+
+## References
+
+::: {#refs}
+:::
