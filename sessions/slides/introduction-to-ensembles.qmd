@@ -14,7 +14,7 @@ format:
 
 ### Ensembles: many forecasts into one
 
-![Figure credit: Evan Ray and Nick Reich](figures/ensemble.jpg)
+![Figure credit [@shandross_multi-model_2026]](figures/ensemble2.png)
 
 ### Why ensemble?
 
@@ -36,16 +36,35 @@ Average of multiple predictions is often (not always) more performant than any i
 - Strong evidence in weather & economic forecasting
 
 - Recent evidence in infectious disease forecasting
-    - Ebola[@funkAssessingPerformanceRealtime2019]
-    - dengue[@colon-gonzalez_probabilistic_2021]
-    - flu[@reich_accuracy_2019]
-    - COVID-19[@cramer_evaluation_2022]
+    - Ebola [@funkAssessingPerformanceRealtime2019]
+    - dengue [@colon-gonzalez_probabilistic_2021]
+    - flu [@reich_accuracy_2019]
+    - COVID-19 [@cramer_evaluation_2022]
 
 ### Ensemble methods: how to average?
 
-![Figure credit: @howertonContextdependentRepresentationBetweenmodel2023](figures/lop-vs-vincent.jpg)
+![Figure credit: @shandross_multi-model_2026](figures/ensemble-methods.png)
+
+### Linear opinion pool ensemble {.smaller}
+
+Let $F_m(x)$ be a cumulative density function (CDF) given by forecast model $m$.
+
+$$F_{LOP}(x) = \sum_{m=1}^M w_m F_m(x) $$
+
+![Figure credit: @shandross_multi-model_2026](figures/ensemble-methods.png)
+
+
+### Quantile (Vincent) average ensemble  {.smaller}
+
+Let $F_m^{-1}(\theta)$ be the inverse CDF, or the quantile function, for quantile level $\theta$.
+
+$$F_Q^{-1}(\theta) = \sum_{m=1}^M w_m F_m^{-1}(\theta) $$
+
+![Figure credit: @shandross_multi-model_2026](figures/ensemble-methods.png)
 
 ### Ensemble methods: to weight or not?
+
+$$F_{LOP}(x) = \sum_{m=1}^M w_m F_m(x) $$
 
    - Weight models by past forecast performance
    

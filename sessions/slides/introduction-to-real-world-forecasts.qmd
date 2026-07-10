@@ -2,6 +2,7 @@
 title: "Evaluating real-world forecasts"
 author: "Nowcasting and forecasting of infectious disease dynamics"
 engine: knitr
+bibliography: ../../nfidd.bib
 format:
   revealjs:
     output: slides/introduction-to-real-world-forecasts.html
@@ -10,6 +11,60 @@ format:
     slide-level: 3
 ---
 
+## Challenges in evaluation  {background-color="#447099"}
+
+### Challenges in evaluation
+
+Based on what you've seen so far, what are the main challenges with forecasting evaluation?
+
+### Challenges in evaluation
+
+Based on what you've seen so far, what are the main challenges with forecasting evaluation? (my list)
+
+- it can be an overwhelming data analysis project
+- forecasts (and the scores) are correlated over time 
+- forecats (and the scores) can be scale-dependent
+- models don't all make the same predictions 
+
+
+### Data analysis
+
+![](figures/all-the-forecasts.png)
+
+
+### Scores are often correlated, with outliers
+
+![[Flusight Eval website](https://reichlab.io/flusight-dashboard/eval.html)](figures/flusight-scores-over-time.png)
+
+
+### Scores can be scale-dependent
+
+![[Flusight Eval website](https://reichlab.io/flusight-dashboard/eval.html)](figures/flusight-scores-by-location.png)
+
+
+### Models don't make the same predictions
+
+::: {.callout-caution}
+When models have made forecasts for different subsets of tasks, it can make comparison of models complicated. For example, what if one model never forecasts for the harder prediction tasks?
+:::
+
+::: {.callout-tip}
+## Relative Skill Scores are a possible solution
+![See e.g., [@cramer_evaluation_2022]](figures/relative-skill-scores.png)
+:::
+
+
+### How to draw valid inference about differences between models?
+
+
+* Standard methods include using the [Diebold Mariano test](https://pkg.robjhyndman.com/forecast/reference/dm.test.html).
+* Some recent work has used regressions to draw inference in the context of these data challenges. [@lopezChallengesCOVID19Case2024]
+
+
+
+## Hubs facilitate forecast evaluation {background-color="#447099"}
+
+
 ### Hubs accelerate scientific discovery {.smaller}
 
 "Comparing the accuracy of forecasting applications is difficult because forecasting methods, forecast outcomes, and reported validation metrics varied widely."
@@ -17,7 +72,7 @@ format:
 -- Chretien et al., PLOS ONE, 2014
 
 ::: {.fragment}
-!(figures/modeling-hubs-timeline.png){width=75%}
+![](figures/modeling-hubs-timeline.png){width=75%}
 :::
 
 ### [The US COVID-19 Forecast Hub](https://covid19forecasthub.org/) {.smaller}
@@ -68,11 +123,18 @@ From a practical standpoint, standards facilitate
 - evaluation
 - ensembling
 
+
+
 ### COVID Hub reboot (2024-present)
 
 In 2024, CDC rebooted the hub, using hubverse standards.
 
 These are the data that you will use in this session.
+
+### References
+
+::: {#refs}
+:::
 
 ## `r fontawesome::fa("laptop-code", "white")` Your Turn {background-color="#447099" transition="fade-in"}
 
@@ -80,8 +142,8 @@ Use COVID-19 Forecast Hub forecasts to ...
 
 1. create forecast visualizations.
 2. evaluate multiple forecast models.
-3. create weighted ensembles.
 
 #
+
 
 [Return to the session](../real-world-forecasts.qmd)

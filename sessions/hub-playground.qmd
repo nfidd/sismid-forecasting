@@ -1,6 +1,6 @@
 ---
 title: "Local hub playground"
-order: 13
+order: 8
 bibliography: ../nfidd.bib
 ---
 

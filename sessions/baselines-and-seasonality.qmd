@@ -1,6 +1,6 @@
 ---
 title: "Baselines and seasonality"
-order: 8
+order: 3
 bibliography: ../nfidd.bib
 ---
 

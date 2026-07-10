@@ -22,11 +22,11 @@ It is paired with the companion [nowcasting course](https://nfidd.github.io/sism
 | | 12.30–13.30 | *Lunch* | |
 | | 13.30–15.00 | Session 6 · Evaluating real-world outbreak forecasts | [Slides](sessions/slides/introduction-to-real-world-forecasts.qmd), [Practice](sessions/real-world-forecasts.qmd) |
 | | 15.00–15.30 | *Coffee break* | |
-| | 15.30–17.00 | Session 7 · Local hub playground | [Slides](sessions/slides/hub-playground.qmd), [Practice](sessions/hub-playground.qmd) |
+| | 15.30–17.00 | Session 7 · Forecasting with ensembles | [Slides](sessions/slides/introduction-to-ensembles.qmd), [Practice](sessions/forecast-ensembles.qmd) |
 | **Fri 17 Jul** | 09.00–09.15 | Day 2 review | |
-| | 09.15–10.30 | Session 8 · Advanced forecast evaluation | TBD |
+| | 09.15–10.30 | Session 8 · Local hub playground | [Slides](sessions/slides/hub-playground.qmd), [Practice](sessions/hub-playground.qmd) |
 | | 10.30–11.00 | *Coffee break* | |
-| | 11.00–12.30 | Session 9 · Forecasting with ensembles | [Slides](sessions/slides/introduction-to-ensembles.qmd), [Practice](sessions/forecast-ensembles.qmd) |
+| | 11.00–12.30 | Session 9 · Advanced forecast evaluation | TBD |
 | | 12.30–13.30 | *Lunch* | |
 | | 13.30–14.00 | Session 10 · Model importance | TBD |
 | | 14.00–15.00 | Session 11 · Local hub playground | TBD |

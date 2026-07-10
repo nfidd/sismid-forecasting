@@ -1,39 +1,16 @@
 ---
 title: "Forecast ensembles"
-order: 11
+order: 7
 bibliography: ../nfidd.bib
 ---
 
 # Introduction
 
-As we saw in the sessions on [baselines and seasonality](baselines-and-seasonality.qmd) and [forecast evaluation](forecast-evaluation.qmd), different modelling approaches have different strength and weaknesses, and we do not usually know in advance which one will produce the best forecast in any given situation.
+As we saw in the sessions on [baselines and seasonality](baselines-and-seasonality.qmd), [forecast evaluation](forecast-evaluation.qmd), and [real-world forecasts](real-world-forecasts.qmd), different modelling approaches have different strength and weaknesses, and we do not usually know in advance which one will produce the best forecast in any given situation.
 One way to attempt to draw strength from a diversity of approaches is the creation of so-called *forecast ensembles* from the forecasts produced by different models.
 
 In this session, we'll start with forecasts from the models we explored in the previous sessions and build ensembles of these models.
 We will then compare the performance of these ensembles to the individual models and to each other.
-
-::: {.callout-note collapse="false"}
-## Representations of probabilistic forecasts
-
-Probabilistic predictions can be described as coming from probability distributions.
-In general, it is not safe to assume that these distributions can be expressed in a simple mathematical form as we can do if, e.g., talking about common probability distributions such as the normal or gamma distributions.
-(Although some of the `fable` models, like ARIMA can express forecasts as normal distributions.)
-
-It can be helpful to have a model-agnostic way to represent probabilistic distributions.
-
--   One common way is to use a limited number (say, between 100 and 1000) of **samples** generated from Monte Carlo methods to represent the predictive distribution.
-
--   Another approach uses values that corresponds to a specific set of **quantile** levels of the predictive distribution.
-    For example, the median is the 50th quantile of a distribution, meaning that 50% of the values in the distribution are less than the median and 50% are greater.
-    Similarly, the 90th quantile is the value that corresponds to 90% of the distribution being less than this value.
-    If we characterise a predictive distribution by its quantiles, we specify these values at a range of specific quantile levels, e.g. from 5% to 95% in 5% steps.
-
--   Another approach might be to define **bins** (intervals) that an outcome might fall into and assign probabilities to those bins
-
-Deciding how to represent forecasts depends on many things, for example the method used (and whether it produces samples by default) but also logistical considerations.
-Many collaborative forecasting projects and so-called forecasting hubs use quantile-based representations of forecasts in the hope to be able to characterise both the centre and tails of the distributions more reliably and with less demand on storage space than a sample-based representation.
-Quantiles are also better than a bin-based representation when the range of possible outcomes is large.
-:::
 
 ## Slides
 
@@ -57,7 +34,7 @@ In this session we will use the `fable` package for fitting simple forecasting m
 Additionally, we will use some [hubverse](https://hubverse.io/) packages such as `hubEvals`, `hubUtils`, `hubEnsembles` packages for building ensembles.
 
 ```{r libraries, message = FALSE}
-library('nfidd.forecasting')
+library("nfidd.forecasting")
 library("fable")
 library("dplyr")
 library("ggplot2")
@@ -83,11 +60,62 @@ set.seed(42) ## for Douglas Adams!
 ```
 :::
 
+# Comparing probabilistic ensemble methods
+
+If you are interested in more gory details about building ensembles, we recommend [@shandross_multi-model_2026] for a longer applied introduction to building ensemble forecasts for epidemiology. Recall from the slides how we introduced the difference between linear opinion pool (LOP) and quantile (Q) ensembles. The interactive widget below allows you to explore the differences of these approaches on your own to develop some intuition about the differences between these approaches.
+
+::: {.callout-tip .optional collapse="false"}
+## Interactive: opinion pool vs quantile averaging
+
+```{=html}
+<iframe class="nfidd-embed" src="../interactive/forecast-ensembles.html?embed=headtohead" title="opinion pool vs quantile averaging interactive" loading="lazy" style="width:100%;height:900px;border:1px solid #e5e7eb;border-radius:10px;background:#fff"></iframe>
+<script>(function(){if(window.__nfiddEmbedInit)return;window.__nfiddEmbedInit=1;window.addEventListener('message',function(ev){var h=ev&&ev.data&&ev.data.nfiddEmbedHeight;if(!h)return;document.querySelectorAll('iframe.nfidd-embed').forEach(function(f){if(f.contentWindow===ev.source)f.style.height=(h+24)+'px';});});})();</script>
+```
+:::
+
+
+::: callout-tip
+## Take 5 minutes
+
+An observation about the quantile averaging ensemble approach is that it can end up putting a lot of distributional mass on values that neither prediction thinks are highly likely. Imagine, for example, (or use the interactive above to create this scenario) two narrow distributions that are not close to each other and each get 0.5 weight. The quantile average ensemble will put mass directly between the two. One perspective on this is that this is ok, since neither model is likely to be correct and taking the average is always a reasonable thing to do. Another more critical perspective might say that it doesn't feel right for the ensemble to be saying the most likely values are ones that both models say are unlikely or impossible. Discuss with your neighbor: which of these viewpoints do you agree with more?
+
+:::
+
+
+# Representations of probabilistic forecasts
+
+Probabilistic predictions can be described as coming from probability distributions.
+In general, it is not safe to assume that these distributions can be expressed in a simple mathematical form as we can do if, e.g., talking about common probability distributions such as the normal or gamma distributions.
+(Although some of the `fable` models, like ARIMA can express forecasts as normal distributions.)
+
+It can be helpful to have a model-agnostic way to represent probabilistic distributions.
+
+-   One common way is to use a limited number (say, between 100 and 1000) of **samples** generated from Monte Carlo methods to represent the predictive distribution.
+
+-   Another approach uses values that corresponds to a specific set of **quantile** levels of the predictive distribution.
+    For example, the median is the 50th quantile of a distribution, meaning that 50% of the values in the distribution are less than the median and 50% are greater.
+    Similarly, the 90th quantile is the value that corresponds to 90% of the distribution being less than this value.
+    If we characterise a predictive distribution by its quantiles, we specify these values at a range of specific quantile levels, e.g. from 5% to 95% in 5% steps.
+
+-   Another approach might be to define **bins** (intervals) that an outcome might fall into and assign probabilities to those bins
+
+Deciding how to represent forecasts depends on many things, for example the method used (and whether it produces samples by default) but also logistical considerations.
+Many collaborative forecasting projects and so-called forecasting hubs use quantile-based representations of forecasts in the hope to be able to characterise both the centre and tails of the distributions more reliably and with less demand on storage space than a sample-based representation.
+Quantiles are also better than a bin-based representation when the range of possible outcomes is large.
+
+## Implementation in R
+
+The table below summarizes how different forecast representations are aggregated using the two mathematical functions described in the slides.
+
+![Table 3 from [@shandross_multi-model_2026]](slides/figures/ensemble-approach-table.png)
+
+
+
 # Loading data
 
 As we have done in previous sessions, we will load some ILI data using the `epidatr` package,
 
-```{r load-epidata}
+```{r load-epidata, eval = FALSE}
 flu_data <- epidatr::pub_fluview(regions = c("nat"),
                                  epiweeks = epirange(200335, 201831)) |> 
   select(region, epiweek, wili) |> 
@@ -162,16 +190,12 @@ autoplot(
 # Forecast representation and format
 
 One important thing about working with forecast data in practice is that following some standard ways of representing individual forecasts can make it easier to do a wider range of analyses with a broad array of models.
-In this section, we will start using hubverse-style data for forecast output formats, as we find it to be a flexible, easily extensible, and general set-up for data formats that will enable activities on the last day of the class.
+In this section, we will start using hubverse-style data for forecast output formats, as we find it to be a flexible, easily extensible, and general set-up for data formats that will enable activities later in the course.
 
 ::: {.callout-tip collapse="true"}
 ## What is the hubverse?
 
-The [hubverse](https://hubverse.io/) is a project designed to improve public health outcomes through collaborative modeling.
-Hubverse data standards and software support collaborative modeling "hubs" around the world, including in Europe, Paraguay, Australia, the US and Canada.
-Modeling hubs collect forecasts in standardized formats from many models.
-Hubs enable us to obtain a more informed prediction of the future, often by creating a consensus of the models by building an ensemble.
-The hubverse data standards were developed for and by folks doing epidemiological forecasting and projections, but they are general and could be used by practitioners in other fields as well.
+Recall from the slides our introduction to the hubverse.
 
 Several key hubverse terms to keep in mind are:
 
@@ -252,7 +276,7 @@ sampled_forecasts_hub |>
             aes(x=epiweek, y=wili))
 ```
 
-# Forecast ensembles
+# Building ensembles of `fable` models
 
 Now that we have standardized our data formatting, we will now move to creating forecasts as a combination of multiple forecasts.
 This procedure is also sometimes called *stacking*, and the resulting forecasts are said to come from *ensembles* of forecast models.
@@ -269,9 +293,8 @@ If we have reason to believe that some models are **consistently** better than o
 In this session we will be thinking about forecasts in terms quantiles of the predictive distributions, we will need to convert our sample-based forecasts to quantile-based forecasts.
 We will do this by focusing on the *marginal distribution* at each predicted time point, that is we treat each time point as independent of all others and calculate quantiles based on the sample predictive trajectories at that time point.
 An easy way to do this is to use the `hubUtils` package, which has utility functions for interacting with hubverse-style data.
-The steps to do this are to first do some reformatting so the forecasts can be seen as hubverse-style `sample` forecasts.
 
-Now we convert these `sample` forecasts to `quantile` forecasts.
+We will reformat the hubverse `sample` forecasts that we created above to hubverse `quantile` forecasts.
 
 ```{r convert-to-quantile}
 quantiles_to_save <- c(0.025, 0.05, 0.1, 0.25, 0.5, 0.75, 0.9, 0.95, 0.975)
@@ -572,16 +595,6 @@ In that case, we want to create a (possibly weighted) mixture distribution of th
 This can be done very straight-forwardly using samples.
 The procedure is sometimes called a linear opinion pool.
 
-::: callout-tip
-##### Comparing ensembling methods
-
-This nice figure from Howerton et al. shows visually the difference between different ensembling approaches.[@howertonContextdependentRepresentationBetweenmodel2023]
-
-![Comparing LOP vs vincent averaging for ensemble.](slides/figures/lop-vs-vincent.jpg)
-
-Above we used Vincent averaging through the `hubEnsembles::simple_ensemble()` function.
-Below we will use the linear opinion pool, illustrated by the LOP line in the figure.
-:::
 
 We will start by adding two new unweighted ensemble approaches (one filtered, one not, similar to the section above) to our growing collection of models.
 Recall that we had created hubverse-style sample-based forecasts.
@@ -618,16 +631,6 @@ lop_ensemble_filtered <- sampled_forecasts_hub |>
   )   
 ```
 
-::: {.callout-tip .optional collapse="true"}
-## Interactive: opinion pool vs quantile averaging
-
-```{=html}
-<iframe class="nfidd-embed" src="../interactive/forecast-ensembles.html?embed=headtohead" title="opinion pool vs quantile averaging interactive" loading="lazy" style="width:100%;height:900px;border:1px solid #e5e7eb;border-radius:10px;background:#fff"></iframe>
-<script>(function(){if(window.__nfiddEmbedInit)return;window.__nfiddEmbedInit=1;window.addEventListener('message',function(ev){var h=ev&&ev.data&&ev.data.nfiddEmbedHeight;if(!h)return;document.querySelectorAll('iframe.nfidd-embed').forEach(function(f){if(f.contentWindow===ev.source)f.style.height=(h+24)+'px';});});})();</script>
-```
-
-Average probabilities (opinion pool) vs quantiles (Vincent) — and watch them diverge.
-:::
 
 ### Visualize sample-based forecasts
 
