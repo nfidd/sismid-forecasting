@@ -76,6 +76,35 @@ fourth_root <- function(x) x^0.25
 inv_fourth_root <- function(x) x^4
 my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
 ```
+
+We also set the inference configuration that every EpiNow2 fit in this session will use, so we can change it in one place if we want different inference later.
+
+```{r}
+stan_config <- stan_opts(method = "vb", backend = "rstan", samples = 1000)
+```
+:::
+
+::: {.callout-note collapse="true"}
+## Inference in this session: variational Bayes, and how to switch to pathfinder or MCMC
+
+EpiNow2 fits a Bayesian model in Stan, and we refit it dozens of times across forecast dates and models.
+Full Markov-chain Monte Carlo (MCMC) sampling gives the most honest posterior but takes ~1–2 minutes per fit, which would make the backtest take over an hour.
+Variational Bayes (`vb`) gives an approximate posterior in seconds via the `rstan` backend that ships with EpiNow2, so you do not need to install anything extra — the right trade-off for a teaching backtest where we care about relative model behaviour, not calibrated uncertainty.
+
+If you have the `cmdstanr` package and a CmdStan install, pathfinder usually gives a better approximation than `vb`.
+Switch by changing the single `stan_config` line above:
+
+```r
+stan_config <- stan_opts(method = "pathfinder", backend = "cmdstanr")
+```
+
+For full MCMC (best-calibrated, slowest):
+
+```r
+stan_config <- stan_opts(samples = 1000, chains = 2, method = "sampling", backend = "rstan")
+```
+
+Every fit in the session picks up the change automatically.
 :::
 
 # From autoregression to the renewal equation
@@ -177,7 +206,7 @@ en2_default <- estimate_infections(
   rt = rt_opts(rw = 7),
   gp = NULL,
   forecast = forecast_opts(horizon = 14),
-  stan = stan_opts(method = "vb", backend = "rstan", samples = 1000)
+  stan = stan_config
 )
 
 arima_default <- train |>
@@ -241,23 +270,6 @@ Which model looks closer to the truth over the first few days, and which drifts 
 What single piece of information would either model need to predict the turning point?
 :::
 
-## Scoring the single forecast
-
-To score the forecast we convert the EpiNow2 fit to a `forecast_sample` object with `as_forecast_sample()`, supplying the full observed series.
-We set `horizon = 1` so only genuinely out-of-sample predictions (one day ahead or more) are scored; the cutoff day itself (horizon 0) was used for fitting and would not be a fair test.
-
-```{r score-single}
-single_fc <- as_forecast_sample(en2_default, observations = reported, horizon = 1)
-single_scores <- score(single_fc)
-summarise_scores(single_scores, by = "forecast_date") |>
-  as_tibble() |>
-  select(forecast_date, crps, bias) |>
-  mutate(across(where(is.numeric), \(x) round(x, 2)))
-```
-
-CRPS summarises the whole predictive distribution against the observation (lower is better), and bias is positive when the forecast sits above the observations.
-A single number is hard to interpret on its own; scores are most useful when comparing models, which is what we do next.
-
 # The models we will compare
 
 We compare four models that differ in how much epidemiological mechanism they include.
@@ -290,28 +302,6 @@ forecast_dates <- seq.Date(
 length(forecast_dates)
 ```
 
-::: {.callout-note collapse="true"}
-## Why variational Bayes, and how to use better inference instead
-
-EpiNow2 fits a Bayesian model in Stan.
-Full Markov-chain Monte Carlo (MCMC) sampling gives the most honest posterior but takes ~1-2 minutes per fit, and here we refit 40 times across forecast dates and models.
-Variational Bayes (vb, via the rstan backend that ships with EpiNow2) gives an approximate posterior in seconds — the right trade-off for a teaching backtest where we care about relative model behaviour, not calibrated uncertainty.
-
-To use pathfinder instead, swap the `stan` argument (needs the cmdstanr package + CmdStan install):
-
-```r
-stan = stan_opts(method = "pathfinder", backend = "cmdstanr")
-```
-
-For full MCMC, use:
-
-```r
-stan = stan_opts(samples = 1000, chains = 2, method = "sampling", backend = "rstan")
-```
-
-Both give better-calibrated uncertainty at the cost of much longer runtimes.
-:::
-
 We define a helper that fits an EpiNow2 model with variational Bayes and returns sample-level predictions, and another that does the same for the ARIMA baseline via `fable::generate()`.
 
 ```{r fit-helpers}
@@ -322,7 +312,7 @@ fit_epinow2 <- function(rt, data) {
     delays = delay_opts(example_incubation_period + example_reporting_delay),
     rt = rt, gp = NULL,
     forecast = forecast_opts(horizon = 14),
-    stan = stan_opts(method = "vb", backend = "rstan", samples = 1000)
+    stan = stan_config
   )
 }
 
