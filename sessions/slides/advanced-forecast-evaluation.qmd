@@ -55,7 +55,7 @@ Many decisions depend on how locations move **together**:
 
 . . .
 
-A simultaneous peak everywhere is a different problem from staggered peaks — even when each region's marginal forecast is identical.
+A simultaneous peak everywhere is a different problem from staggered peaks, even when each region's marginal forecast is identical.
 
 ### The energy score {.smaller}
 
@@ -68,11 +68,11 @@ $$
 - $\mathbf{X}, \mathbf{X}'$ are independent draws from the forecast, $\lVert\cdot\rVert$ is Euclidean distance
 - First term rewards **accuracy**, second rewards **sharpness**
 - In one dimension it **is** the CRPS
-- Needs **joint samples** — fit each location alone and you assume independence
+- Needs **joint samples**, so fitting each location alone assumes independence
 
 ### Interactive: the energy score {.smaller}
 
-Same marginals, different dependence — only the energy score can tell.
+Same marginals, different dependence, and only the energy score can tell.
 
 [Open the energy-score explainer](../../interactive/advanced-forecast-evaluation.html){target="_blank"}
 
@@ -85,7 +85,7 @@ A single averaged score hides a lot, and a significance test barely helps:
 
 - scores are **skewed** and vary hugely by scale
 - they are **correlated** across dates, locations and horizons
-- forecasts differ in **difficulty** — averages reward easy targets
+- forecasts differ in **difficulty**, so averages reward easy targets
 - a p-value tells you *whether* models differ, not **where** or **by how much**
 
 ### Model the scores {.smaller}

@@ -213,9 +213,22 @@ The lesson is not that dependence is always good, but that the energy score can 
 
 When we compare models we usually reach for a single averaged score, and sometimes a significance test on top.
 Both are fragile.
-Scores are strongly right-skewed, they vary hugely with the scale of the data, and they are correlated across dates, locations and horizons.
-Forecasts also differ in difficulty, so an average quietly rewards whoever predicted the easy targets.
-A p-value, meanwhile, tells you *whether* two models differ, not *where* or *by how much*.
+
+::: callout-tip
+## Take 2 minutes
+
+Before reading on, write down two reasons a single average CRPS could give a misleading comparison of models.
+:::
+
+::: {.callout-note collapse="true"}
+## Solution
+
+-   Scores are strongly right-skewed, so a few hard weeks dominate the mean.
+-   They vary with the scale of the data, so big locations swamp small ones.
+-   They are correlated across dates, locations and horizons, so there is much less information than the number of rows suggests.
+-   Forecasts differ in difficulty, so an average quietly rewards whoever predicted the easy targets.
+-   A significance test tells you *whether* two models differ, not *where* or *by how much*.
+:::
 
 A more useful approach is to treat the scores themselves as data and model them.
 Let's run a small backtest over several forecast dates with three contrasting models.
