@@ -259,14 +259,17 @@ single_fc <- bind_rows(
     transmute(date, sample = as.integer(sample), predicted,
               model = "epi_default"),
   arima_default |> transmute(date, sample, predicted, model)
-)
+) |>
+  filter(!is.na(predicted))
 
 single_sum <- single_fc |>
   group_by(model, date) |>
   summarise(
-    median = median(predicted),
-    lower_50 = quantile(predicted, 0.25), upper_50 = quantile(predicted, 0.75),
-    lower_90 = quantile(predicted, 0.05), upper_90 = quantile(predicted, 0.95),
+    median = median(predicted, na.rm = TRUE),
+    lower_50 = quantile(predicted, 0.25, na.rm = TRUE),
+    upper_50 = quantile(predicted, 0.75, na.rm = TRUE),
+    lower_90 = quantile(predicted, 0.05, na.rm = TRUE),
+    upper_90 = quantile(predicted, 0.95, na.rm = TRUE),
     .groups = "drop"
   )
 
@@ -403,12 +406,14 @@ The no-depletion models can grow explosively, so we show the trajectories on bot
 
 ```{r plot-backtests}
 trajectory_summary <- all_forecasts |>
-  filter(horizon > 0) |>
+  filter(horizon > 0, !is.na(predicted)) |>
   group_by(model, forecast_date, date) |>
   summarise(
-    median = median(predicted),
-    lower_50 = quantile(predicted, 0.25), upper_50 = quantile(predicted, 0.75),
-    lower_90 = quantile(predicted, 0.05), upper_90 = quantile(predicted, 0.95),
+    median = median(predicted, na.rm = TRUE),
+    lower_50 = quantile(predicted, 0.25, na.rm = TRUE),
+    upper_50 = quantile(predicted, 0.75, na.rm = TRUE),
+    lower_90 = quantile(predicted, 0.05, na.rm = TRUE),
+    upper_90 = quantile(predicted, 0.95, na.rm = TRUE),
     .groups = "drop"
   )
 
@@ -671,11 +676,12 @@ mechanism_compare <- bind_rows(
   get_predictions(demo_wrong, format = "sample") |>
     as_tibble() |> filter(horizon > 0) |> mutate(model = "wrong_pop_prior")
 ) |>
+  filter(!is.na(predicted)) |>
   group_by(model, date) |>
   summarise(
-    median = median(predicted),
-    lower_90 = quantile(predicted, 0.05),
-    upper_90 = quantile(predicted, 0.95),
+    median = median(predicted, na.rm = TRUE),
+    lower_90 = quantile(predicted, 0.05, na.rm = TRUE),
+    upper_90 = quantile(predicted, 0.95, na.rm = TRUE),
     .groups = "drop"
   )
 ```
