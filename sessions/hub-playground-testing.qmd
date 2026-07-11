@@ -75,7 +75,7 @@ This hub contains five seasons for which you can submit forecasts, starting with
 Our recommended procedure from [the first session](hub-playground.qmd) is to use the first two seasons as a place to do as much model fitting as you have time for.
 If you did not have a chance to get 2-3 models to fit and generate predictions for the first two seasons, we suggest that you return to that session and complete that task before starting here. 
 
-You could create multiple flavors of ARIMA, or any of the more complex models suggested in the first session.
+You could create multiple flavors of ARIMA, or any of the more complex models suggested in the first session or in the [epidemiologically-motivated models](epi-motivated-forecasting.qmd).
 To do this in a "complete" way, you might create between 10 and 100 different variations of models. 
 
 Then, from those models, select the few that you think will do the best in the final three seasons.
