@@ -1,12 +1,12 @@
 ---
-title: "Epi-motivated forecasting"
+title: "Epidemiologically-motivated forecasting"
 author: "Nowcasting and forecasting of infectious disease dynamics"
 engine: knitr
 bibliography: ../../nfidd.bib
 format:
   revealjs:
     output: slides/epi-motivated-forecasting.html
-    footer: "Epi-motivated forecasting"
+    footer: "Epidemiologically-motivated forecasting"
     chalkboard: true
     slide-level: 3
 ---
@@ -19,35 +19,22 @@ theme_set(theme_bw())
 
 ### Forecasting so far
 
-In earlier sessions we used ARIMA, baselines, and ensembles, all *statistical* models that find patterns in counts and project them forward.
+In earlier sessions we used statistical models such as ARIMA that find patterns in counts and project them forward.
 
-:::: {.columns}
-
-::: {.column width="50%"}
 #### What we model
 
 -   Reported case counts
 -   Trends and seasonality
 -   Autocorrelation in the data
-:::
 
-::: {.column width="50%"}
-#### What we ignore
+### What we ignore
 
 -   How infections arise
 -   Generation time / transmission
 -   Susceptible depletion
--   Why growth must end
-:::
-
-::::
-
-### The missing ingredient: epidemiological mechanism
 
 Reported cases are the tail of a transmission process.
-
-If we model that process, the forecast can "know" things a pure time-series model cannot.
-For example, that exponential growth must end when susceptibles run out.
+If we model that process, the forecast can capture what a pure time-series model cannot.
 
 ### From infections to infections: the generation time
 
@@ -65,7 +52,7 @@ $$ I_t = R_t \times \sum_{t' < t} I_{t'}\, g(t - t') $$
 
 Past infections convolved with the generation time, scaled by $R_t$.
 
-### A renewal equation is an epi-informed autoregression {.smaller}
+### A renewal equation is an epidemiologically-informed autoregression {.smaller}
 
 :::: {.columns}
 
@@ -74,22 +61,22 @@ Past infections convolved with the generation time, scaled by $R_t$.
 
 $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 
-- Weights $\phi_s$ are free parameters
-- No epidemiological meaning
+- Coefficients $\phi_s$ are free parameters
+- $\varepsilon_t$ is an estimated noise term
 :::
 
 ::: {.column width="48%"}
 #### Renewal
 
-$$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s}\right) $$
+$$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s} + \iota_t\right) $$
 
-- Weights $w_s$ are the generation-time PMF
-- Scale is $R_t$, the reproduction number
+- Coefficients are $R_t\, w_s$, reproduction number times generation-time weight
+- $\iota_t$ is imported infections, set to zero here
 :::
 
 ::::
 
-Same autoregressive shape, but the weights are the generation-time distribution and the scale is $R_t$.
+Same autoregressive shape, but each coefficient is $R_t$ times a generation-time weight, and the noise term becomes imported infections we set to zero.
 
 ### From infections to reported cases
 
@@ -98,7 +85,7 @@ We observe *reported cases*.
 
 Delays such as the incubation period and reporting delay convolve infections into reports.
 
-EpiNow2 jointly estimates and deconvolves these delays.
+EpiNow2 models these delays jointly with transmission.
 
 ### Adding mechanism: susceptible depletion
 
@@ -108,44 +95,45 @@ As susceptibles run out, the effective reproduction number falls below $R_0$ eve
 
 $$ R_t = \frac{S_{t-1}}{N}\, R_0 $$
 
-```{r rt-decline, echo = FALSE, fig.height = 3.5}
+```{r rt-decline, echo = FALSE, fig.height = 3.2}
 n <- 100; N <- 1000; R0 <- 1.5
 S <- rep(NA, n); S[1] <- N
 Rt <- rep(NA, n); Rt[1] <- R0
 I <- rep(NA, n); I[1] <- 1
 for (i in 2:n) {
-  Rt[i] <- (S[i-1]) / N * R0
+  Rt[i] <- S[i-1] / N * R0
   I[i] <- I[i-1] * Rt[i]
   S[i] <- S[i-1] - I[i]
 }
-data <- tibble(t = 1:n, Rt = Rt)
-ggplot(data, aes(x = t, y = Rt)) +
+data <- tibble(
+  t = rep(1:n, 2),
+  value = c(S, Rt),
+  quantity = factor(
+    rep(c("Susceptibles (S)", "Reproduction number (Rt)"), each = n),
+    levels = c("Susceptibles (S)", "Reproduction number (Rt)")
+  )
+)
+ggplot(data, aes(x = t, y = value)) +
   geom_line() +
-  labs(title = "Rt declines as susceptibles deplete", x = "Time", y = "Rt") +
+  facet_wrap(~quantity, scales = "free_y") +
+  labs(
+    title = "Susceptibles deplete and Rt falls together",
+    x = "Time", y = NULL
+  ) +
   theme_bw()
 ```
 
-### What goes wrong with the wrong mechanism
-
-:::: {.columns}
-
-::: {.column width="50%"}
-#### Too-small population
+### A population set too small
 
 - Depletion bites too early
 - Forecast turns over prematurely
 - **Under-shoots** the peak
-:::
 
-::: {.column width="50%"}
-#### No depletion (default)
+### No susceptible depletion
 
 - Model keeps growing
 - Forecast sails past the peak
 - **Over-shoots** the peak
-:::
-
-::::
 
 A wrong mechanism is a *systematic* error in a *predictable* direction, not noise.
 
@@ -153,24 +141,10 @@ A wrong mechanism is a *systematic* error in a *predictable* direction, not nois
 
 In the real world you do not know the population at risk, and you cannot assume $R_t$ is constant.
 
-The model that estimates the population and lets $R_t$ vary is the one you would use, even though it scores worse when you do know the truth.
-
-### EpiNow2 is a tool, not the point
-
-EpiNow2 = renewal equation + delays + optional susceptible depletion, estimated in Stan.
-
-The engine is incidental.
-The **model structure** is what carries the forecast.
-
-We use variational Bayes (fast, ships with EpiNow2) instead of full MCMC, taking seconds per fit rather than minutes.
+Which of these models would you reach for?
 
 ## `r fontawesome::fa("laptop-code", "white")` Your turn {background-color="#447099" transition="fade-in"}
 
-### Back to the backtest
-
-Compare four models across 10 forecast dates and score them.
-The models are ARIMA, constant-rt fixed-pop, random-walk fixed-pop, and random-walk estimated-pop.
-
-Where in the epidemic does mechanism matter most?
+#
 
 [Return to the session](../epi-motivated-forecasting.qmd)

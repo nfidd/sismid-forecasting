@@ -1,5 +1,5 @@
 ---
-title: "Epi-motivated forecasting"
+title: "Epidemiologically-motivated forecasting"
 order: 5
 bibliography: ../nfidd.bib
 ---
@@ -10,25 +10,30 @@ options(width=100)
 
 # Introduction
 
-In earlier sessions we built forecasts from purely statistical models such as ARIMA, baselines, and ensembles.
+In earlier sessions we built forecasts from purely statistical models such as ARIMA.
 These models find patterns in reported counts and project those patterns forward.
 They do not know anything about *how* infections arise, how they are transmitted, or why an epidemic must eventually decline.
 
 In this session we add epidemiological mechanism to the forecast.
 The key idea is the **renewal equation**, a model of incidence that is mathematically an autoregression whose coefficients are the generation-time distribution and whose scale is the reproduction number $R_t$ [@bhattSemiMechanisticBayesianModeling2020; @coriNewFrameworkSoftware2013].
 This gives the forecast access to information that a pure time-series model cannot use.
-For example, it can capture that exponential growth must end when susceptibles run out.
 
-We will also account for the delay between infection and case report, and for susceptible depletion that bends the epidemic curve over at the peak.
-The backtest asks a question about parsimony and identification.
+We will account for the delay between infection and case report, and for susceptible depletion that bends the epidemic curve over at the peak.
+We then backtest a set of models with different amounts of epidemiological mechanism, making forecasts from a series of past dates and scoring them against what happened next.
+This asks a question about parsimony and identification.
 Does the model that matches the data-generating process win, and do unnecessary parameters hurt?
-We then deliberately break the mechanism with a wrong population size to see the cost of a wrong model up close.
-Throughout, we use the EpiNow2 R package as our tool [@abbottEpiNow2EstimateRealtime2025].
-The focus is on the model structure, not the software.
+Finally we deliberately break the mechanism with a wrong population size to see the cost of a wrong model up close.
+
+::: callout-note
+## EpiNow2 is the tool, not the point
+We fit these models with the EpiNow2 R package [@abbottEpiNow2EstimateRealtime2025].
+EpiNow2 combines the renewal equation, the delays from infection to report, and optional susceptible depletion, and fits them in Stan.
+The same model structure fit with other software would give the same forecasts, so the focus here is on the structure rather than the package.
+:::
 
 ## Slides
 
--   [Epi-motivated forecasting](slides/epi-motivated-forecasting.qmd)
+-   [Epidemiologically-motivated forecasting](slides/epi-motivated-forecasting.qmd)
 
 ## Objectives
 
@@ -116,15 +121,8 @@ Every fit in the session picks up the change automatically.
 
 # From autoregression to the renewal equation
 
-An ARIMA model, as we saw in earlier sessions, predicts the next value of a time series as a weighted sum of past values.
-$$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
-The weights $\phi_s$ are free parameters, estimated from the data with no constraints beyond stationarity.
-
+An ARIMA model predicts the next value of a time series as a weighted sum of its past values.
 A renewal equation has the same autoregressive shape, but every piece is given epidemiological meaning.
-$$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s}\right) $$
-Here $I_t$ is the number of new infections, $R_t$ is the reproduction number, and $w_s$ is the **generation-time distribution**, the probability that an infection caused $s$ days ago transmits now [@wallingaDifferentEpidemicCurves2004].
-The weights are not free.
-They must form a valid probability distribution, and they are typically estimated from data on serial intervals or generation times, not from the incidence curve itself.
 
 :::: {.columns}
 ::: {.column width="48%"}
@@ -132,25 +130,24 @@ They must form a valid probability distribution, and they are typically estimate
 
 $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 
-- Weights $\phi_s$ are free, estimated from the data
-- Scale is implicit in the weights
+- Coefficients $\phi_s$ are free, estimated from the data
+- $\varepsilon_t$ is an estimated noise term
 - No epidemiological meaning
 :::
 
 ::: {.column width="48%"}
 #### Renewal
 
-$$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s}\right) $$
+$$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s} + \iota_t\right) $$
 
-- Weights $w_s$ are the generation-time PMF
-- Scale is $R_t$, the reproduction number
+- Coefficients are $R_t\, w_s$, the reproduction number times the generation-time weight
+- $\iota_t$ is imported infections, set to zero here
 - Every term is an epidemiological quantity
 :::
 ::::
 
-This is the conceptual bridge.
-**A renewal equation is an epidemiologically-informed autoregression.**
-The structure is familiar, but the coefficients now carry mechanistic meaning that constrains what the model can say about the future.
+Here $I_t$ is the number of new infections, $R_t$ is the reproduction number, and $w_s$ is the **generation-time distribution**, the probability that an infection caused $s$ days ago transmits now [@wallingaDifferentEpidemicCurves2004].
+The generation-time weights $w_s$ are not free but must form a valid probability distribution, and are typically estimated from data on serial intervals or generation times, not from the incidence curve itself.
 
 # Simulating an outbreak
 
