@@ -141,12 +141,15 @@
 #' forecastable season (2015/16 through 2019/20), for the US National level and
 #' the 10 HHS regions. Each `.split` corresponds to a forecast origin, and its
 #' wILI values reflect the data **as it was available in real time** at that
-#' origin: for a split whose last observed week ends on `origin_date` D (epiweek
-#' XX), values come from the FluView release `issue == XX` (published the Friday
-#' of week XX+1, before the historical FluSight submission deadline of Monday of
-#' week XX+2), with weeks older than that release's revision window filled from
+#' origin: for a split whose last observed week ends on `origin_date` D, each
+#' week takes its latest FluView release on or before the historical FluSight
+#' submission deadline (Monday of week XX+2 = D + 9 days) -- so the origin week
+#' appears at its first-reported value and earlier weeks at whatever revision was
+#' published by then. Deep pre-vintage weeks (no release by D + 9) fall back to
 #' the finalized [flu_data_hhs]. Consequently the same week's value differs
-#' across splits, reproducing reporting backfill.
+#' across splits, reproducing reporting backfill. This is the identical
+#' reconstruction used for the hub's dashboard time-series, so the training data
+#' matches the observed series shown for each forecast.
 #'
 #' These mirror the shape of a [tsibble::stretch_tsibble()] result and can be
 #' passed directly to [fabletools::model()].

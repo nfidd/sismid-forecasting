@@ -81,20 +81,21 @@ flu_data_hhs_versions <- bind_rows(deep_history, flu_data_hhs_versions) |>
   arrange(location, origin_date, as_of)
 
 ## ---- vintage tscv builder -------------------------------------------------
-## For each origin D (Saturday), snapshot = issue == (D - 6) recent weeks,
-## coalesced over finalized deep history; tagged with an integer .split id.
+## For each origin D (Saturday = last observed week), the training series is the
+## data as it was available at the FluSight submission deadline (Monday of week
+## XX+2 = D + 9 days): for EACH week, its latest release on or before D + 9.
+## Deep pre-vintage weeks (no release by D + 9) fall back to the finalized value.
+## This is exactly the reconstruction used for the dashboard time-series
+## (target-data/get_target_data.R), so the training data a model saw at origin D
+## matches the observed series shown for that forecast, week for week.
 build_tscv <- function(origins) {
   origins <- as.Date(origins)
-  missing_issue <- setdiff(as.character(origins - 6),
-                           as.character(unique(as.Date(raw$issue))))
-  if (length(missing_issue)) {
-    stop("No issue in raw for origin(s): ",
-         paste(as.character(as.Date(missing_issue) + 6), collapse = ", "))
-  }
-
   imap(origins, function(D, i) {
     vint <- raw |>
-      filter(as.Date(issue) == D - 6) |>
+      filter(as.Date(release_date) <= D + 9) |>
+      group_by(region, epiweek) |>
+      slice_max(as.Date(release_date), n = 1, with_ties = FALSE) |>
+      ungroup() |>
       transmute(location = unname(reg2loc[region]),
                 origin_date = as.Date(epiweek) + 6,
                 wili_v = wili)
