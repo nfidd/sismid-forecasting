@@ -1,0 +1,46 @@
+---
+title: "Building real-world ensembles"
+author: "Nowcasting and forecasting of infectious disease dynamics"
+bibliography: ../../nfidd.bib
+engine: knitr
+format:
+  revealjs:
+    output: slides/real-world-ensembles.html
+    footer: "Building real-world ensembles"
+    chalkboard: true
+    slide-level: 3
+---
+
+### Recall: all the COVID-19 forecasts
+
+![](figures/all-the-forecasts.png)
+
+
+### Recall: building ensembles {.smaller}
+
+$$F_{LOP}(x) = \sum_{m=1}^M w_m F_m(x) $$
+
+![Figure credit: [@shandross_multi-model_2026]](figures/ensemble-methods.png)
+
+
+### Ensemble methods: to weight or not?
+
+$$F_{LOP}(x) = \sum_{m=1}^M w_m F_m(x) $$
+
+   - How do you estimate weights?
+      - by past performance: e.g., using forecast scores
+      - by human judgment, using expertise and knowledge of mdoels
+      
+   - Rarely better than equal average
+      - lots of uncertainty in weight estimation!
+      - put a "strong prior" on equal weights, both in your mental and statistical models
+
+#
+
+[Return to the session](../eval-real-world-ensembles.qmd)
+
+### References
+
+::: {#refs}
+:::
+
