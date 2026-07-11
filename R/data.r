@@ -104,3 +104,76 @@
 #'   \item{wili}{the weighted ILI (Influenza-like Illness) variable}
 #' }
 "flu_data_hhs"
+
+#' Versioned (vintage) Flusight ILI data for the US and HHS regions
+#'
+#' Each reported version of weekly weighted ILI (wILI) for the US National
+#' level and the 10 HHS regions, for the observation weeks of the five
+#' forecastable seasons in the sandbox hub (2015/16-2019/20). Because ILINet is
+#' revised as more reports arrive ("backfill"), the same observation week has
+#' several values, one per data release, so you can see how an estimate for a
+#' given week evolved and what a forecaster would have seen in real time.
+#'
+#' For weeks in the forecastable seasons, versions run from a week's first
+#' release up to that season's finalized value, defined as the latest release on
+#' or before 1 July of the season's end year (weeks in Aug-Dec belong to the
+#' season ending the following year). Later cross-season re-baselines of ILINet
+#' are excluded, so the last `as_of` for each such week is that season's final
+#' value. Weeks before the forecastable era (prior to the 2015/16 season) were
+#' already settled when forecasting begins and carry a single baseline version
+#' (their finalized value, `as_of` 2015-10-01), so the full 2003-onward series is
+#' available -- e.g. for reconstructing the training data available at any date.
+#'
+#' @format A [tibble::tibble()] with 4 columns.
+#' \describe{
+#'   \item{location}{"US National", or "HHS Region 1" through "HHS Region 10"}
+#'   \item{origin_date}{the Saturday ending the observed epiweek}
+#'   \item{as_of}{the date this version of the observation was published by the
+#'   CDC (the release date); the season-final value is the one with the latest
+#'   `as_of`}
+#'   \item{wili}{the weighted ILI value as reported in that release}
+#' }
+"flu_data_hhs_versions"
+
+#' Vintage time-series cross-validation datasets for the sandbox hub seasons
+#'
+#' Five expanding-window time-series cross-validation datasets, one per
+#' forecastable season (2015/16 through 2019/20), for the US National level and
+#' the 10 HHS regions. Each `.split` corresponds to a forecast origin, and its
+#' wILI values reflect the data **as it was available in real time** at that
+#' origin: for a split whose last observed week ends on `origin_date` D (epiweek
+#' XX), values come from the FluView release `issue == XX` (published the Friday
+#' of week XX+1, before the historical FluSight submission deadline of Monday of
+#' week XX+2), with weeks older than that release's revision window filled from
+#' the finalized [flu_data_hhs]. Consequently the same week's value differs
+#' across splits, reproducing reporting backfill.
+#'
+#' These mirror the shape of a [tsibble::stretch_tsibble()] result and can be
+#' passed directly to [fabletools::model()].
+#'
+#' @format A [tsibble::tsibble()] keyed by `location` and `.split`, indexed by
+#'   `origin_date`.
+#' \describe{
+#'   \item{location}{"US National", or "HHS Region 1" through "HHS Region 10"}
+#'   \item{origin_date}{the Saturday ending an epiweek}
+#'   \item{wili}{the vintage weighted ILI value available at that split's origin}
+#'   \item{.split}{integer id of the cross-validation split (forecast origin)}
+#' }
+#' @name flu_data_hhs_tscv
+"flu_data_hhs_tscv_season1"
+
+#' @rdname flu_data_hhs_tscv
+#' @format NULL
+"flu_data_hhs_tscv_season2"
+
+#' @rdname flu_data_hhs_tscv
+#' @format NULL
+"flu_data_hhs_tscv_season3"
+
+#' @rdname flu_data_hhs_tscv
+#' @format NULL
+"flu_data_hhs_tscv_season4"
+
+#' @rdname flu_data_hhs_tscv
+#' @format NULL
+"flu_data_hhs_tscv_season5"

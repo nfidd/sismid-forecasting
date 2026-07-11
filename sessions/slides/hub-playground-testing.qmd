@@ -123,10 +123,9 @@ The best-*looking* model isn't reliably the best *forecaster*.
   **generate once, no refitting, no peeking.**
 
 ::: {.fragment .fade-in}
-::: callout-caution
+::: callout-note
 
-We forecast with **finalized** data, whereas the hub's original models
-used data **as it was at the time**. Compare with care.
+Our cross-validation uses the **vintage** data available at each date, so — like the original hub models — you forecast from real-time data, not finalized data.
 :::
 :::
 
