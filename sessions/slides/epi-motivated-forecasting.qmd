@@ -60,7 +60,7 @@ Past infections convolved with the generation time, scaled by $R_t$.
 $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 
 - Coefficients $\phi_s$ are free parameters
-- $\varepsilon_t$ is an estimated noise term
+- $\varepsilon_t$ is the observation error
 :::
 
 ::: {.column width="48%"}
@@ -69,12 +69,13 @@ $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 $$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s} + \iota_t\right) $$
 
 - Coefficients are $R_t\, w_s$, reproduction number times generation-time weight
+- Observation error comes from the sampling distribution
 - $\iota_t$ is imported infections, set to zero here
 :::
 
 ::::
 
-Same autoregressive shape, but each coefficient is $R_t$ times a generation-time weight, and the noise term becomes imported infections we set to zero.
+Same autoregressive shape, but the coefficients are $R_t$ times generation-time weights, and the observation error comes from the sampling distribution rather than an additive $\varepsilon_t$.
 
 ### From infection to report: delays {.smaller}
 

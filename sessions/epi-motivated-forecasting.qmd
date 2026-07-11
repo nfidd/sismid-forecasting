@@ -131,7 +131,7 @@ A renewal equation has the same autoregressive shape, but every piece is given e
 $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 
 - Coefficients $\phi_s$ are free, estimated from the data
-- $\varepsilon_t$ is an estimated noise term
+- $\varepsilon_t$ is the observation error
 - No epidemiological meaning
 :::
 
@@ -141,12 +141,14 @@ $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 $$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s} + \iota_t\right) $$
 
 - Coefficients are $R_t\, w_s$, the reproduction number times the generation-time weight
+- The sampling distribution is the observation error, in place of $\varepsilon_t$
 - $\iota_t$ is imported infections, set to zero here
-- Every term is an epidemiological quantity
 :::
 ::::
 
 Here $I_t$ is the number of new infections, $R_t$ is the reproduction number, and $w_s$ is the **generation-time distribution**, the probability that an infection caused $s$ days ago transmits now [@wallingaDifferentEpidemicCurves2004].
+Both models carry an observation error: the ARIMA adds it as $\varepsilon_t$, while the renewal draws the counts from a sampling distribution (negative binomial when we fit).
+The additive $\iota_t$ is separate: it is infections imported from outside the population, which we set to zero here.
 The generation-time weights $w_s$ are not free but must form a valid probability distribution, and are typically estimated from data on serial intervals or generation times, not from the incidence curve itself.
 
 # Simulating an outbreak
