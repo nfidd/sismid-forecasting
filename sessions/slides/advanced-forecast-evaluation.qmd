@@ -45,6 +45,20 @@ A forecast for two regions is a cloud of plausible **pairs**, not two separate n
 Averaging a one-location score (CRPS) only ever sees the **marginals**.
 It cannot tell these forecasts apart.
 
+### Same forecast, two views {.smaller}
+
+:::: {.columns}
+::: {.column width="50%"}
+![](figures/ili-forecast-ribbon.png)
+:::
+::: {.column width="50%"}
+![](figures/ili-forecast-trajectories.png)
+:::
+::::
+
+The ribbon shows the spread at each week on its own.
+The trajectories show whole paths, so you can see how the forecast moves **over time**.
+
 ### Why the joint distribution matters {.smaller}
 
 Many decisions depend on how locations move **together**:
@@ -56,6 +70,12 @@ Many decisions depend on how locations move **together**:
 . . .
 
 A simultaneous peak everywhere is a different problem from staggered peaks, even when each region's marginal forecast is identical.
+
+### Paths across locations {.smaller}
+
+![](figures/ili-trajectories-regions.png)
+
+To ask questions that couple locations, you need the **paths**, not just the margins at each week.
 
 ### The energy score {.smaller}
 
