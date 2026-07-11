@@ -77,6 +77,8 @@ A simultaneous peak everywhere is a different problem from staggered peaks, even
 
 To ask questions that couple locations, you need the **paths**, not just the margins at each week.
 
+Quantile hubs store per-location, per-horizon margins; sample (trajectory) output keeps the joint distribution [@hubverseModelOutput2026].
+
 ### The energy score {.smaller}
 
 A proper scoring rule for a **vector** outcome $\mathbf{y}$, generalising the CRPS.

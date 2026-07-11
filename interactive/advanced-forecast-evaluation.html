@@ -251,6 +251,8 @@ function fixedNormals(m){
     svg.appendChild(el("text",{x:sx(obs.a)+12,y:sy(obs.b)-10,"font-size":12,fill:"#ea580c","font-weight":700})).textContent="y";
 
     // readouts
+    // marginals use the closed-form Normal CRPS (depends only on mu, sig, y) so
+    // they are exactly invariant to rho; the energy score uses the sample cloud.
     const cA=crpsNorm(muA,sig,obs.a), cB=crpsNorm(muB,sig,obs.b);
     const es=energyScore(pts,obs);
     document.getElementById("esCrpsA").textContent=cA.toFixed(2);

@@ -202,7 +202,7 @@ Why does coupling the regions help here, and when would it hurt instead?
 
 At this target date all three regions came in **below** their forecast medians at the same time, a synchronised late-season decline.
 The comonotonic forecast puts probability on regions being jointly low (or jointly high), so it places mass near what actually happened and scores better.
-The independent forecast, which is what fitting each region separately gives us, spreads its joint mass into corners where one region is high while another is low, and pays for it.
+The independent forecast, which is what fitting each region separately gives us, spreads its joint mass across combinations where one region is high while another is low, and scores worse for it.
 
 If instead the regions had diverged, one high while another was low, the coupling would have hurt and the independent forecast would have scored better.
 The marginal CRPS is blind to all of this: it is identical either way.
@@ -224,9 +224,9 @@ Before reading on, write down two reasons a single average CRPS could give a mis
 ## Solution
 
 -   Scores are strongly right-skewed, so a few hard weeks dominate the mean.
--   They vary with the scale of the data, so big locations swamp small ones.
+-   They vary with the scale of the data, so big locations dominate small ones.
 -   They are correlated across dates, locations and horizons, so there is much less information than the number of rows suggests.
--   Forecasts differ in difficulty, so an average quietly rewards whoever predicted the easy targets.
+-   Forecasts differ in difficulty, so an average rewards whoever predicted the easy targets.
 -   A significance test tells you *whether* two models differ, not *where* or *by how much*.
 :::
 
@@ -297,7 +297,7 @@ We adjust for horizon and location difficulty, and we get uncertainty on each mo
 ::: callout-important
 ## Do not transform the score itself
 
-It is tempting to fit `lm(log(crps) ~ ...)` to tame the skew, but this quietly breaks what made the CRPS worth using.
+It is tempting to fit `lm(log(crps) ~ ...)` to handle the skew, but this breaks what made the CRPS worth using.
 The CRPS is a *proper* score, so the average CRPS is minimised by the better forecaster.
 The log is nonlinear, so the average *log* CRPS is not, and ranking models by it is no longer a proper comparison.
 
@@ -337,12 +337,23 @@ newd <- data.frame(
   horizon  = 2
 )
 pr <- predict(score_model, newd, se.fit = TRUE)  # link (log) scale
-data.frame(
+adj_means <- data.frame(
   model    = as.character(newd$model),
   adj_crps = exp(pr$fit),
   lower    = exp(pr$fit - 1.96 * pr$se.fit),
   upper    = exp(pr$fit + 1.96 * pr$se.fit)
 )
+adj_means
+```
+
+A forest plot makes the overlap easy to read.
+
+```{r partB-forest}
+adj_means |>
+  mutate(model = reorder(model, adj_crps)) |>
+  ggplot(aes(x = adj_crps, y = model)) +
+  geom_pointrange(aes(xmin = lower, xmax = upper)) +
+  labs(x = "Adjusted mean CRPS (horizon 2, Region 1)", y = NULL)
 ```
 
 ::: callout-tip
@@ -356,7 +367,7 @@ What does the model tell you that the average does not?
 ::: {.callout-note collapse="true"}
 ## Solution
 
-The naive ranking puts `fourier` first, but the score model shows its edge is not distinguishable from noise, with a coefficient near $-0.09$ and a standard error of about $0.08$.
+The naive ranking puts `fourier` first, but the score model shows its edge is not distinguishable from noise, with a `modelfourier` coefficient that is small relative to its standard error.
 The `rw` model is effectively tied with `arima210`.
 The adjusted intervals for all three models overlap heavily, so the average overstates a difference that is within noise.
 
@@ -382,7 +393,7 @@ Adding random effects for date, location and horizon handles this properly, eith
 ## Methods in practice
 
 -   The `scoringRules` package [documentation](https://cran.r-project.org/package=scoringRules) covers multivariate scores including the energy and variogram scores.
--   Modelling scores with random effects is used in practice to compare models across many locations and dates.[@sherrattPredictivePerformanceMultimodel2023]
+-   Hubs increasingly collect sample (trajectory) forecasts rather than only quantiles, which keeps the joint distribution across locations and horizons.[@hubverseModelOutput2026]
 
 # Wrap up
 
