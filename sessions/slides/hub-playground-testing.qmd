@@ -77,7 +77,7 @@ But — will it still be the best on seasons it has *never seen*?
 
 ### Validation rank ≠ test rank
 
-- Each forecast is genuinely **out-of-sample in time** — the model never sees the weeks it predicts.
+- Each forecast is **out-of-sample in time** — the model never sees the weeks it predicts.
 - **But** across the validation seasons you iterate: tweak, refit, re-score, keep what looks best.
 - So those seasons quietly become **in-sample for model *selection*** — you are, in effect, fitting to them.
 - And it's a **tiny sample — just two seasons** — so the rankings are **noisy** and **optimistically biased**.
@@ -98,8 +98,8 @@ This further suggests that we need to be cautious about assuming that validation
 
 Favour models that are:
 
-- ✅ **consistently good** in CV — not just the single lowest score
-- ✅ **parsimonious** — fewer parameters overfit less
+- ✅ **consistently good** in CV — not just the single lowest validation score 
+- ✅ **parsimonious** — fewer parameters means the model is less likely to be overfit
 - ✅ **diverse** — e.g. best `ARIMA`, best `NNETAR`, best ensemble
 - ✅ **stable** across seasons *and* locations
 
