@@ -60,18 +60,17 @@ Let $F_m^{-1}(\theta)$ be the inverse CDF, or the quantile function, for quantil
 
 $$F_Q^{-1}(\theta) = \sum_{m=1}^M w_m F_m^{-1}(\theta) $$
 
-![Figure credit: @shandross_multi-model_2026](figures/ensemble-methods.png)
+![Figure credit: [@shandross_multi-model_2026]](figures/ensemble-methods.png)
 
 ### Ensemble methods: to weight or not?
 
 $$F_{LOP}(x) = \sum_{m=1}^M w_m F_m(x) $$
 
-   - Weight models by past forecast performance
-   
-      - e.g. using forecast scores
+   - How do you estimate weights?
+      - by past performance: e.g., using forecast scores
+      - by human judgment, using expertise and knowledge of mdoels
       
    - Rarely better than equal average
-   
       - lots of uncertainty in weight estimation!
       - put a "strong prior" on equal weights, both in your mental and statistical models
 
