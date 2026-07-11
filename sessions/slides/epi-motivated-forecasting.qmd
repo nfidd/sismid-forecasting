@@ -19,7 +19,7 @@ theme_set(theme_bw())
 
 ### Forecasting so far
 
-In earlier sessions we used ARIMA, baselines, and ensembles — all *statistical* models that find patterns in counts and project them forward.
+In earlier sessions we used ARIMA, baselines, and ensembles, all *statistical* models that find patterns in counts and project them forward.
 
 :::: {.columns}
 
@@ -46,17 +46,18 @@ In earlier sessions we used ARIMA, baselines, and ensembles — all *statistical
 
 Reported cases are the tail of a transmission process.
 
-If we model that process, the forecast can "know" things a pure time-series model cannot — for example, that exponential growth must end when susceptibles run out.
+If we model that process, the forecast can "know" things a pure time-series model cannot.
+For example, that exponential growth must end when susceptibles run out.
 
 ### From infections to infections: the generation time
 
 The time from one infection (person A) to the next infection it causes (person B) is the **generation time**, a distribution $g(t)$.
 
-This is the infection-to-infection analogue of the delay convolution we saw in the nowcasting course.
+It describes how the infections caused by one person are spread out over the days after they are infected.
 
 ### The renewal equation as a convolution {.smaller}
 
-Infections today depend on infections in the past, weighted by the generation-time distribution and scaled by $R_t$:
+Infections today depend on infections in the past, weighted by the generation-time distribution and scaled by $R_t$.
 
 $$ I_t = R_t \times \sum_{t' < t} I_{t'}\, g(t - t') $$
 
@@ -73,7 +74,7 @@ Past infections convolved with the generation time, scaled by $R_t$.
 
 $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 
-- Weights $\phi_s$: free parameters
+- Weights $\phi_s$ are free parameters
 - No epidemiological meaning
 :::
 
@@ -82,29 +83,28 @@ $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 
 $$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s}\right) $$
 
-- Weights $w_s$: generation-time PMF
-- Scale: $R_t$ (reproduction number)
+- Weights $w_s$ are the generation-time PMF
+- Scale is $R_t$, the reproduction number
 :::
 
 ::::
 
-Same autoregressive shape — but the weights are the generation-time distribution and the scale is $R_t$.
+Same autoregressive shape, but the weights are the generation-time distribution and the scale is $R_t$.
 
 ### From infections to reported cases
 
-We don't observe infections; we observe *reported cases*.
+We don't observe infections.
+We observe *reported cases*.
 
-Delays — incubation period plus reporting delay — convolve infections into reports.
+Delays such as the incubation period and reporting delay convolve infections into reports.
 
 EpiNow2 jointly estimates and deconvolves these delays.
-
-The nowcasting companion course covers delays in depth.
 
 ### Adding mechanism: susceptible depletion
 
 The population at risk is finite.
 
-As susceptibles run out, the effective reproduction number falls below $R_0$ even with no change in behaviour:
+As susceptibles run out, the effective reproduction number falls below $R_0$ even with no change in behaviour.
 
 $$ R_t = \frac{S_{t-1}}{N}\, R_0 $$
 
@@ -147,27 +147,29 @@ ggplot(data, aes(x = t, y = Rt)) +
 
 ::::
 
-A wrong mechanism is a *systematic* error, in a *predictable* direction — not noise.
+A wrong mechanism is a *systematic* error in a *predictable* direction, not noise.
 
 ### Which model would you actually use?
 
 In the real world you do not know the population at risk, and you cannot assume $R_t$ is constant.
 
-The model that estimates the population and lets $R_t$ vary is the one you would use — even though it scores worse when you do know the truth.
+The model that estimates the population and lets $R_t$ vary is the one you would use, even though it scores worse when you do know the truth.
 
-### EpiNow2 — a tool, not the point
+### EpiNow2 is a tool, not the point
 
 EpiNow2 = renewal equation + delays + optional susceptible depletion, estimated in Stan.
 
-The engine is incidental; the **model structure** is what carries the forecast.
+The engine is incidental.
+The **model structure** is what carries the forecast.
 
-We use variational Bayes (fast, ships with EpiNow2) instead of full MCMC — seconds per fit, not minutes.
+We use variational Bayes (fast, ships with EpiNow2) instead of full MCMC, taking seconds per fit rather than minutes.
 
 ## `r fontawesome::fa("laptop-code", "white")` Your turn {background-color="#447099" transition="fade-in"}
 
 ### Back to the backtest
 
-Compare four models — ARIMA, constant-rt fixed-pop, random-walk fixed-pop, random-walk estimated-pop — across 10 forecast dates and score them.
+Compare four models across 10 forecast dates and score them.
+The models are ARIMA, constant-rt fixed-pop, random-walk fixed-pop, and random-walk estimated-pop.
 
 Where in the epidemic does mechanism matter most?
 

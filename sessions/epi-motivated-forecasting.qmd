@@ -10,18 +10,21 @@ options(width=100)
 
 # Introduction
 
-In earlier sessions we built forecasts from purely statistical models — ARIMA, baselines, and ensembles.
+In earlier sessions we built forecasts from purely statistical models such as ARIMA, baselines, and ensembles.
 These models find patterns in reported counts and project those patterns forward.
 They do not know anything about *how* infections arise, how they are transmitted, or why an epidemic must eventually decline.
 
 In this session we add epidemiological mechanism to the forecast.
-The key idea is the **renewal equation**: a model of incidence that is, mathematically, an autoregression whose coefficients are the generation-time distribution and whose scale is the reproduction number $R_t$ [@bhattSemiMechanisticBayesianModeling2020; @coriNewFrameworkSoftware2013].
-This gives the forecast access to information that a pure time-series model cannot use — for example, that exponential growth must end when susceptibles run out.
+The key idea is the **renewal equation**, a model of incidence that is mathematically an autoregression whose coefficients are the generation-time distribution and whose scale is the reproduction number $R_t$ [@bhattSemiMechanisticBayesianModeling2020; @coriNewFrameworkSoftware2013].
+This gives the forecast access to information that a pure time-series model cannot use.
+For example, it can capture that exponential growth must end when susceptibles run out.
 
 We will also account for the delay between infection and case report, and for susceptible depletion that bends the epidemic curve over at the peak.
-The backtest asks a question about parsimony and identification: does the model that matches the data-generating process win, and do unnecessary parameters hurt?
+The backtest asks a question about parsimony and identification.
+Does the model that matches the data-generating process win, and do unnecessary parameters hurt?
 We then deliberately break the mechanism with a wrong population size to see the cost of a wrong model up close.
-Throughout, we use the EpiNow2 R package as our tool [@abbottEpiNow2EstimateRealtime2025]; the focus is on the model structure, not the software.
+Throughout, we use the EpiNow2 R package as our tool [@abbottEpiNow2EstimateRealtime2025].
+The focus is on the model structure, not the software.
 
 ## Slides
 
@@ -86,11 +89,12 @@ stan_config <- stan_opts(method = "vb", backend = "rstan", samples = 1000)
 :::
 
 ::: {.callout-note collapse="true"}
-## Inference in this session: variational Bayes, and how to switch to pathfinder or MCMC
+## Inference in this session, and how to switch to pathfinder or MCMC
 
 EpiNow2 fits a Bayesian model in Stan, and we refit it dozens of times across forecast dates and models.
-Full Markov-chain Monte Carlo (MCMC) sampling gives the most honest posterior but takes ~1–2 minutes per fit, which would make the backtest take over an hour.
-Variational Bayes (`vb`) gives an approximate posterior in seconds via the `rstan` backend that ships with EpiNow2, so you do not need to install anything extra — the right trade-off for a teaching backtest where we care about relative model behaviour, not calibrated uncertainty.
+Full Markov-chain Monte Carlo (MCMC) sampling gives the most honest posterior but takes around 40 seconds per fit, which would make the backtest take 20 minutes or more.
+Variational Bayes (`vb`) gives an approximate posterior in one to two seconds via the `rstan` backend that ships with EpiNow2, so you do not need to install anything extra.
+This is the right trade-off for a teaching backtest where we care about relative model behaviour rather than calibrated uncertainty.
 
 If you have the `cmdstanr` package and a CmdStan install, pathfinder usually gives a better approximation than `vb`.
 Switch by changing the single `stan_config` line above:
@@ -105,20 +109,22 @@ For full MCMC (best-calibrated, slowest):
 stan_config <- stan_opts(samples = 1000, chains = 2, warmup = 300, method = "sampling", backend = "rstan")
 ```
 
-In a real-world analysis you would use more warmup and sampling iterations for better-calibrated uncertainty; we use reduced settings here to keep the session runtime manageable.
+In a real-world analysis you would use more warmup and sampling iterations for better-calibrated uncertainty.
+We use reduced settings here to keep the session runtime manageable.
 Every fit in the session picks up the change automatically.
 :::
 
 # From autoregression to the renewal equation
 
-An ARIMA model, as we saw in earlier sessions, predicts the next value of a time series as a weighted sum of past values:
+An ARIMA model, as we saw in earlier sessions, predicts the next value of a time series as a weighted sum of past values.
 $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 The weights $\phi_s$ are free parameters, estimated from the data with no constraints beyond stationarity.
 
-A renewal equation has the same autoregressive shape, but every piece is given epidemiological meaning:
+A renewal equation has the same autoregressive shape, but every piece is given epidemiological meaning.
 $$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s}\right) $$
-Here $I_t$ is the number of new infections, $R_t$ is the reproduction number, and $w_s$ is the **generation-time distribution** — the probability that an infection caused $s$ days ago transmits now [@wallingaDifferentEpidemicCurves2004].
-The weights are not free: they must form a valid probability distribution, and they are typically estimated from data on serial intervals or generation times, not from the incidence curve itself.
+Here $I_t$ is the number of new infections, $R_t$ is the reproduction number, and $w_s$ is the **generation-time distribution**, the probability that an infection caused $s$ days ago transmits now [@wallingaDifferentEpidemicCurves2004].
+The weights are not free.
+They must form a valid probability distribution, and they are typically estimated from data on serial intervals or generation times, not from the incidence curve itself.
 
 :::: {.columns}
 ::: {.column width="48%"}
@@ -126,8 +132,8 @@ The weights are not free: they must form a valid probability distribution, and t
 
 $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 
-- Weights $\phi_s$: free, estimated from the data
-- Scale: implicit in the weights
+- Weights $\phi_s$ are free, estimated from the data
+- Scale is implicit in the weights
 - No epidemiological meaning
 :::
 
@@ -136,13 +142,14 @@ $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 
 $$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s}\right) $$
 
-- Weights $w_s$: generation-time PMF
-- Scale: $R_t$ (reproduction number)
+- Weights $w_s$ are the generation-time PMF
+- Scale is $R_t$, the reproduction number
 - Every term is an epidemiological quantity
 :::
 ::::
 
-This is the conceptual bridge: **a renewal equation is an epidemiologically-informed autoregression**.
+This is the conceptual bridge.
+**A renewal equation is an epidemiologically-informed autoregression.**
 The structure is familiar, but the coefficients now carry mechanistic meaning that constrains what the model can say about the future.
 
 # Simulating an outbreak
@@ -184,7 +191,8 @@ ggplot(reported, aes(x = date, y = confirm)) +
   theme_bw()
 ```
 
-The decline happens because susceptibles are running out — the population at risk is finite, and once enough people have been infected, the effective reproduction number drops below 1 even though the underlying $R_t$ is still 1.25.
+The decline happens because susceptibles are running out.
+The population at risk is finite, so once enough people have been infected the effective reproduction number drops below 1 even though the underlying $R_t$ is still 1.25.
 This is the mechanism we want our forecasts to capture.
 
 # A single forecast
@@ -197,7 +205,7 @@ forecast_date <- as.Date("2023-03-18")
 train <- reported |> filter(date <= forecast_date)
 ```
 
-We fit two models: the EpiNow2 default renewal model and the ARIMA baseline from earlier sessions.
+We fit two models, the EpiNow2 default renewal model and the ARIMA baseline from earlier sessions.
 Both use a 14-day forecast horizon.
 
 ```{r single-forecast, warning = FALSE, message = FALSE}
@@ -261,8 +269,9 @@ ggplot(single_fc_sum, aes(x = date, fill = model, colour = model)) +
 ```
 
 Neither model knows that the epidemic is about to turn over.
-The ARIMA projects the recent trend forward; the renewal model does the same, because this model has no mechanism for susceptible depletion.
-Both over-shoot the peak — foreshadowing the backtest, where we give the EpiNow2 models the ability to see the turnover coming.
+The ARIMA projects the recent trend forward, and the renewal model does the same because this model has no mechanism for susceptible depletion.
+Both over-shoot the peak.
+This foreshadows the backtest, where we give the EpiNow2 models the ability to see the turnover coming.
 
 ::: callout-tip
 ## Take 5 minutes
@@ -275,18 +284,20 @@ What single piece of information would either model need to predict the turning 
 # The models we will compare
 
 We compare four models that differ in how much epidemiological mechanism and flexibility they include.
-This is a story about parsimony and identification: the data-generating process has constant $R_t$ and a known population, so the model that matches it should win.
+This is a story about parsimony and identification.
+The data-generating process has constant $R_t$ and a known population, so the model that matches it should win.
 Unnecessary flexibility (a random walk on $R_t$) and an unidentified parameter (estimating the population) should hurt.
 
-- **ARIMA** — `ARIMA(my_fourth_root(confirm))` with auto-ARIMA, so fable selects the order automatically from the data. Auto-ARIMA may select different orders at different forecast dates — this is a feature of a fair statistical baseline, not a bug.
-- **constant_rt_fixed** — constant reproduction number (the default `rw = 0`) with the *true* population size. This matches the data-generating process: constant $R_t$ plus susceptible depletion. Should win.
-- **rw_fixed** — adds a weekly random walk on $R_t$ (`rw = 7`) with the true population. The random walk is unnecessary flexibility — the DGP has constant $R_t$.
-- **rw_estimated** — weekly random walk on $R_t$ with an estimated population (`Normal(mean = pop_size, sd = pop_size / 2)`). The population is weakly identified from a single outbreak, so estimating it adds uncertainty without benefit.
+- **ARIMA**. `ARIMA(my_fourth_root(confirm))` with auto-ARIMA, so fable selects the order automatically from the data. It may select different orders at different forecast dates, which is a feature of a fair statistical baseline rather than a bug.
+- **constant_rt_fixed**. Constant reproduction number (the default `rw = 0`) with the *true* population size. This matches the data-generating process of constant $R_t$ plus susceptible depletion, so it should win.
+- **rw_fixed**. Adds a weekly random walk on $R_t$ (`rw = 7`) with the true population. The random walk is unnecessary flexibility because the data-generating process has constant $R_t$.
+- **rw_estimated**. Weekly random walk on $R_t$ with an estimated population (`Normal(mean = pop_size, sd = pop_size / 2)`). The population is weakly identified from a single outbreak, so estimating it adds uncertainty without benefit.
 
-The EpiNow2 models share the same renewal structure; they differ only in the `rt_opts()` arguments.
+The EpiNow2 models share the same renewal structure and differ only in the `rt_opts()` arguments.
 The ARIMA baseline is fit separately with `fable`, using the same fourth-root transformation as in earlier sessions.
 
-The wrong-population model is deliberately left out of the backtest — it appears later as a standalone demonstration.
+The wrong-population model is deliberately left out of the backtest.
+It appears later as a standalone demonstration.
 
 ```{r model-specs}
 epi_models <- list(
@@ -299,7 +310,8 @@ epi_models <- list(
 # Backtesting across forecast dates
 
 We backtest each model from 10 forecast dates, one week apart, spanning the growth phase, the peak, and the decline.
-Contrasting phases matters because susceptible depletion only shapes the forecast near and after the peak; early in the growth phase it is almost irrelevant.
+Contrasting phases matters because susceptible depletion only shapes the forecast near and after the peak.
+Early in the growth phase it is almost irrelevant.
 
 ```{r forecast-dates}
 forecast_dates <- seq.Date(
@@ -364,7 +376,8 @@ all_forecasts <- map_dfr(forecast_dates, backtest_one) |>
 ## Visualising the backtested forecasts
 
 Before scoring, we look at the forecast trajectories themselves.
-Each panel is a forecast date; the ribbons are the 50% and 90% credible intervals, the lines are the posterior medians, and the points are the observed data.
+Each panel is a forecast date.
+The ribbons are the 50% and 90% credible intervals, the lines are the posterior medians, and the points are the observed data.
 
 ```{r plot-backtests, fig.height = 10}
 trajectory_summary <- all_forecasts |>
@@ -418,9 +431,10 @@ Does your prediction change if we score on the natural scale versus the log scal
 ::: {.callout-note collapse="true"}
 ## Solution
 
-The constant-RT fixed-population model should score best overall if the parsimony story holds, because it matches the data-generating process.
-But the results may surprise us — a constant $R_t$ estimated from limited data may be too rigid to adapt as the peak passes.
-The models should differ most around the peak and decline, where the changing trend is decisive; during early growth the data already contain the stable trend, so the models converge.
+The constant-RT fixed-population model should score best overall, because it matches the data-generating process of constant $R_t$ plus susceptible depletion.
+The models should differ most around the peak and decline, where the changing trend is decisive.
+During early growth the data already contain the stable trend, so the models converge.
+Watch the constant-RT model as the peak passes, where a single fixed $R_t$ can be too rigid to track the turning trend.
 :::
 
 # Scoring
@@ -444,7 +458,8 @@ fc <- as_forecast_sample(
 ```
 
 Reported cases span several orders of magnitude over an epidemic, so a score on the natural scale is dominated by the largest counts near the peak.
-As in the [forecast evaluation session](forecast-evaluation.qmd), we score on both the natural and the log scale; we use `transform_forecasts()` with `log_shift` to add log-transformed forecasts alongside the originals, which `score()` then scores together, labelling each with a `scale` column.
+As in the [forecast evaluation session](forecast-evaluation.qmd), we score on both the natural and the log scale.
+We use `transform_forecasts()` with `log_shift` to add log-transformed forecasts alongside the originals, which `score()` then scores together, labelling each with a `scale` column.
 
 ```{r score}
 fc <- transform_forecasts(fc, fun = log_shift, offset = 1)
@@ -463,26 +478,30 @@ overall |>
   select(model, scale, crps, bias, dispersion, underprediction, overprediction)
 ```
 
-The results now match the parsimony story we expected.
-On the natural scale, `constant_rt_fixed` — the model that matches the data-generating process — wins on CRPS.
-The two random-walk models, `rw_fixed` and `rw_estimated`, sit in the middle: both pay for flexibility the DGP does not require, and `rw_estimated` pays a little more because the population is weakly identified from a single outbreak.
+The results match the parsimony story we expected.
+On the natural scale `constant_rt_fixed`, the model that matches the data-generating process, wins on CRPS.
+The two random-walk models `rw_fixed` and `rw_estimated` sit in the middle.
+Both pay for flexibility the data-generating process does not require, and `rw_estimated` pays a little more because the population is weakly identified from a single outbreak.
 Their exact order can swap between runs under variational Bayes, but both are clearly worse than the correctly specified model and clearly better than the ARIMA.
-The ARIMA, with no epidemiological mechanism at all, is worst — it cannot see the susceptible depletion that turns the curve over.
-This is the parsimony and identification story in action: the correctly specified model wins, unnecessary parameters hurt, and removing mechanism entirely hurts most.
+The ARIMA has no epidemiological mechanism at all and is worst, because it cannot see the susceptible depletion that turns the curve over.
+The correctly specified model wins, unnecessary parameters hurt, and removing mechanism entirely hurts most.
 On the log scale the ranking is the same but the gaps are smaller, because log scoring down-weights the large peak counts that dominate the natural scale.
-As we discussed in the [session on evaluating forecasts](forecast-evaluation.qmd), matching the data-generating process matters most when the mechanism shapes the forecast — here, the susceptible depletion that bends the curve at the peak.
-But `constant_rt_fixed` and `rw_fixed` use the true population size — information we would not have in the real world.
-In the real world you never know the population at risk precisely, and you cannot rule out the reproduction number changing over time — interventions shift it, behaviour shifts it, seasonality shifts it.
-The model that estimates the population and lets $R_t$ vary — `rw_estimated` — is the one you would use.
-The backtest shows the cost of that choice: `rw_estimated` is competitive except near the peak, where the weakly identified population struggles, and its overall CRPS is worse than the fixed-population models.
+As we discussed in the [session on evaluating forecasts](forecast-evaluation.qmd), matching the data-generating process matters most when the mechanism shapes the forecast, here the susceptible depletion that bends the curve at the peak.
+But `constant_rt_fixed` and `rw_fixed` use the true population size, information we would not have in the real world.
+In practice you never know the population at risk precisely, and you cannot rule out the reproduction number changing over time as interventions, behaviour, and seasonality all shift it.
+The model that estimates the population and lets $R_t$ vary, `rw_estimated`, is the one you would use.
+The backtest shows the cost of that choice.
+`rw_estimated` is competitive except near the peak, where the weakly identified population struggles, and its overall CRPS is worse than the fixed-population models.
 That is the price of not assuming you know things you do not.
 
 ::: callout-tip
 ## Take 5 minutes
 
-`constant_rt_fixed` wins on both CRPS and bias — the correctly specified model is also the best-calibrated.
-But the ARIMA, despite having the worst CRPS, has relatively small bias because its errors are symmetric — it misses the magnitude of the peak but does not systematically over- or under-predict.
-Recall from the [forecast evaluation session](forecast-evaluation.qmd) what CRPS and bias each measure: which metric should you trust when they disagree, and why?
+`constant_rt_fixed` wins on both CRPS and bias, so the correctly specified model is also the best-calibrated.
+The ARIMA has the worst CRPS but relatively small bias, because its errors are symmetric.
+It misses the magnitude of the peak but does not systematically over- or under-predict.
+Recall from the [forecast evaluation session](forecast-evaluation.qmd) what CRPS and bias each measure.
+Which metric should you trust when they disagree, and why?
 :::
 
 ## Scores by forecast date
@@ -524,11 +543,13 @@ gridExtra::grid.arrange(scores_plot, obs_plot)
 ```
 
 On the natural scale the pattern follows the epidemic phases.
-During early growth (mid-February) `constant_rt_fixed` does best — the correctly specified model wins when the trend is stable.
+During early growth (mid-February) `constant_rt_fixed` does best, because the correctly specified model wins when the trend is stable.
 Around the peak (March) `rw_fixed` pulls ahead, because the random walk lets $R_t$ adapt as the data show the turnover.
-During the decline (April) `constant_rt_fixed` does poorly, because its single $R_t$ is stuck too high; `rw_fixed` and the ARIMA, which can adapt to the downward trend, do much better.
+During the decline (April) `constant_rt_fixed` does poorly, because its single $R_t$ is stuck too high.
+`rw_fixed` and the ARIMA can adapt to the downward trend and do much better.
 On the log scale the same pattern appears but is less pronounced, because log scoring down-weights the large counts near the peak that dominate the natural scale.
-The natural scale is dominated by the peak counts, where the cost of a wrong mechanism is largest; the log scale spreads the error more evenly across growth, peak, and decline.
+The natural scale is dominated by the peak counts, where the cost of a wrong mechanism is largest.
+The log scale spreads the error more evenly across growth, peak, and decline.
 
 ## Scores by horizon
 
@@ -555,7 +576,8 @@ On the log scale the differences are smaller and steadier, because log scoring d
 
 ## Coverage
 
-Interval coverage is not returned by `score()` for sample forecasts, so we compute it manually: for each forecast, we check whether the observation falls within the 50% and 90% prediction intervals, then average across all forecasts for each model.
+Interval coverage is not returned by `score()` for sample forecasts, so we compute it manually.
+For each forecast we check whether the observation falls within the 50% and 90% prediction intervals, then average across all forecasts for each model.
 
 ```{r coverage}
 coverage_data <- score_data |>
@@ -579,13 +601,16 @@ coverage_data
 ```
 
 Well-calibrated models should hit approximately 50% and 90% coverage.
-Variational Bayes gives approximate posteriors, so coverage may deviate from nominal levels; the relative ranking between models is more informative than the absolute values.
+Variational Bayes gives approximate posteriors, so coverage may deviate from nominal levels.
+The relative ranking between models is more informative than the absolute values.
 
 # When the mechanism is wrong: a demonstration
 
-The backtest showed that knowing the population matters: the models with the fixed, correct population forecast the turnover well, while the model that estimates the population pays a cost near the peak.
+The backtest showed that knowing the population matters.
+The models with the fixed, correct population forecast the turnover well, while the model that estimates the population pays a cost near the peak.
 Here we go further and deliberately give the model a population 10× too small, to see the cost of a wrong mechanism up close.
-We fit two models at the peak forecast date, both with constant $R_t$ (`rw = 0`): one with the correct population and one with a population 10× too small.
+We fit two models at the peak forecast date, both with constant $R_t$ (`rw = 0`).
+One uses the correct population and one uses a population 10× too small.
 
 ```{r mechanism-demo, warning = FALSE, message = FALSE}
 demo_date <- as.Date("2023-03-18")
@@ -639,23 +664,25 @@ ggplot(mechanism_compare, aes(x = date, fill = model, colour = model)) +
 ```
 
 The correct-population model bends over with the observations.
-The wrong-population model is told the population is 10× too small, so susceptible depletion bites at the wrong time — EpiNow2 even warns that the population is smaller than cumulative cases.
+The wrong-population model is told the population is 10× too small, so susceptible depletion bites at the wrong time.
+EpiNow2 even warns that the population is smaller than cumulative cases.
 The only difference is one number, and it produces a systematically wrong forecast.
-This is the cost of a wrong mechanism: not noise, but a directional error.
+This is the cost of a wrong mechanism.
+It is not noise but a directional error.
 
 # Going further
 
 ## Challenge
 
 -   Add a Gaussian process (`gp = gp_opts()`, from EpiNow2) instead of constant $R_t$. Does smoothing $R_t$ change the peak forecast?
--   Re-run the backtest with full MCMC (`stan_config <- stan_opts(samples = 1000, chains = 2, warmup = 300, method = 'sampling', backend = 'rstan')`). Do the rankings change with better-calibrated uncertainty?
+-   Re-run the backtest with full MCMC (`stan_config <- stan_opts(samples = 1000, chains = 2, warmup = 300, method = 'sampling', backend = 'rstan')`). This takes around 20 minutes to refit every model. Do the rankings change with better-calibrated uncertainty?
 -   Extend the forecast horizon to 28 days. Which model degrades fastest?
 
 ## Methods in practice
 
--   @abbottEpiNow2EstimateRealtime2025 — EpiNow2.
--   @bhattSemiMechanisticBayesianModeling2020 — renewal models in practice.
--   @gosticPracticalConsiderationsMeasuring2020 — practical $R_t$.
+-   @abbottEpiNow2EstimateRealtime2025 on EpiNow2.
+-   @bhattSemiMechanisticBayesianModeling2020 on renewal models in practice.
+-   @gosticPracticalConsiderationsMeasuring2020 on practical $R_t$ estimation.
 
 # Wrap up
 
