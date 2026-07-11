@@ -33,8 +33,6 @@ In earlier sessions we used statistical models such as ARIMA that find patterns 
 -   Generation time / transmission
 -   Susceptible depletion
 
-Reported cases are the tail of a transmission process.
-If we model that process, the forecast can capture what a pure time-series model cannot.
 
 ### From infections to infections: the generation time
 
@@ -107,10 +105,6 @@ p_dist <- ggplot() +
 gridExtra::grid.arrange(p_events, p_dist, ncol = 2)
 ```
 
-::: {.callout-note}
-Reports lag infections, so the most recent days are still filling in and undercount recent infections.
-A forecast that maps infections to reports through this delay starts from the right place; one that models the raw reports does not.
-:::
 
 ### Adding mechanism: susceptible depletion
 
@@ -153,7 +147,6 @@ ggplot(data, aes(x = t, y = value)) +
 We fit these models with the EpiNow2 package.
 It estimates the reproduction number from the case data, maps infections to reports through the delays, and can include susceptible depletion, in one Bayesian model fit with Stan.
 
-The package is the engine; the model structure is what we have been building up.
 
 ### A population set too small
 
