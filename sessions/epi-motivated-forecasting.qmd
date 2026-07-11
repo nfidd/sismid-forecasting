@@ -253,7 +253,7 @@ We plot both forecasts against the data that were later observed, on the natural
 The shaded ribbons are the 50% and 90% credible intervals, the lines are the posterior medians, and the points are the observations.
 A renewal model with no susceptible depletion can grow explosively past the peak, so on the natural scale we cap the axis to keep the plot readable; the log scale shows the full range.
 
-```{r plot-single-forecast}
+```{r plot-single-forecast, fig.width = 10, fig.height = 5}
 single_fc <- bind_rows(
   get_predictions(en2_default, format = "sample") |>
     as_tibble() |>
@@ -264,35 +264,45 @@ single_fc <- bind_rows(
 ) |>
   filter(!is.na(predicted))
 
-single_sum <- single_fc |>
-  group_by(model, date) |>
-  summarise(
-    median = median(predicted, na.rm = TRUE),
-    lower_50 = quantile(predicted, 0.25, na.rm = TRUE),
-    upper_50 = quantile(predicted, 0.75, na.rm = TRUE),
-    lower_90 = quantile(predicted, 0.05, na.rm = TRUE),
-    upper_90 = quantile(predicted, 0.95, na.rm = TRUE),
-    .groups = "drop"
-  )
+# 30%, 60% and 90% prediction intervals
+band_summary <- function(df, group_vars) {
+  df |>
+    group_by(across(all_of(group_vars))) |>
+    summarise(
+      lower_30 = quantile(predicted, 0.35, na.rm = TRUE),
+      upper_30 = quantile(predicted, 0.65, na.rm = TRUE),
+      lower_60 = quantile(predicted, 0.20, na.rm = TRUE),
+      upper_60 = quantile(predicted, 0.80, na.rm = TRUE),
+      lower_90 = quantile(predicted, 0.05, na.rm = TRUE),
+      upper_90 = quantile(predicted, 0.95, na.rm = TRUE),
+      .groups = "drop"
+    )
+}
+
+# draw the three nested intervals as ribbons, no median line
+add_bands <- function(g) {
+  g +
+    geom_ribbon(aes(ymin = lower_90, ymax = upper_90, fill = model),
+                alpha = 0.15) +
+    geom_ribbon(aes(ymin = lower_60, ymax = upper_60, fill = model),
+                alpha = 0.25) +
+    geom_ribbon(aes(ymin = lower_30, ymax = upper_30, fill = model),
+                alpha = 0.40)
+}
+
+single_sum <- band_summary(single_fc, c("model", "date"))
 
 obs_window <- reported |>
-  filter(date > forecast_date - 21, date <= forecast_date + 14)
+  filter(date > forecast_date - 14, date <= forecast_date + 14)
 
 plot_single <- function(log_scale = FALSE) {
-  g <- ggplot(single_sum, aes(x = date, fill = model, colour = model)) +
-    geom_ribbon(aes(ymin = lower_90, ymax = upper_90), alpha = 0.15,
-                colour = NA) +
-    geom_ribbon(aes(ymin = lower_50, ymax = upper_50), alpha = 0.3,
-                colour = NA) +
-    geom_line(aes(y = median)) +
+  g <- add_bands(ggplot(single_sum, aes(x = date))) +
     geom_point(data = obs_window, aes(x = date, y = confirm),
-               inherit.aes = FALSE) +
+               inherit.aes = FALSE, size = 1.2) +
     geom_vline(xintercept = forecast_date, linetype = "dashed") +
     scale_fill_manual(
       values = c("epi_default" = "#4292C6", "arima" = "#E6550D")) +
-    scale_colour_manual(
-      values = c("epi_default" = "#4292C6", "arima" = "#E6550D")) +
-    labs(x = "Date", y = "Reported cases", fill = "Model", colour = "Model") +
+    labs(x = "Date", y = "Reported cases", fill = "Model") +
     theme_bw() +
     theme(legend.position = "bottom")
   if (log_scale) {
@@ -303,7 +313,7 @@ plot_single <- function(log_scale = FALSE) {
   }
 }
 
-gridExtra::grid.arrange(plot_single(FALSE), plot_single(TRUE), ncol = 1)
+gridExtra::grid.arrange(plot_single(FALSE), plot_single(TRUE), ncol = 2)
 ```
 
 Neither model knows that the epidemic is about to turn over.
@@ -317,6 +327,7 @@ This foreshadows the backtest, where we give the other EpiNow2 models the abilit
 Look at the two forecasts against the held-out observations, on both scales.
 Which model looks closer over the first few days, and which drifts further off as the horizon grows?
 What single piece of information would either model need to predict the turning point?
+:::
 
 ::: {.callout-note collapse="true"}
 ## Solution
@@ -325,7 +336,6 @@ Over the first few days both forecasts sit close to the observations, and there 
 As the horizon grows both drift above the truth and over-shoot the peak, because neither has any mechanism to stop growth.
 The renewal default grows fastest, since it projects the recent reproduction number forward with nothing to bend it down.
 To predict the turning point either model would need to know that the susceptible pool is running out, which means knowing the population at risk and how much of it has already been infected.
-:::
 :::
 
 # The models we will compare
@@ -366,13 +376,13 @@ epi_models <- list(
 
 # Backtesting across forecast dates
 
-We backtest each model from 10 forecast dates, one week apart, spanning the growth phase, the peak, and the decline.
+We backtest each model from 12 forecast dates, one week apart, spanning the growth phase, the peak, and the decline.
 Contrasting phases matters because susceptible depletion only shapes the forecast near and after the peak.
 Early in the growth phase it is almost irrelevant.
 
 ```{r forecast-dates}
 forecast_dates <- seq.Date(
-  from = as.Date("2023-02-15"), to = as.Date("2023-04-19"), by = "week"
+  from = as.Date("2023-02-01"), to = as.Date("2023-04-19"), by = "week"
 )
 length(forecast_dates)
 ```
@@ -407,38 +417,26 @@ Each panel is a forecast date, with the 50% and 90% credible intervals as ribbon
 The no-depletion models can grow explosively, so we show the trajectories on both a capped natural scale and a log scale.
 
 ```{r plot-backtests}
-trajectory_summary <- all_forecasts |>
-  filter(horizon > 0, !is.na(predicted)) |>
-  group_by(model, forecast_date, date) |>
-  summarise(
-    median = median(predicted, na.rm = TRUE),
-    lower_50 = quantile(predicted, 0.25, na.rm = TRUE),
-    upper_50 = quantile(predicted, 0.75, na.rm = TRUE),
-    lower_90 = quantile(predicted, 0.05, na.rm = TRUE),
-    upper_90 = quantile(predicted, 0.95, na.rm = TRUE),
-    .groups = "drop"
-  )
+trajectory_summary <- band_summary(
+  all_forecasts |> filter(horizon > 0, !is.na(predicted)),
+  c("model", "forecast_date", "date")
+)
 
 obs_windows <- map_dfr(forecast_dates, function(fd) {
   reported |>
-    filter(date >= fd - 28, date <= fd + 14) |>
+    filter(date >= fd - 14, date <= fd + 14) |>
     mutate(forecast_date = fd)
 })
 
 plot_trajectories <- function(log_scale = FALSE) {
-  g <- ggplot(trajectory_summary, aes(x = date)) +
-    geom_ribbon(aes(ymin = lower_90, ymax = upper_90, fill = model),
-                alpha = 0.12) +
-    geom_ribbon(aes(ymin = lower_50, ymax = upper_50, fill = model),
-                alpha = 0.28) +
-    geom_line(aes(y = median, colour = model), linewidth = 0.4) +
+  g <- add_bands(ggplot(trajectory_summary, aes(x = date))) +
     geom_point(data = obs_windows, aes(y = confirm), size = 0.5) +
     geom_vline(
       data = tibble(forecast_date = forecast_dates),
       aes(xintercept = forecast_date), linetype = "dashed", linewidth = 0.3
     ) +
     facet_wrap(~forecast_date, scales = "free", ncol = 3) +
-    labs(x = "Date", y = "Reported cases", colour = "Model", fill = "Model") +
+    labs(x = "Date", y = "Reported cases", fill = "Model") +
     theme_bw() +
     theme(legend.position = "bottom")
   if (log_scale) {
@@ -450,11 +448,11 @@ plot_trajectories <- function(log_scale = FALSE) {
 }
 ```
 
-```{r plot-backtests-natural, fig.height = 8}
+```{r plot-backtests-natural, fig.width = 11, fig.height = 11}
 plot_trajectories(FALSE)
 ```
 
-```{r plot-backtests-log, fig.height = 8}
+```{r plot-backtests-log, fig.width = 11, fig.height = 11}
 plot_trajectories(TRUE)
 ```
 
@@ -538,6 +536,7 @@ Read the score table before reading on.
 On each scale, which model has the best (lowest) CRPS, and which the worst?
 What do the `bias`, `overprediction`, and `underprediction` columns say about *how* each model fails?
 How does the ranking change between the natural and the log scale, and why?
+:::
 
 ::: {.callout-note collapse="true"}
 ## Solution
@@ -547,7 +546,6 @@ How does the ranking change between the natural and the log scale, and why?
 - `rw_estimated` sits in between, because estimating the population from a single outbreak adds uncertainty, so it pays a little over the fixed-population models.
 - On the log scale the gaps shrink, because log scoring down-weights the large peak counts that dominate the natural scale, but the depletion models still lead.
 - The fixed-population models use the true population, which you would not know in the real world, so `rw_estimated` is closer to what you would actually run.
-:::
 :::
 
 ## Scores by forecast date
@@ -639,6 +637,7 @@ coverage
 
 Compare each model's 50% and 90% coverage against the nominal 0.5 and 0.9.
 Which models are over-confident, with intervals too narrow to reach nominal coverage, and which are about right?
+:::
 
 ::: {.callout-note collapse="true"}
 ## Solution
@@ -646,7 +645,6 @@ Which models are over-confident, with intervals too narrow to reach nominal cove
 - The depletion models are close to nominal: `constant_rt_fixed` covers about 0.58 and 0.91, `rw_fixed` 0.61 and 0.90, and `rw_estimated` 0.61 and 0.98.
 - The ARIMA (about 0.18 and 0.39) and the `default` renewal (about 0.38 and 0.62) are badly over-confident: their intervals are far too narrow to contain the observations around the peak they miss.
 - Coverage is a joint check on the median and the spread: a model can have reasonable coverage by being wide as well as by being accurate, so read it alongside the CRPS rather than on its own.
-:::
 :::
 
 # When the mechanism is wrong: a demonstration
@@ -714,6 +712,7 @@ ggplot(mechanism_compare, aes(x = date, fill = model, colour = model)) +
 Compare the two forecasts against the observations after the forecast date.
 What does the wrong population prior do to the timing of the turnover, and in which direction is the error?
 Is the wrong forecast simply noisier, or is it wrong in a systematic way?
+:::
 
 ::: {.callout-note collapse="true"}
 ## Solution
@@ -722,14 +721,13 @@ Is the wrong forecast simply noisier, or is it wrong in a systematic way?
 - The wrong prior tells the model the susceptible pool is far smaller than it is, so depletion takes hold too early and the forecast turns over before the real peak, under-shooting the truth.
 - The error is systematic and directional, not noise: a wrong mechanism sends the forecast the wrong way rather than just widening the intervals.
 :::
-:::
 
 # Going further
 
 ## Challenge
 
 -   Change the simulation and see how the rankings move. Try a different reproduction number, a different population size, or a reproduction number that varies over time (`R` as a time series in `simulate_infections()`). Note that a time-varying `R` in the simulation is the effective reproduction number for a wholly susceptible population, before susceptible depletion is applied on top.
--   Give the ARIMA baseline some mechanism. Add a covariate for depletion, for example a susceptible fraction or cumulative cases, with `ARIMA(my_fourth_root(confirm) ~ xreg)`. Does a statistical model with a depletion covariate close the gap to the renewal models?
+-   Give the ARIMA baseline some mechanism. Build a susceptible-fraction covariate, for example `1 - cumsum(confirm) / pop_size`, and add it as a regressor with `ARIMA(my_fourth_root(confirm) ~ susceptible_fraction)`. You will need to project the covariate forward over the forecast horizon, for instance by extrapolating the cumulative cases. Does a statistical model with a depletion covariate close the gap to the renewal models?
 -   Add a Gaussian process (`gp = gp_opts()`, from EpiNow2) instead of a random walk on $R_t$. Does smoothing $R_t$ change the peak forecast?
 -   Swap the inference to variational Bayes or pathfinder by changing the single `stan_config` line. How much faster is the backtest, and does the coverage change?
 -   Extend the forecast horizon to 28 days. Which model degrades fastest?
