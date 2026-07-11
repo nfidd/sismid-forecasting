@@ -1,0 +1,184 @@
+---
+title: "Selecting test-phase models"
+author: "Nowcasting and forecasting of infectious disease dynamics"
+engine: knitr
+format:
+  revealjs:
+    output: slides/hub-playground-testing.html
+    footer: "Selecting test-phase models"
+    chalkboard: true
+    slide-level: 3
+bibliography: ../../nfidd.bib
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+library("nfidd.forecasting")
+library("dplyr")
+library("ggplot2")
+theme_set(theme_bw(base_size = 15))
+```
+
+```{=html}
+<style>
+.reveal .mermaid { display: flex; justify-content: center; }
+.reveal .mermaid svg { width: 100%; max-width: 1100px !important; height: auto; }
+</style>
+```
+
+### From validation to testing
+
+- You built **many** models on the **two validation seasons**.
+- Now: choose just **1–2** to carry into the **three testing seasons**.
+- The testing seasons stand in for **real-time** forecasting.
+
+```{r split-fig, echo=FALSE, fig.width=9, fig.height=3}
+data(flu_data_hhs)
+nat <- flu_data_hhs |>
+  tibble::as_tibble() |>
+  filter(location == "US National") |>
+  mutate(origin_date = as.Date(origin_date))
+
+seasons <- tibble::tribble(
+  ~season,     ~start,       ~end,         ~phase,
+  "2015/2016", "2015-10-01", "2016-05-15", "Validation",
+  "2016/2017", "2016-10-01", "2017-05-15", "Validation",
+  "2017/2018", "2017-10-01", "2018-05-15", "Testing",
+  "2018/2019", "2018-10-01", "2019-05-15", "Testing",
+  "2019/2020", "2019-10-01", "2020-05-15", "Testing"
+) |>
+  mutate(across(c(start, end), as.Date),
+         phase = factor(phase, levels = c("Validation", "Testing")))
+
+xlim <- as.Date(c("2015-06-01", "2020-08-01"))
+ggplot() +
+  geom_rect(data = seasons,
+            aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, fill = phase),
+            alpha = 0.25) +
+  geom_line(data = filter(nat, origin_date >= xlim[1], origin_date <= as.Date("2017-07-01")),
+            aes(origin_date, wili), linewidth = 0.5) +
+  scale_fill_manual(values = c(Validation = "#1b9e77", Testing = "#d95f02"), name = NULL) +
+  scale_x_date(limits = xlim, date_breaks = "1 year", date_labels = "%Y") +
+  labs(x = NULL, y = "ILI %") +
+  theme(legend.position = "top")
+```
+
+### The temptation
+
+From the earlier session: you have several (or many) fitted models and their validation scores.
+
+Tempting move: **submit the one with the best validation score.**
+
+::: {.fragment .fade-in}
+::: callout-caution
+
+But — will it still be the best on seasons it has *never seen*?
+:::
+:::
+
+### Validation rank ≠ test rank
+
+- Each forecast is **out-of-sample in time** — the model never sees the weeks it predicts.
+- **But** across the validation seasons you iterate: tweak, refit, re-score, keep what looks best.
+- So those seasons quietly become **in-sample for model *selection*** — you are, in effect, fitting to them.
+- And it's a **tiny sample — just two seasons** — so the rankings are **noisy** and **optimistically biased**.
+
+### If you've seen one flu season...
+
+The saying at CDC goes:
+
+> If you've seen one flu season... you've seen one flu season.
+
+In other words, every season is unique!
+
+::: callout-caution
+This further suggests that we need to be cautious about assuming that validation phase patterns will be the same in the unpeeked-at testing seasons.
+:::
+
+### How to choose {.smaller}
+
+Favour models that are:
+
+- ✅ **consistently good** in CV — not just the single lowest validation score 
+- ✅ **parsimonious** — fewer parameters means the model is less likely to be overfit
+- ✅ **diverse** — e.g. best `ARIMA`, best `NNETAR`, best ensemble
+- ✅ **stable** across seasons *and* locations
+
+Then pass only **1–2** to the testing phase.
+
+::: callout-tip
+
+The best-*looking* model isn't reliably the best *forecaster*.
+:::
+
+
+### Your selection rule is a model too
+
+- Every peek at validation to pick a model is a kind of **fitting**.
+- Decide your rule, then **commit** — don't tune on the testing seasons.
+- A **simpler** selection process → a more trustworthy test result.
+
+### The testing phase = real-time
+
+- Treat 2017/18–2019/20 as if it were **live**:
+  **generate once, no refitting, no peeking.**
+
+::: {.fragment .fade-in}
+::: callout-caution
+
+We forecast with **finalized** data, whereas the hub's original models
+used data **as it was at the time**. Compare with care.
+:::
+:::
+
+### Why submit to an online hub?
+
+- A shared **format** → automatic validation of your submission
+- Line your forecasts up against **others** — and build **ensembles**
+- The reward: your model on the **[public dashboard](https://reichlab.io/sismid-ili-forecasting-dashboard/)**
+
+### Two ways to submit
+
+::: {.fragment .fade-in}
+**Get help** — hand your files to an instructor/TA/classmate to upload
+:::
+
+::: {.fragment .fade-in}
+**Drag & drop** — Upload files using web interface to GitHub.com.
+*(you still need a GitHub account)*
+:::
+
+::: {.fragment .fade-in}
+**Fork → clone → PR** — the full GitHub workflow, on your own
+:::
+
+### The pull-request loop (if using GitHub)
+
+```{mermaid}
+%%{init: {'theme':'base', 'themeVariables': {'fontSize':'26px'}, 'flowchart': {'curve':'basis', 'nodeSpacing':45, 'rankSpacing':55}}}%%
+flowchart LR
+  A["Fork the hub"] --> B["Clone your fork"]
+  B --> C["Add forecasts<br/>+ metadata"]
+  C --> D["Commit & push"]
+  D --> E["Open a PR"]
+  E --> F{"Checks<br/>pass?"}
+  F -- no --> C
+  F -- yes --> G["Merged →<br/>dashboard 🎉"]
+```
+
+Watch the automated checks; fix any errors they flag.
+
+## `r fontawesome::fa("laptop-code", "white")` Your Turn {background-color="#447099" transition="fade-in"}
+
+1. **Select** 1–2 models from your validation work.
+2. **Generate** test-phase forecasts (seasons 2017/18–2019/20).
+3. **Submit** them to the hub via a pull request.
+4. **Find yourself** on the dashboard!
+
+#
+
+[Return to the session](../hub-playground-testing.qmd)
+
+### References
+
+::: {#refs}
+:::

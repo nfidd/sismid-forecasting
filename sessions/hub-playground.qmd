@@ -1,6 +1,6 @@
 ---
 title: "Local hub playground"
-order: 8
+order: 9
 bibliography: ../nfidd.bib
 ---
 
@@ -76,7 +76,6 @@ We have built [a live modeling hub](https://github.com/reichlab/sismid-ili-forec
 
 We are referring to this hub as a **"sandbox" hub** because it's not an active hub in use by decision-makers. 
 It's a sandbox where we can build models and try things out without worrying about breaking them.
-But please don't throw sand at each other!
 
 We will also use the term **local hub** in this session. 
 By this we mean any modeling hub that you set up on your local filesystem to do a modeling project.
@@ -84,7 +83,7 @@ We're going to set up a hub in the style of [the hubverse](https://hubverse.io/)
 But you could build a local hub however you want for your own modeling experiments.
 :::
 
-If you can get through this session, the reward will be seeing your forecasts alongside the other forecasts at [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html).
+If you can get through this session and the next one, the reward will be seeing your forecasts alongside the other forecasts at [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html?as_of=2016-01-16&interval=95%25&target_var=ili+perc&xaxis_range=2015-12-02&xaxis_range=2016-07-13&yaxis_range=0.03190391899589995&yaxis_range=11.26564457976691&model=delphi-epicast&model=hist-avg&location=US+National).
 
 
 You should download this hub to your local laptop before continuing this session. 
@@ -115,7 +114,7 @@ Our sandbox hub is set up to accept forecasts for the US level and the 10 Health
 
 A forecast will produce quantile predictions of *1- through 4-week ahead* forecasts of the estimated percentage of outpatient doctors office visits that are for ILI.
 This target is given the label "ili perc" in the hub.
-Forecasts can be submitted for any week during the 2015/2016, 2016/2017, 2018/2019 or 2019/2020 influenza seasons.
+Forecasts can be submitted for any week during the 2015/2016, 2016/2017, 2017/2018, 2018/2019 or 2019/2020 influenza seasons.
 
 ## Details of this hub
 
@@ -218,6 +217,7 @@ Here are some ideas of other models you could try:
 - add forecasts from other variants of the `fable::ARIMA()` models
 - try out other specifications of transformations (e.g. a log transformation instead of a fourth-root) or the number of fourier terms.
 - incorporate another model of your choice.
+- consider working with a generative AI coding tool to build a model. If you are familiar with tools like Claude, Codex or other AI-based coding assistants, they might be very effective and taking an idea of a model that you'd like to translate into a forecast model and building a prototype quickly that would work in the framework of this course.
 - build some ensembles of all (or a subset) of the models you created.
 
 # Designing forecast validation and testing 
@@ -227,6 +227,90 @@ We will design an validation and testing experiment where we will use the first 
 We can fit as many models as we want to on the weeks during these two seasons. 
 However, to show that we have a modeling process that can create a reliable forecasting model, we want to pass only 1-2 models on to the test phase to measure their performance.
 We want to pass along only models that we think will perform well in the test phase. 
+
+The figure below shows the validation and testing split. The first two **validation seasons** are used to tune the models and select ones that you like best. The next three **testing seasons** are used to measure performance of any selected models that are passed to that phase. Note that we intentionally didn't show the data from the three testing seasons so as not to bias you beforehand by getting a glimpse of the dynamics on those seasons.
+
+```{r split-plot, echo=FALSE}
+## National ILI series (the quantity being forecast)
+nat <- flu_data_hhs |>
+  tibble::as_tibble() |>
+  filter(location == "US National") |>
+  mutate(origin_date = as.Date(origin_date))
+
+## The five forecastable seasons in the sandbox hub, split into
+## validation (first two) and testing (last three) phases.
+## Flu seasons run ~ mid-Oct to early May.
+seasons <- tibble::tribble(
+  ~season,     ~start,       ~end,         ~phase,
+  "2015/2016", "2015-10-01", "2016-05-15", "Validation",
+  "2016/2017", "2016-10-01", "2017-05-15", "Validation",
+  "2017/2018", "2017-10-01", "2018-05-15", "Testing",
+  "2018/2019", "2018-10-01", "2019-05-15", "Testing",
+  "2019/2020", "2019-10-01", "2020-05-15", "Testing"
+) |>
+  mutate(across(c(start, end), as.Date),
+         phase = factor(phase, levels = c("Validation", "Testing")))
+
+xlim <- as.Date(c("2015-06-01", "2020-08-01"))
+ymax <- max(nat$wili, na.rm = TRUE)
+
+ggplot() +
+  geom_rect(data = seasons,
+            aes(xmin = start, xmax = end, ymin = -Inf, ymax = Inf, fill = phase),
+            alpha = 0.25) +
+  geom_text(data = seasons,
+            aes(x = start + (end - start) / 2, y = ymax, label = season),
+            vjust = 1, size = 3, colour = "grey30") +
+  geom_line(data = filter(nat, origin_date >= xlim[1], origin_date <= as.Date("2017-07-01")),
+            aes(origin_date, wili), linewidth = 0.5) +
+  scale_fill_manual(values = c(Validation = "#1b9e77", Testing = "#d95f02"), name = NULL) +
+  scale_x_date(limits = xlim, date_breaks = "1 year", date_labels = "%Y") +
+  labs(title = "Sandbox hub: validation vs. testing split",
+       x = NULL, y = "% of visits due to ILI (US National)") +
+  theme_bw() +
+  theme(legend.position = "top")
+```
+
+And the figure below here shows the expanding window cross-validation where for each week that a forecast is made (rows of the figure), the blue squares indicate weeks whose data are used in training and the red squares indicate the weeks for which forecasts are made. Note that the training data actually extends back to 2003, but we are only showing some of those weeks for easier visualization.
+
+```{r expanding-window-plot, echo=FALSE}
+## Season 1 = 2015/2016. Weekly forecast origin dates (epiweek-ending Saturdays):
+## 30 of them, matching stretch_tsibble(.init = 634, .step = 1) from the first
+## 2015/2016 origin (2015-10-17) to the last (2016-05-07).
+origins <- seq(as.Date("2015-10-17"), as.Date("2016-05-07"), by = 7)
+horizon <- 4L
+
+## display window: a short training lead-in through the final forecast target
+weeks <- seq(min(origins) - 7 * 10, max(origins) + 7 * horizon, by = 7)
+
+splits <- tidyr::expand_grid(origin_date = origins, week = weeks) |>
+  mutate(status = case_when(
+    week <= origin_date               ~ "Training",
+    week <= origin_date + 7 * horizon ~ "Forecast",
+    TRUE                              ~ NA_character_
+  )) |>
+  filter(!is.na(status)) |>
+  mutate(
+    status   = factor(status, levels = c("Training", "Forecast")),
+    origin_f = factor(format(origin_date, "%Y-%m-%d"),
+                      levels = rev(format(origins, "%Y-%m-%d")))
+  )
+
+ggplot(splits, aes(week, origin_f, fill = status)) +
+  geom_tile(colour = "white", linewidth = 0.3) +
+  scale_fill_manual(values = c(Training = "#4477AA", Forecast = "#EE6677"), name = NULL) +
+  scale_x_date(date_breaks = "1 month", date_labels = "%b %Y") +
+  labs(
+    title = "2015/2016 season: training vs. forecast weeks for each forecast date",
+    caption = "Training data actually extends back to 2003; only a lead-in is shown here.",
+    x = NULL, y = "Forecast date (origin)"
+  ) +
+  theme_bw() +
+  theme(legend.position = "top",
+        axis.text.y = element_text(size = 6),
+        panel.grid = element_blank())
+```
+
 
 
 ## Validation-phase forecasts
@@ -257,6 +341,7 @@ flu_data_hhs_tscv_season1 <- flu_data_hhs |>
     .step = 1,
     .id = ".split"
     )
+
 flu_data_hhs_tscv_season1
 ```
 
@@ -487,70 +572,17 @@ Note that the forecasts that we make are using the finalized version of the data
 This is potentially a considerable disadvantage, if data ended up being substantially revised, therefore these evaluations against the "real" models should be interpreted with caution.
 :::
 
+# Going further
 
-# Selecting models for the "testing phase"
+## Challenge
 
-You are now officially turned loose to build more models in this sandbox hub!
-
-A reminder that this hub contains five seasons for which you can submit forecasts, starting with 2015/2016 and ending with 2019/2020.
-Our recommended procedure is to use the first two years as a place to do as much model fitting as you have time for.
-You could create multiple flavors of ARIMA, or any of the more complex models suggested just above.
-To do this in a "complete" way, you might create between 10 and 100 different variations of models. 
-
-Then, from those models, select the few that you think will do the best in the final three seasons.
-(We can think of the last three years as our real-time forecast "testing phase".)
-This selection process is important, and tricky to think about.
-
-::: callout-tip
-In general you want to pick models that have performed well in some time-series cross-validation (similar to the analysis we ran above in this session).
-But, you might also want to prioritize choosing models that are simpler (i.e., have fewer parameters) and therefore are less likely to be "overfit" to the cross-validation phase.
-
-You could also consider splitting the models into a few different classes and picking 1-2 models from each class, e.g. your best `ARIMA` model, your best `NNETAR` model, your best ensemble, etc...
-:::
-
-Once you've selected the models, you can generate and submit forecasts for the test phase to your local hub.
+- If you complete this session, consider generating more model forecasts for the first two seasons. You could also move on to [the next test-phase local hub session](hub-playground-testing.qmd).
 
 
-# Submitting test-phase forecasts to an online hub
+# Wrap up
 
-If you've gotten this far, congratulations!
+-   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives.qmd)
 
-As a last test of your forecasting prowess, we invite you to submit the forecasts for your test-phase models to our [online `sismid-ili-forecasting-sandbox` hub](https://github.com/reichlab/sismid-ili-forecasting-sandbox).
-
-If you can get through this process, the reward will be seeing your forecasts on [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html).
-
-## Process of submitting to an online hub
-
-The best way to submit to an online hub is via a [pull request initiated through GitHub](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
-
-### Drag and drop
-
-If you're not that familiar with GitHub and you have forecasts that you'd like to upload, work with an instructor or another participant who does have access to the hub. 
-They will be able to create a subfolder of [the model-output directory of the hub](https://github.com/reichlab/sismid-ili-forecasting-sandbox/tree/main/model-output) for you to upload forecasts to via a Drag and Drop.
-
-You still will need a GitHub account ([sign up here](https://github.com/signup) if you don't have one).
-
-
-### Cloning repo, submitting via PR
-
-::: callout-caution
-The following assumes that you have a GitHub account and some basic working knowledge of GitHub interactions and terminology.
-:::
-
-
-1. Fork the [`sismid-ili-forecasting-sandbox` hub](https://github.com/reichlab/sismid-ili-forecasting-sandbox) so you have a copy of this repository owned by your GitHub user account.
-
-2. Clone your fork of the repo to your laptop (ideally, it should live at the top level within the `sismid` directory with these course materials).
-
-3. Put whatever model-metadata and forecasts you want to submit into the correct locations in the hub.
-
-4. Commit these changes to your local clone and push those changes to your fork on GitHub.
-
-5. Open a Pull Request (PR) back to the primary repository with your changes.
-
-6. Once the PR is open, watch the validations, and inspect/fix any errors that appear.
-
-7. If your forecasts pass validations, then an instructor will merge them in.
 
 # References
 
