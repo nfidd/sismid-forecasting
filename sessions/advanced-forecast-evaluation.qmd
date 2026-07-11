@@ -1,0 +1,356 @@
+---
+title: "Advanced forecast evaluation"
+order: 9
+bibliography: ../nfidd.bib
+---
+
+# Introduction
+
+In the last few sessions we built forecasts for many locations at once and scored them with the CRPS.
+We scored each location on its own and then averaged.
+In this session we look at two things that simple approach misses.
+First, scoring locations one at a time is blind to how they move *together*, which the energy score can capture.
+Second, a single averaged score, or a significance test, is a fragile way to compare models, and modelling the scores directly is often better.
+
+## Slides
+
+-   [Advanced forecast evaluation](slides/advanced-forecast-evaluation.qmd)
+
+## Objectives
+
+The aim of this session is to score joint forecasts across locations and to treat forecast scores as data worth modelling.
+
+::: {.callout-note collapse="true"}
+# Setup
+
+## Source file
+
+The source file of this session is located at `sessions/advanced-forecast-evaluation.qmd`.
+
+## Libraries used
+
+In this session we will use the `fable` package for forecasting, the `dplyr`, `tidyr` and `tsibble` packages for data wrangling, the `ggplot2` package for plotting, and the `scoringRules` and `scoringutils` packages for scoring.
+
+```{r libraries, message = FALSE}
+library("nfidd.forecasting")
+library("dplyr")
+library("tsibble")
+library("fable")
+library("tidyr")
+library("ggplot2")
+library("scoringRules")
+library("scoringutils")
+theme_set(theme_bw())
+```
+
+::: callout-tip
+The best way to interact with the material is via the [Visual Editor](https://docs.posit.co/ide/user/ide/guide/documents/visual-editor.html) of RStudio.
+:::
+
+## Initialisation
+
+We set a random seed for reproducibility.
+
+```{r}
+set.seed(406) # for Ted Williams
+```
+
+We reuse the same fourth-root transformation and multi-location flu data (`flu_data_hhs`) from the [local hub playground session](hub-playground.qmd).
+
+```{r transform}
+fourth_root <- function(x) x^0.25
+inv_fourth_root <- function(x) x^4
+my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
+
+data(flu_data_hhs)
+```
+:::
+
+# From marginal to joint forecasts
+
+A forecast for several regions is not a set of separate numbers.
+It is a distribution over the whole *vector* of outcomes, one value per region.
+When we score each region on its own and average, we only ever use the **marginal** forecasts.
+Two forecasts can share every marginal and still disagree completely about whether regions rise *together*.
+
+That difference matters whenever a decision couples the regions.
+If you hold a fixed stockpile to split across regions, a peak that hits everywhere at once is a very different problem from peaks that arrive one region at a time.
+Marginal scores cannot see this, because the coupling lives in the joint distribution.
+
+Let's build sample-path forecasts for three regions and pull out the samples we need to score them jointly.
+
+```{r partA-samples}
+## fable fits each location separately, so its joint forecast assumes
+## independence across regions. A genuinely joint model (e.g. fable::VAR())
+## would instead learn the cross-region dependence.
+sel_locations <- c("HHS Region 1", "HHS Region 2", "HHS Region 3")
+train_cutoff  <- as.Date("2019-02-16")
+horizon       <- 4L
+
+fit_joint <- flu_data_hhs |>
+  filter(location %in% sel_locations, origin_date <= train_cutoff) |>
+  model(arima210 = ARIMA(my_fourth_root(wili) ~ pdq(2, 1, 0)))
+
+sims <- fit_joint |>
+  generate(h = 4, times = 1000, bootstrap = TRUE) |>
+  group_by(location, .rep) |>
+  mutate(horizon = row_number()) |>
+  ungroup() |>
+  as_tibble()
+```
+
+We reshape the samples for our target horizon into a matrix with one row per region and one column per sample, which is the format the scoring functions expect.
+
+```{r partA-matrix}
+samp_wide <- sims |>
+  filter(horizon == !!horizon) |>
+  select(location, .rep, .sim) |>
+  pivot_wider(names_from = .rep, values_from = .sim)
+
+target_end_date <- sims |>
+  filter(horizon == !!horizon) |> pull(origin_date) |> unique()
+
+dat_indep <- as.matrix(samp_wide[, -1])
+rownames(dat_indep) <- samp_wide$location
+
+## observed value at the target date, one per region
+y <- flu_data_hhs |> as_tibble() |>
+  filter(location %in% sel_locations, origin_date == target_end_date) |>
+  arrange(match(location, samp_wide$location)) |>
+  pull(wili)
+names(y) <- samp_wide$location
+
+target_end_date
+y
+```
+
+# The energy score
+
+The energy score is a proper scoring rule for a **vector** outcome $\mathbf{y}$, and it generalises the CRPS.
+Writing $\mathbf{X}, \mathbf{X}'$ for independent draws from the forecast and $\lVert\cdot\rVert$ for Euclidean distance, it balances accuracy against sharpness exactly as the CRPS does, but reads the whole vector at once.
+In one dimension it *is* the CRPS.
+
+::: {.callout-tip .optional collapse="true"}
+## Mathematical definition (optional)
+
+$$
+\text{ES}(F, \mathbf{y}) = \mathbb{E}\lVert \mathbf{X} - \mathbf{y} \rVert - \tfrac{1}{2}\,\mathbb{E}\lVert \mathbf{X} - \mathbf{X}' \rVert
+$$
+
+The first term rewards forecasts whose draws land close to the observed vector.
+The second term rewards a concentrated cloud of draws.
+To compute it we replace the expectations with averages over our predictive samples.
+:::
+
+::: callout-tip
+### Key things to note about the energy score
+
+-   Small values are better, and it is reported in the units of the data.
+-   It is a genuine generalisation of the CRPS, to which it reduces in one dimension.
+-   It needs **joint samples**, so a forecast that treats regions independently and one that couples them are scored differently.
+-   Like the CRPS it is best used to **compare** forecasts, not read in isolation.
+:::
+
+::: {.callout-tip .optional collapse="true"}
+## Interactive: the energy score
+
+```{=html}
+<iframe class="nfidd-embed" src="../interactive/advanced-forecast-evaluation.html?embed=energy" title="Energy score interactive" loading="lazy" style="width:100%;height:820px;border:1px solid #e5e7eb;border-radius:10px;background:#fff"></iframe>
+<script>(function(){if(window.__nfiddEmbedInit)return;window.__nfiddEmbedInit=1;window.addEventListener('message',function(ev){var h=ev&&ev.data&&ev.data.nfiddEmbedHeight;if(!h)return;document.querySelectorAll('iframe.nfidd-embed').forEach(function(f){if(f.contentWindow===ev.source)f.style.height=(h+24)+'px';});});})();</script>
+```
+
+Drag the observation and rotate the forecast cloud with the dependence slider.
+The mean marginal CRPS never moves; only the energy score responds to the dependence.
+:::
+
+To see the difference dependence makes, we build a second forecast with **identical marginals** but perfect positive dependence.
+Sorting each region's samples makes high draws in one region line up with high draws in the others.
+
+```{r partA-dependence}
+## identical marginals, but now the regions move together (comonotonic)
+dat_comono <- t(apply(dat_indep, 1, sort))
+
+## marginal CRPS (per region) is unchanged by the reordering
+crps_indep  <- scoringRules::crps_sample(y = y, dat = dat_indep)
+crps_comono <- scoringRules::crps_sample(y = y, dat = dat_comono)
+
+rbind(independent = crps_indep, comonotonic = crps_comono)
+c(mean_indep = mean(crps_indep), mean_comono = mean(crps_comono))
+```
+
+The per-region CRPS, and therefore the average, are exactly the same for both forecasts.
+The energy score is not.
+
+```{r partA-energy}
+es_indep  <- scoringRules::es_sample(y = y, dat = dat_indep)
+es_comono <- scoringRules::es_sample(y = y, dat = dat_comono)
+
+c(independent = es_indep, comonotonic = es_comono)
+```
+
+::: callout-tip
+## Take 5 minutes
+
+The mean marginal CRPS is identical for the two forecasts, but the energy score prefers the comonotonic one.
+Look at the observed vector `y` relative to the forecast medians.
+Why does coupling the regions help here, and when would it hurt instead?
+:::
+
+::: {.callout-note collapse="true"}
+## Solution
+
+At this target date all three regions came in **below** their forecast medians at the same time, a synchronised late-season decline.
+The comonotonic forecast puts probability on regions being jointly low (or jointly high), so it places mass near what actually happened and scores better.
+The independent forecast, which is what fitting each region separately gives us, spreads its joint mass into corners where one region is high while another is low, and pays for it.
+
+If instead the regions had diverged, one high while another was low, the coupling would have hurt and the independent forecast would have scored better.
+The marginal CRPS is blind to all of this: it is identical either way.
+The lesson is not that dependence is always good, but that the energy score can see it and marginal scores cannot.
+:::
+
+# Modelling scores
+
+When we compare models we usually reach for a single averaged score, and sometimes a significance test on top.
+Both are fragile.
+Scores are strongly right-skewed, they vary hugely with the scale of the data, and they are correlated across dates, locations and horizons.
+Forecasts also differ in difficulty, so an average quietly rewards whoever predicted the easy targets.
+A p-value, meanwhile, tells you *whether* two models differ, not *where* or *by how much*.
+
+A more useful approach is to treat the scores themselves as data and model them.
+Let's run a small backtest over several forecast dates with three contrasting models.
+
+```{r partB-backtest}
+flu_sub <- flu_data_hhs |> filter(location %in% sel_locations)
+
+init_n <- flu_sub |>
+  filter(location == "HHS Region 1", origin_date <= as.Date("2018-12-01")) |>
+  nrow()
+
+flu_tscv <- flu_sub |>
+  filter(origin_date <= as.Date("2019-03-16")) |>
+  tsibble::stretch_tsibble(.init = init_n, .step = 2, .id = ".split")
+
+cv_samples <- flu_tscv |>
+  model(
+    rw       = RW(my_fourth_root(wili)),
+    arima210 = ARIMA(my_fourth_root(wili) ~ pdq(2, 1, 0)),
+    fourier  = ARIMA(my_fourth_root(wili) ~ pdq(2, 0, 0) + fourier(period = "year", K = 3))
+  ) |>
+  generate(h = 4, times = 500, bootstrap = TRUE) |>
+  group_by(.split, .model, location, .rep) |>
+  mutate(horizon = row_number()) |>
+  ungroup() |>
+  as_tibble()
+```
+
+We score each forecast unit (a model, location, horizon and origin date) with the CRPS using `scoringutils`.
+
+```{r partB-score}
+truth <- flu_data_hhs |> as_tibble() |>
+  filter(location %in% sel_locations) |>
+  select(location, target_end_date = origin_date, observed = wili)
+
+fc_samples <- cv_samples |>
+  rename(target_end_date = origin_date, predicted = .sim, model = .model) |>
+  left_join(truth, by = c("location", "target_end_date")) |>
+  mutate(origin_date = target_end_date - horizon * 7L) |>
+  filter(!is.na(observed))
+
+scores <- fc_samples |>
+  as_forecast_sample(
+    forecast_unit = c("model", "location", "horizon", "origin_date"),
+    observed = "observed", predicted = "predicted", sample_id = ".rep"
+  ) |>
+  score(metrics = list(crps = crps_sample))
+```
+
+Here is the naive summary: the average CRPS per model.
+
+```{r partB-naive}
+scores |> as_tibble() |>
+  group_by(model) |>
+  summarise(mean_crps = mean(crps), sd_crps = sd(crps), n = n()) |>
+  arrange(mean_crps)
+
+## the scores are strongly right-skewed
+quantile(scores$crps, c(.1, .5, .9, .99))
+```
+
+The `fourier` model has the lowest average, but the standard deviations are large and the scores are heavily skewed.
+Now we model the scores instead.
+We adjust for horizon and location difficulty, and we get uncertainty on each model's effect.
+
+```{r partB-model}
+sdf <- scores |> as_tibble() |>
+  mutate(model = relevel(factor(model), ref = "arima210"),
+         horizon = factor(horizon),
+         location = factor(location))
+
+eps <- 0.5 * min(sdf$crps[sdf$crps > 0])
+score_model <- lm(log(crps + eps) ~ model + horizon + location, data = sdf)
+round(summary(score_model)$coefficients, 3)
+```
+
+The `model` coefficients are what we care about.
+We can turn them into an adjusted mean CRPS per model with an interval, holding horizon and location fixed.
+
+```{r partB-adjusted}
+newd <- data.frame(
+  model    = factor(levels(sdf$model), levels = levels(sdf$model)),
+  horizon  = factor(2, levels = levels(sdf$horizon)),
+  location = factor("HHS Region 1", levels = levels(sdf$location))
+)
+pr <- predict(score_model, newd, se.fit = TRUE)
+data.frame(
+  model    = as.character(newd$model),
+  adj_crps = exp(pr$fit) - eps,
+  lower    = exp(pr$fit - 1.96 * pr$se.fit) - eps,
+  upper    = exp(pr$fit + 1.96 * pr$se.fit) - eps
+)
+```
+
+::: callout-tip
+## Take 5 minutes
+
+Compare the naive ranking with the model coefficients and the adjusted intervals.
+Does the model that "wins" on average clearly beat the others?
+What does the model tell you that the average does not?
+:::
+
+::: {.callout-note collapse="true"}
+## Solution
+
+The naive ranking puts `fourier` first, but the score model shows its edge is not distinguishable from noise: its coefficient is about $-0.10$ with a standard error of $0.06$.
+The `rw` model is effectively tied with `arima210`.
+The adjusted intervals for all three models overlap heavily, so the average overstates a difference that is within noise.
+
+What the model adds is structure.
+Horizon dominates everything, with four-week-ahead scores far worse than one-week-ahead, and Region 2 is systematically harder to predict.
+These are the effects that a single average blends together and hides.
+:::
+
+::: callout-tip
+The standard errors above are optimistic, because the score rows are correlated: they share origin dates and locations, and horizons are nested within each forecast.
+A mixed-effects or Bayesian model with random effects for date, location and horizon handles this properly, and is the approach taken in large multi-model comparisons.[@sherrattPredictivePerformanceMultimodel2023]
+:::
+
+# Going further
+
+## Challenge
+
+-   Recompute the energy-score comparison at a target date where the regions diverged rather than declining together. Does the independent forecast now score better?
+-   Fit a genuinely joint model with `fable::VAR()` and compare its energy score to the independent ARIMA forecast.
+-   Add the variogram score (`scoringRules::vs_sample()`) to the joint comparison. How does it differ from the energy score in what it rewards?
+-   Refit the score model with an interaction between `model` and `horizon`. Do any models do relatively better at longer horizons?
+
+## Methods in practice
+
+-   The `scoringRules` package [documentation](https://cran.r-project.org/package=scoringRules) covers multivariate scores including the energy and variogram scores.
+-   Modelling scores with random effects is used in practice to compare models across many locations and dates.[@sherrattPredictivePerformanceMultimodel2023]
+
+# Wrap up
+
+-   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives.qmd)
+
+::: {#refs}
+:::

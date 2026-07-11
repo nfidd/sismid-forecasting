@@ -1,0 +1,118 @@
+---
+title: "Advanced forecast evaluation"
+author: "Nowcasting and forecasting of infectious disease dynamics"
+bibliography: ../../nfidd.bib
+engine: knitr
+format:
+  revealjs:
+    output: slides/advanced-forecast-evaluation.html
+    footer: "Advanced forecast evaluation"
+    chalkboard: true
+    slide-level: 3
+---
+
+### Where we have got to {.smaller}
+
+- We can build forecasts for **many locations at once**
+- We can score them with the **CRPS** and summarise across dimensions
+- So far we have scored each location **on its own** and averaged
+
+. . .
+
+Two questions this leaves open:
+
+1. What are we missing when we only score **one location at a time**?
+2. Is a single **average score** (or a significance test) enough to compare models?
+
+### Marginal is not joint {.smaller}
+
+A forecast for two regions is a cloud of plausible **pairs**, not two separate numbers.
+
+:::: {.columns}
+::: {.column width="50%"}
+- Same forecast for A
+- Same forecast for B
+- Very different **together**
+:::
+::: {.column width="50%"}
+- Do peaks arrive **everywhere at once**?
+- Or **one region at a time**?
+:::
+::::
+
+. . .
+
+Averaging a one-location score (CRPS) only ever sees the **marginals**.
+It cannot tell these forecasts apart.
+
+### Why the joint distribution matters {.smaller}
+
+Many decisions depend on how locations move **together**:
+
+- splitting a fixed **stockpile** across regions
+- staffing that can be **moved** between places
+- national **totals** built from local forecasts
+
+. . .
+
+A simultaneous peak everywhere is a different problem from staggered peaks — even when each region's marginal forecast is identical.
+
+### The energy score {.smaller}
+
+A proper scoring rule for a **vector** outcome $\mathbf{y}$, generalising the CRPS.
+
+$$
+\text{ES}(F, \mathbf{y}) = \mathbb{E}\lVert \mathbf{X} - \mathbf{y} \rVert - \tfrac{1}{2}\,\mathbb{E}\lVert \mathbf{X} - \mathbf{X}' \rVert
+$$
+
+- $\mathbf{X}, \mathbf{X}'$ are independent draws from the forecast, $\lVert\cdot\rVert$ is Euclidean distance
+- First term rewards **accuracy**, second rewards **sharpness**
+- In one dimension it **is** the CRPS
+- Needs **joint samples** — fit each location alone and you assume independence
+
+### Interactive: the energy score {.smaller}
+
+Same marginals, different dependence — only the energy score can tell.
+
+[Open the energy-score explainer](../../interactive/advanced-forecast-evaluation.html){target="_blank"}
+
+- Drag the observation, rotate the cloud with **dependence** $\rho$
+- Mean marginal CRPS stays fixed; the energy score moves
+
+### One number is not enough {.smaller}
+
+A single averaged score hides a lot, and a significance test barely helps:
+
+- scores are **skewed** and vary hugely by scale
+- they are **correlated** across dates, locations and horizons
+- forecasts differ in **difficulty** — averages reward easy targets
+- a p-value tells you *whether* models differ, not **where** or **by how much**
+
+### Model the scores {.smaller}
+
+Treat the scores as **data** and fit a model:
+
+$$
+\log(\text{CRPS}) \sim \text{model} + \text{horizon} + \text{location} + \dots
+$$
+
+- estimates each model's effect **with uncertainty**
+- **adjusts** for horizon and location difficulty
+- random effects for date/location/horizon are the natural extension [@sherrattPredictivePerformanceMultimodel2023]
+
+A principled description of variation in scores beats a single ranking.
+
+## `r fontawesome::fa("laptop-code", "white")` Your Turn {background-color="#447099" transition="fade-in"}
+
+1. Score multi-location forecasts jointly with the energy score.
+2. Show that dependence changes the energy score but not the marginal CRPS.
+3. Model the scores to compare forecast models fairly.
+
+#
+
+[Return to the session](../advanced-forecast-evaluation.qmd)
+
+### References
+
+::: {#refs}
+:::

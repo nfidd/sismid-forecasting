@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Scoring joint forecasts — the energy score</title>
+<style>
+  :root{
+    --fc:#2563eb;     /* forecast / blue */
+    --ob:#ea580c;     /* observation / orange */
+    --sharp:#16a34a;  /* green */
+    --wide:#9333ea;   /* purple */
+    --ink:#1f2933;
+    --muted:#6b7280;
+    --line:#e5e7eb;
+    --bg:#fbfbfd;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; background:var(--bg); color:var(--ink);
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  }
+  .wrap{max-width:920px; margin:0 auto; padding:0 22px 120px}
+  header.hero{
+    padding:54px 22px 30px; text-align:center;
+    background:linear-gradient(180deg,#eef2ff 0%, var(--bg) 100%);
+    border-bottom:1px solid var(--line);
+  }
+  header.hero h1{font-size:30px; margin:0 0 8px; letter-spacing:-.4px}
+  header.hero p{max-width:680px; margin:0 auto; color:var(--muted)}
+  section{
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:26px 28px; margin:30px 0; box-shadow:0 1px 2px rgba(15,23,42,.04);
+  }
+  section > h2{margin:0 0 4px; font-size:23px; letter-spacing:-.3px}
+  .tagline{color:var(--muted); margin:0 0 18px; font-size:15px}
+  h3{margin:26px 0 8px; font-size:17px}
+  p{margin:10px 0}
+  .lower{font-weight:600}
+  .fig{
+    border:1px solid var(--line); border-radius:12px; padding:16px 14px 10px;
+    margin:18px 0 6px; background:#fff;
+  }
+  .fig svg{display:block; width:100%; height:auto; touch-action:none}
+  .figcap{font-size:13.5px; color:var(--muted); margin:8px 4px 2px}
+  .controls{
+    display:flex; flex-wrap:wrap; gap:18px 26px; align-items:center;
+    margin:8px 4px 2px; padding:12px 14px; background:#f8fafc;
+    border:1px solid var(--line); border-radius:10px; font-size:14px;
+  }
+  .controls label{display:flex; flex-direction:column; gap:2px; min-width:170px}
+  .controls .vlabel{font-weight:600}
+  .controls input[type=range]{width:180px; accent-color:var(--fc)}
+  .readout{
+    display:inline-flex; gap:18px; flex-wrap:wrap; margin:10px 4px 0;
+    font-variant-numeric:tabular-nums;
+  }
+  .readout .chip{
+    background:#f1f5f9; border:1px solid var(--line); border-radius:8px;
+    padding:6px 12px; font-size:14px;
+  }
+  .readout .chip b{font-size:16px}
+  .presets{display:flex; gap:8px; flex-wrap:wrap; margin:14px 4px 0}
+  .presets button{
+    font:600 13px inherit; border:1px solid #c7d2fe; background:#fff; color:var(--fc);
+    padding:6px 13px; border-radius:8px; cursor:pointer;
+  }
+  .presets button:hover{background:#eef2ff}
+  .legend{display:flex; gap:18px; flex-wrap:wrap; font-size:13.5px; margin:4px 4px 0}
+  .legend span{display:inline-flex; align-items:center; gap:7px}
+  .dot{width:12px; height:12px; border-radius:50%; display:inline-block}
+  .key{background:#eff6ff; border-left:4px solid var(--fc); padding:12px 16px; border-radius:0 8px 8px 0; margin:16px 0}
+  .key.green{background:#f0fdf4; border-color:var(--sharp)}
+  .key.orange{background:#fff7ed; border-color:var(--ob)}
+  .formula{
+    background:#0f172a; color:#e2e8f0; border-radius:10px; padding:14px 18px;
+    font-family:"SFMono-Regular",Consolas,"Liberation Mono",Menlo,monospace;
+    font-size:15px; overflow-x:auto; margin:14px 0;
+  }
+  ul{margin:10px 0; padding-left:22px}
+  li{margin:5px 0}
+  .pill{display:inline-block; font-size:12px; font-weight:700; padding:2px 9px; border-radius:999px; vertical-align:middle}
+  .pill.score{background:#dbeafe; color:#1d4ed8}
+</style>
+</head>
+<body>
+<header class="hero">
+  <h1>Scoring joint forecasts: the energy score</h1>
+  <p>When you forecast several places at once, the <i>marginal</i> forecasts can be identical yet the <i>joint</i> forecast — how the places move together — can differ completely. The energy score is a proper scoring rule that sees this.</p>
+</header>
+
+<div class="wrap">
+
+<section id="intro">
+  <h2>Marginal is not joint</h2>
+  <p class="tagline">Same one-location forecasts, different picture of what happens together.</p>
+  <p>Suppose you forecast influenza activity in two regions, <b>A</b> and <b>B</b>. Your forecast is not two separate numbers but a cloud of plausible <i>pairs</i> (A, B) — a joint distribution. Two forecasts can have exactly the same <b>marginal</b> distribution in A and the same marginal in B, and still disagree about whether A and B tend to rise <i>together</i>.</p>
+  <p>Averaging a one-location score such as the <b>CRPS</b> over regions only ever sees the marginals. It cannot tell these forecasts apart. But many decisions depend on the joint distribution: if you hold a fixed stockpile to split across regions, a peak that hits everywhere at once is a very different problem from peaks that arrive one region at a time. To score that, you need a rule that reads the whole vector at once.</p>
+</section>
+
+<section id="energy">
+  <h2>The energy score <span class="pill score">score · lower is better</span></h2>
+  <p class="tagline">A multivariate generalisation of the CRPS.</p>
+  <p>The energy score takes a forecast that is a distribution <i>F</i> over a <b>vector</b> outcome (here the pair (A, B)) and the observed vector <b>y</b>, and returns one number. Written with draws <b>X</b>, <b>X′</b> from the forecast and the Euclidean distance ‖·‖:</p>
+
+  <div class="formula">ES(F, <b>y</b>) = E‖<b>X</b> &minus; <b>y</b>‖ &minus; &frac12; E‖<b>X</b> &minus; <b>X′</b>‖</div>
+
+  <p>It is exactly the "energy" form of the CRPS with absolute value replaced by vector distance: the first term rewards <b>accuracy</b> (draws close to the truth), the second rewards <b>sharpness</b> (a concentrated cloud). In one dimension it <i>is</i> the CRPS.</p>
+
+  <p>Below, the blue cloud is a forecast for two regions with fixed marginals. Drag the <b style="color:var(--ob)">orange observation</b>, and slide the <b>dependence</b> to rotate the cloud <i>without changing either marginal</i>. Watch the two panels of numbers: the mean marginal CRPS never moves, but the energy score does.</p>
+
+  <div class="legend">
+    <span><i class="dot" style="background:var(--fc)"></i> forecast draws (A, B)</span>
+    <span><i class="dot" style="background:var(--ob)"></i> observation <b>y</b></span>
+    <span><i class="dot" style="background:#93c5fd"></i> forecast spread (1&sigma; ellipse)</span>
+  </div>
+
+  <div class="fig">
+    <svg id="esSvg" viewBox="0 0 720 460" role="img" aria-label="Two-region forecast cloud with a draggable observation and adjustable dependence"></svg>
+  </div>
+  <div class="controls">
+    <label><span class="vlabel">Dependence &rho; (A &amp; B together): <span id="esRhoVal">0.0</span></span>
+      <input id="esRho" type="range" min="-0.95" max="0.95" step="0.05" value="0.0"></label>
+    <label><span class="vlabel">Forecast spread &sigma; (both regions): <span id="esSigVal">1.6</span></span>
+      <input id="esSig" type="range" min="0.6" max="3.0" step="0.1" value="1.6"></label>
+  </div>
+  <div class="presets">
+    <button data-rho="0">Independent (&rho; = 0)</button>
+    <button data-rho="0.9">Rise together (&rho; = 0.9)</button>
+    <button data-rho="-0.9">Trade off (&rho; = &minus;0.9)</button>
+  </div>
+  <div class="readout">
+    <span class="chip" style="border-left:4px solid var(--ob);padding-left:10px">CRPS&nbsp;A = <b id="esCrpsA">—</b></span>
+    <span class="chip" style="border-left:4px solid var(--ob);padding-left:10px">CRPS&nbsp;B = <b id="esCrpsB">—</b></span>
+    <span class="chip">mean marginal CRPS = <b id="esCrpsM">—</b></span>
+    <span class="chip" style="border-left:4px solid var(--fc);padding-left:10px">energy score = <b id="esVal">—</b></span>
+    <span class="chip" id="esHint" style="background:#ecfeff"></span>
+  </div>
+
+  <h3>Why the two panels disagree</h3>
+  <p>The marginal CRPS for A depends only on region A's forecast and region A's outcome; likewise for B. Rotating the cloud leaves both marginals untouched, so their average is frozen. The energy score reads the pair together: when the observation sits <i>against</i> the cloud's tilt — say both regions high while the forecast expected a trade-off — it pays a penalty the marginals never charge.</p>
+
+  <h3>Things worth remembering</h3>
+  <ul>
+    <li>The energy score is <b>proper</b> for the whole joint distribution and reduces to the CRPS in one dimension, so it is a genuine generalisation.</li>
+    <li>It is reported in the <b>units of the data</b> and, like the CRPS, is best read by <b>comparing</b> forecasts rather than in isolation.</li>
+    <li>You need <b>joint samples</b> to compute it. Fitting each region on its own gives independent draws (&rho; = 0); capturing dependence needs a genuinely joint model (e.g. a vector autoregression).</li>
+    <li>It is known to be relatively <b>insensitive to misspecified dependence</b> in high dimensions — a reason people also turn to the variogram score, or to <i>modelling</i> the scores directly.</li>
+  </ul>
+</section>
+
+</div>
+
+<script>
+/* ---------- small math helpers ---------- */
+const SVGNS="http://www.w3.org/2000/svg";
+function el(tag,attrs){const e=document.createElementNS(SVGNS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);return e;}
+function clear(svg){while(svg.firstChild)svg.removeChild(svg.firstChild);}
+function normPdf(z){return Math.exp(-0.5*z*z)/Math.sqrt(2*Math.PI);}
+function normCdf(z){ // Abramowitz-Stegun
+  const t=1/(1+0.2316419*Math.abs(z));
+  const d=0.3989423*Math.exp(-z*z/2);
+  let p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));
+  return z>0?1-p:p;
+}
+// closed-form CRPS of a Normal(mu,sd) at y, in data units
+function crpsNorm(mu,sd,y){
+  const z=(y-mu)/sd;
+  return sd*( z*(2*normCdf(z)-1) + 2*normPdf(z) - 1/Math.sqrt(Math.PI) );
+}
+// deterministic standard-normal sample via Box-Muller on a fixed LCG
+function fixedNormals(m){
+  let s=1234567; const rnd=()=>{s=(1103515245*s+12345)&0x7fffffff; return s/0x7fffffff;};
+  const out=[];
+  for(let i=0;i<m;i++){
+    let u=rnd()||1e-9, v=rnd();
+    out.push([Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v),
+              Math.sqrt(-2*Math.log(u))*Math.sin(2*Math.PI*v)]);
+  }
+  return out;
+}
+
+/* ================= energy-score explorer ================= */
+(function(){
+  const svg=document.getElementById("esSvg");
+  const W=720,H=460,m={l:56,r:22,t:22,b:52};
+  const lo=0, hi=12;            // data scale for both regions (% ILI-like)
+  const muA=6, muB=6;           // fixed forecast centre
+  const M=170;                  // number of forecast draws
+  const Z=fixedNormals(M);      // fixed standard normals, rotated by rho
+  const sx=v=>m.l+(v-lo)/(hi-lo)*(W-m.l-m.r);
+  const sy=v=>H-m.b-(v-lo)/(hi-lo)*(H-m.t-m.b);
+  const ix=px=>lo+(px-m.l)/(W-m.l-m.r)*(hi-lo);
+  const iy=py=>lo+(H-m.b-py)/(H-m.t-m.b)*(hi-lo);
+
+  const rhoInp=document.getElementById("esRho"), sigInp=document.getElementById("esSig");
+  let obs={a:8.5,b:3.5};        // draggable observation
+
+  function draws(sig,rho){
+    const r=Math.sqrt(Math.max(0,1-rho*rho));
+    return Z.map(z=>[muA+sig*z[0], muB+sig*(rho*z[0]+r*z[1])]);
+  }
+  function energyScore(pts,y){
+    let a=0; for(const p of pts) a+=Math.hypot(p[0]-y.a,p[1]-y.b);
+    a/=pts.length;
+    let b=0; const n=pts.length;
+    for(let i=0;i<n;i++)for(let j=0;j<n;j++) b+=Math.hypot(pts[i][0]-pts[j][0],pts[i][1]-pts[j][1]);
+    b/=(n*n);
+    return a-0.5*b;
+  }
+
+  function draw(){
+    const sig=+sigInp.value, rho=+rhoInp.value;
+    document.getElementById("esRhoVal").textContent=rho.toFixed(2);
+    document.getElementById("esSigVal").textContent=sig.toFixed(1);
+    clear(svg);
+    // grid + axes
+    for(let v=lo; v<=hi; v+=2){
+      svg.appendChild(el("line",{x1:sx(v),y1:sy(lo),x2:sx(v),y2:sy(hi),stroke:"#eef2f7","stroke-width":1}));
+      svg.appendChild(el("line",{x1:sx(lo),y1:sy(v),x2:sx(hi),y2:sy(v),stroke:"#eef2f7","stroke-width":1}));
+      svg.appendChild(el("text",{x:sx(v),y:H-m.b+18,"text-anchor":"middle","font-size":11,fill:"#6b7280"})).textContent=v;
+      svg.appendChild(el("text",{x:m.l-10,y:sy(v)+4,"text-anchor":"end","font-size":11,fill:"#6b7280"})).textContent=v;
+    }
+    svg.appendChild(el("line",{x1:m.l,y1:sy(lo),x2:W-m.r,y2:sy(lo),stroke:"#cbd5e1"}));
+    svg.appendChild(el("line",{x1:m.l,y1:sy(lo),x2:m.l,y2:sy(hi),stroke:"#cbd5e1"}));
+    svg.appendChild(el("text",{x:(m.l+W-m.r)/2,y:H-8,"text-anchor":"middle","font-size":12.5,fill:"#374151"})).textContent="Region A activity";
+    const yl=el("text",{x:15,y:(m.t+H-m.b)/2,"text-anchor":"middle","font-size":12.5,fill:"#374151",transform:`rotate(-90 15 ${(m.t+H-m.b)/2})`}); yl.textContent="Region B activity"; svg.appendChild(yl);
+
+    // 1-sigma ellipse (visualises the dependence shape)
+    const r=Math.sqrt(Math.max(0,1-rho*rho)); let ell="";
+    for(let k=0;k<=64;k++){
+      const t=2*Math.PI*k/64, z1=Math.cos(t), z2=Math.sin(t);
+      const ax=muA+sig*z1, bx=muB+sig*(rho*z1+r*z2);
+      ell+=(k?" L ":"M ")+sx(ax)+" "+sy(bx);
+    }
+    svg.appendChild(el("path",{d:ell+" Z",fill:"#dbeafe",opacity:.45,stroke:"#93c5fd","stroke-width":1.5}));
+
+    // forecast draws
+    const pts=draws(sig,rho);
+    pts.forEach(p=>svg.appendChild(el("circle",{cx:sx(p[0]),cy:sy(p[1]),r:2.6,fill:"#2563eb",opacity:.5})));
+
+    // guide lines from observation to each axis (shows the two marginals)
+    svg.appendChild(el("line",{x1:sx(obs.a),y1:sy(obs.b),x2:sx(obs.a),y2:sy(lo),stroke:"#f59e0b","stroke-dasharray":"3 3","stroke-width":1.2,opacity:.8}));
+    svg.appendChild(el("line",{x1:sx(obs.a),y1:sy(obs.b),x2:sx(lo),y2:sy(obs.b),stroke:"#f59e0b","stroke-dasharray":"3 3","stroke-width":1.2,opacity:.8}));
+    // observation (draggable)
+    svg.appendChild(el("circle",{cx:sx(obs.a),cy:sy(obs.b),r:9,fill:"none",stroke:"#ea580c","stroke-width":2}));
+    const oc=el("circle",{cx:sx(obs.a),cy:sy(obs.b),r:6,fill:"#ea580c",cursor:"grab",id:"esObs"});
+    svg.appendChild(oc);
+    svg.appendChild(el("text",{x:sx(obs.a)+12,y:sy(obs.b)-10,"font-size":12,fill:"#ea580c","font-weight":700})).textContent="y";
+
+    // readouts
+    const cA=crpsNorm(muA,sig,obs.a), cB=crpsNorm(muB,sig,obs.b);
+    const es=energyScore(pts,obs);
+    document.getElementById("esCrpsA").textContent=cA.toFixed(2);
+    document.getElementById("esCrpsB").textContent=cB.toFixed(2);
+    document.getElementById("esCrpsM").textContent=((cA+cB)/2).toFixed(2);
+    document.getElementById("esVal").textContent=es.toFixed(2);
+    const hint=document.getElementById("esHint");
+    if(rho>0.55 && (obs.a-muA)*(obs.b-muB)<-1.5) hint.textContent="obs fights the cloud's tilt → energy score punished";
+    else if(rho<-0.55 && (obs.a-muA)*(obs.b-muB)>1.5) hint.textContent="obs fights the cloud's tilt → energy score punished";
+    else if(Math.abs(rho)<0.15) hint.textContent="independent forecast — dependence carries no information";
+    else hint.textContent="";
+  }
+
+  // dragging
+  let dragging=false;
+  function toData(evt){
+    const r=svg.getBoundingClientRect();
+    const cx=(evt.touches?evt.touches[0].clientX:evt.clientX)-r.left;
+    const cy=(evt.touches?evt.touches[0].clientY:evt.clientY)-r.top;
+    const px=cx/r.width*W, py=cy/r.height*H;
+    return {a:Math.min(hi,Math.max(lo,ix(px))), b:Math.min(hi,Math.max(lo,iy(py)))};
+  }
+  function start(e){ if(e.target && e.target.id==="esObs"){dragging=true; e.preventDefault();} }
+  function move(e){ if(!dragging)return; obs=toData(e); draw(); e.preventDefault(); }
+  function end(){ dragging=false; }
+  svg.addEventListener("mousedown",start); svg.addEventListener("touchstart",start,{passive:false});
+  window.addEventListener("mousemove",move); window.addEventListener("touchmove",move,{passive:false});
+  window.addEventListener("mouseup",end); window.addEventListener("touchend",end);
+  // clicking anywhere on the plot also moves the observation
+  svg.addEventListener("mousedown",e=>{ if(e.target && e.target.id!=="esObs"){ obs=toData(e); draw(); } });
+
+  rhoInp.addEventListener("input",draw); sigInp.addEventListener("input",draw);
+  document.querySelectorAll("#energy .presets button").forEach(b=>{
+    b.addEventListener("click",()=>{ rhoInp.value=b.dataset.rho; draw(); });
+  });
+  draw();
+})();
+</script>
+
+<script>
+/* embed mode: ?embed=sectionId[,id2,...] strips the page chrome and the
+   explanatory prose/maths from the kept sections, leaving only the interactive
+   figures, for inlining in an <iframe> in the course site. Reports height so the
+   host page can auto-size the iframe. */
+(function(){
+  var q=new URLSearchParams(location.search), e=q.get('embed');
+  var KEEP={fig:1,controls:1,readout:1,legend:1,presets:1,figcap:1};
+  if(e){
+    var keep=e.split(',').map(function(s){return s.trim();}).filter(Boolean);
+    ['header.hero','nav.toc','footer'].forEach(function(sel){
+      Array.prototype.forEach.call(document.querySelectorAll(sel),function(n){n.style.display='none';});
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('body > div'),function(d){
+      if(!d.classList.contains('wrap')) d.style.display='none';
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('section'),function(sec){
+      if(keep.indexOf(sec.id)===-1){ sec.style.display='none'; return; }
+      sec.style.margin='0'; sec.style.border='none'; sec.style.boxShadow='none'; sec.style.padding='2px 2px 8px';
+      Array.prototype.forEach.call(sec.children,function(c){
+        var k=false, cl=c.classList; if(cl){ for(var key in KEEP){ if(cl.contains(key)){k=true;break;} } }
+        if(!k) c.style.display='none';
+      });
+    });
+    var wrap=document.querySelector('.wrap'); if(wrap) wrap.style.padding='0 8px 10px';
+    document.body.style.background='#fff'; document.documentElement.style.background='#fff';
+  }
+  function postH(){ try{ parent.postMessage({nfiddEmbedHeight: Math.ceil(document.body.getBoundingClientRect().height)}, '*'); }catch(_){} }
+  window.addEventListener('load', postH);
+  window.addEventListener('resize', postH);
+  document.addEventListener('input', function(){ setTimeout(postH,60); });
+  document.addEventListener('click', function(){ setTimeout(postH,120); });
+  setTimeout(postH,250); setTimeout(postH,1000);
+})();
+</script>
+</body>
+</html>
