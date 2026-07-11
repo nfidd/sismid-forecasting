@@ -64,7 +64,7 @@ The best way to interact with the material is via the [Visual Editor](https://do
 
 Recall that we have built [a live modeling hub](https://github.com/reichlab/sismid-ili-forecasting-sandbox/) for all participants of the class to use as a "sandbox" for building models and running analyses.
 
-If you can get through this session, the reward will be seeing your forecasts alongside the other forecasts at [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html).
+If you can get through this session, the reward will be seeing your forecasts alongside the other forecasts at [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html?as_of=2016-01-16&interval=95%25&target_var=ili+perc&xaxis_range=2015-12-02&xaxis_range=2016-07-13&yaxis_range=0.03190391899589995&yaxis_range=11.26564457976691&model=delphi-epicast&model=hist-avg&location=US+National).
 
 Complete [the setup from the first local hub session](hub-playground.qmd#a-flu-forecasting-hub-for-model-dev) if you haven't already.
 
@@ -98,7 +98,7 @@ If you've gotten this far, congratulations!
 
 As a last test of your forecasting prowess, we invite you to submit the forecasts for your test-phase models to our [online `sismid-ili-forecasting-sandbox` hub](https://github.com/reichlab/sismid-ili-forecasting-sandbox).
 
-If you can get through this process, the reward will be seeing your forecasts on [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html).
+If you can get through this process, the reward will be seeing your forecasts on [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html?as_of=2016-01-16&interval=95%25&target_var=ili+perc&xaxis_range=2015-12-02&xaxis_range=2016-07-13&yaxis_range=0.03190391899589995&yaxis_range=11.26564457976691&model=delphi-epicast&model=hist-avg&location=US+National).
 
 ## Process of submitting to an online hub
 
