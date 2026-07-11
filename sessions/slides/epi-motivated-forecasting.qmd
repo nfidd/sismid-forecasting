@@ -147,27 +147,6 @@ ggplot(data, aes(x = t, y = value)) +
 We fit these models with the EpiNow2 package.
 It estimates the reproduction number from the case data, maps infections to reports through the delays, and can include susceptible depletion, in one Bayesian model fit with Stan.
 
-
-### A population set too small
-
-- Depletion takes hold too early
-- Forecast turns over prematurely
-- **Under-shoots** the peak
-
-### No susceptible depletion
-
-- Model keeps growing
-- Forecast sails past the peak
-- **Over-shoots** the peak
-
-A wrong mechanism is a *systematic* error in a *predictable* direction, not noise.
-
-### Which model would you actually use?
-
-In the real world you do not know the population at risk, and you cannot assume $R_t$ is constant.
-
-Which of these models would you reach for?
-
 ## `r fontawesome::fa("laptop-code", "white")` Your turn {background-color="#447099" transition="fade-in"}
 
 #
