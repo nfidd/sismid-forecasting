@@ -19,11 +19,11 @@ theme_set(theme_bw())
 
 ### Forecasting so far
 
-In earlier sessions we used statistical models such as ARIMA that find patterns in counts and project them forward.
+In earlier sessions we used statistical models such as ARIMA that find patterns in the reported series and project them forward.
 
 #### What we model
 
--   Reported case counts
+-   The reported series (case counts or percentages)
 -   Trends and seasonality
 -   Autocorrelation in the data
 
@@ -78,14 +78,39 @@ $$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s} + \iota_t\right) $$
 
 Same autoregressive shape, but each coefficient is $R_t$ times a generation-time weight, and the noise term becomes imported infections we set to zero.
 
-### From infections to reported cases
+### From infection to report: delays {.smaller}
 
-We don't observe infections.
-We observe *reported cases*.
+We never observe infections directly.
+Each infected person is reported some days later, after an incubation period and a reporting delay.
+Individual delays vary, and together they form a **delay distribution**.
 
-Delays such as the incubation period and reporting delay convolve infections into reports.
+```{r delay-figure, echo = FALSE, fig.height = 2.7}
+set.seed(1)
+n <- 15
+delay_samples <- rgamma(n, shape = 4, rate = 0.7)
+events <- tibble(id = factor(seq_len(n)), infection = 0, report = delay_samples)
+p_events <- ggplot(events) +
+  geom_segment(aes(x = infection, xend = report, y = id, yend = id),
+               colour = "grey70") +
+  geom_point(aes(x = infection, y = id), colour = "#4292C6") +
+  geom_point(aes(x = report, y = id), colour = "#E6550D") +
+  labs(x = "Days since infection", y = "Individual",
+       title = "Individual event times") +
+  theme(axis.text.y = element_blank(), axis.ticks.y = element_blank())
+xx <- seq(0, 15, 0.1)
+dens <- tibble(x = xx, d = dgamma(xx, shape = 4, rate = 0.7))
+p_dist <- ggplot() +
+  geom_histogram(data = events, aes(x = report, y = after_stat(density)),
+                 bins = 10, fill = "grey80", colour = "white") +
+  geom_line(data = dens, aes(x, d), colour = "#E6550D", linewidth = 1) +
+  labs(x = "Delay (days)", y = "Density", title = "Delay distribution")
+gridExtra::grid.arrange(p_events, p_dist, ncol = 2)
+```
 
-EpiNow2 models these delays jointly with transmission.
+::: {.callout-note}
+Reports lag infections, so the most recent days are still filling in and undercount recent infections.
+A forecast that maps infections to reports through this delay starts from the right place; one that models the raw reports does not.
+:::
 
 ### Adding mechanism: susceptible depletion
 
@@ -123,9 +148,16 @@ ggplot(data, aes(x = t, y = value)) +
   theme_bw()
 ```
 
+### EpiNow2
+
+We fit these models with the EpiNow2 package.
+It estimates the reproduction number from the case data, maps infections to reports through the delays, and can include susceptible depletion, in one Bayesian model fit with Stan.
+
+The package is the engine; the model structure is what we have been building up.
+
 ### A population set too small
 
-- Depletion bites too early
+- Depletion takes hold too early
 - Forecast turns over prematurely
 - **Under-shoots** the peak
 

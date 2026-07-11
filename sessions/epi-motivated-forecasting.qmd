@@ -717,7 +717,7 @@ Is the wrong forecast simply noisier, or is it wrong in a systematic way?
 ## Solution
 
 - The correct-population model bends over with the observations.
-- The wrong prior tells the model the susceptible pool is far smaller than it is, so depletion bites too early and the forecast turns over before the real peak, under-shooting the truth.
+- The wrong prior tells the model the susceptible pool is far smaller than it is, so depletion takes hold too early and the forecast turns over before the real peak, under-shooting the truth.
 - The error is systematic and directional, not noise: a wrong mechanism sends the forecast the wrong way rather than just widening the intervals.
 :::
 :::
