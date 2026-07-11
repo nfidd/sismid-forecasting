@@ -78,7 +78,7 @@ This is not strictly necessary but will help us talk about the models.
 set.seed(7321)
 ```
 
-We also define the fourth-root transformation used in earlier sessions, so that our ARIMA baseline is the same model family students already know.
+We also define the fourth-root transformation used in earlier sessions, so that our ARIMA baseline is the same model that you are already familiar with.
 
 ```{r}
 fourth_root <- function(x) x^0.25
