@@ -29,7 +29,7 @@ The source file of this session is located at `sessions/advanced-forecast-evalua
 
 ## Libraries used
 
-In this session we will use the `fable` package for forecasting, the `dplyr`, `tidyr` and `tsibble` packages for data wrangling, the `ggplot2` package for plotting, and the `scoringRules` and `scoringutils` packages for scoring.
+In this session we will use the `fable` package for forecasting, the `dplyr`, `tidyr` and `tsibble` packages for data wrangling, the `ggplot2` package for plotting, the `scoringRules` and `scoringutils` packages for scoring, and the `mgcv` package for modelling the scores.
 
 ```{r libraries, message = FALSE}
 library("nfidd.forecasting")
@@ -40,6 +40,7 @@ library("tidyr")
 library("ggplot2")
 library("scoringRules")
 library("scoringutils")
+library("mgcv")
 theme_set(theme_bw())
 ```
 
@@ -280,32 +281,54 @@ The `fourier` model has the lowest average, but the standard deviations are larg
 Now we model the scores instead.
 We adjust for horizon and location difficulty, and we get uncertainty on each model's effect.
 
+::: callout-important
+## Do not transform the score itself
+
+It is tempting to fit `lm(log(crps) ~ ...)` to tame the skew, but this quietly breaks what made the CRPS worth using.
+The CRPS is a *proper* score, so the average CRPS is minimised by the better forecaster.
+The log is nonlinear, so the average *log* CRPS is not, and ranking models by it is no longer a proper comparison.
+
+The fix is to keep the CRPS on its natural scale as the response, and use a **generalised additive model** with a Gamma family and a log **link**.
+The link handles positivity and skew, but the model still describes the mean CRPS, so the comparison stays proper.
+If instead you want to reward performance on the log scale, transform the *forecasts and observations* before scoring (the `transform = log1p` route from the [real-world forecasts session](real-world-forecasts.qmd#log-scale-scores)), which is still proper, and then model those scores.[@bosse2023scorin]
+:::
+
 ```{r partB-model}
 sdf <- scores |> as_tibble() |>
   mutate(model = relevel(factor(model), ref = "arima210"),
-         horizon = factor(horizon),
          location = factor(location))
 
-eps <- 0.5 * min(sdf$crps[sdf$crps > 0])
-score_model <- lm(log(crps + eps) ~ model + horizon + location, data = sdf)
-round(summary(score_model)$coefficients, 3)
+## Gamma family + log link models E[CRPS] on its natural scale (the response is
+## never transformed), so the model comparison stays proper. The smooth lets
+## the score vary flexibly with horizon.
+score_model <- mgcv::gam(
+  crps ~ model + location + s(horizon, k = 4),
+  family = Gamma(link = "log"), data = sdf
+)
+round(summary(score_model)$p.table, 3)
 ```
 
-The `model` coefficients are what we care about.
-We can turn them into an adjusted mean CRPS per model with an interval, holding horizon and location fixed.
+The `model` terms are what we care about.
+The smooth term for horizon confirms that horizon drives most of the variation in scores.
+
+```{r partB-smooth}
+round(summary(score_model)$s.table, 3)
+```
+
+We can turn the model coefficients into an adjusted mean CRPS per model with an interval, holding horizon and location fixed.
 
 ```{r partB-adjusted}
 newd <- data.frame(
   model    = factor(levels(sdf$model), levels = levels(sdf$model)),
-  horizon  = factor(2, levels = levels(sdf$horizon)),
-  location = factor("HHS Region 1", levels = levels(sdf$location))
+  location = factor("HHS Region 1", levels = levels(sdf$location)),
+  horizon  = 2
 )
-pr <- predict(score_model, newd, se.fit = TRUE)
+pr <- predict(score_model, newd, se.fit = TRUE)  # link (log) scale
 data.frame(
   model    = as.character(newd$model),
-  adj_crps = exp(pr$fit) - eps,
-  lower    = exp(pr$fit - 1.96 * pr$se.fit) - eps,
-  upper    = exp(pr$fit + 1.96 * pr$se.fit) - eps
+  adj_crps = exp(pr$fit),
+  lower    = exp(pr$fit - 1.96 * pr$se.fit),
+  upper    = exp(pr$fit + 1.96 * pr$se.fit)
 )
 ```
 
@@ -320,18 +343,18 @@ What does the model tell you that the average does not?
 ::: {.callout-note collapse="true"}
 ## Solution
 
-The naive ranking puts `fourier` first, but the score model shows its edge is not distinguishable from noise: its coefficient is about $-0.10$ with a standard error of $0.06$.
+The naive ranking puts `fourier` first, but the score model shows its edge is not distinguishable from noise, with a coefficient near $-0.09$ and a standard error of about $0.08$.
 The `rw` model is effectively tied with `arima210`.
 The adjusted intervals for all three models overlap heavily, so the average overstates a difference that is within noise.
 
 What the model adds is structure.
-Horizon dominates everything, with four-week-ahead scores far worse than one-week-ahead, and Region 2 is systematically harder to predict.
+The smooth term shows horizon dominates everything, with four-week-ahead scores far worse than one-week-ahead, and Region 2 is systematically harder to predict.
 These are the effects that a single average blends together and hides.
 :::
 
 ::: callout-tip
-The standard errors above are optimistic, because the score rows are correlated: they share origin dates and locations, and horizons are nested within each forecast.
-A mixed-effects or Bayesian model with random effects for date, location and horizon handles this properly, and is the approach taken in large multi-model comparisons.[@sherrattPredictivePerformanceMultimodel2023]
+The standard errors above are still optimistic, because the score rows are correlated: they share origin dates and locations, and horizons are nested within each forecast.
+Adding random effects for date, location and horizon handles this properly, either as a mixed-effects GAM or a Bayesian model, and is the approach taken in large multi-model comparisons.[@sherrattPredictivePerformanceMultimodel2023]
 :::
 
 # Going further
@@ -341,7 +364,7 @@ A mixed-effects or Bayesian model with random effects for date, location and hor
 -   Recompute the energy-score comparison at a target date where the regions diverged rather than declining together. Does the independent forecast now score better?
 -   Fit a genuinely joint model with `fable::VAR()` and compare its energy score to the independent ARIMA forecast.
 -   Add the variogram score (`scoringRules::vs_sample()`) to the joint comparison. How does it differ from the energy score in what it rewards?
--   Refit the score model with an interaction between `model` and `horizon`. Do any models do relatively better at longer horizons?
+-   Let the horizon smooth vary by model in the score model (`s(horizon, by = model)`). Do any models do relatively better at longer horizons?
 
 ## Methods in practice
 

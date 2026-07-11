@@ -93,11 +93,12 @@ A single averaged score hides a lot, and a significance test barely helps:
 Treat the scores as **data** and fit a model:
 
 $$
-\log(\text{CRPS}) \sim \text{model} + \text{horizon} + \text{location} + \dots
+\text{CRPS} \sim \text{model} + \text{location} + s(\text{horizon}), \quad \text{Gamma, log link}
 $$
 
-- estimates each model's effect **with uncertainty**
-- **adjusts** for horizon and location difficulty
+- keeps the CRPS on its **natural scale** so the comparison stays **proper**
+- do not model $\log(\text{CRPS})$: transforming the score breaks propriety
+- **adjusts** for horizon and location difficulty, with uncertainty
 - random effects for date/location/horizon are the natural extension [@sherrattPredictivePerformanceMultimodel2023]
 
 A principled description of variation in scores beats a single ranking.

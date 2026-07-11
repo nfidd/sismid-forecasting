@@ -37,6 +37,7 @@ Suggests:
     hubUtils,
     hubVis,
     lintr,
+    mgcv,
     plotly,
     purrr,
     rmarkdown,
