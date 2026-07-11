@@ -6,7 +6,7 @@ bibliography: ../nfidd.bib
 
 # Introduction
 
-This session explicitly synthesizes content from two previous sessions, as we will be [building and evaluating ensembles](forecast-ensembles.qmd) using [real-world forecast data](real-world-forecasts.qmd). In particular, we will explore weighting models in the ensemble.
+This session explicitly synthesizes content from two previous sessions, as we will be [building and evaluating ensembles](forecast-ensemble.qmd) using [real-world forecast data](real-world-forecasts.qmd). In particular, we will explore weighting models in the ensemble.
 
 ## Slides
 
