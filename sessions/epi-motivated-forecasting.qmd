@@ -106,28 +106,29 @@ A renewal equation has the same autoregressive shape, but every piece is given e
 ::: {.column width="48%"}
 #### ARIMA
 
-$$ y_t \sim \mathrm{Normal}\!\left(\sum_s \phi_s\, y_{t-s},\ \sigma\right) $$
+$$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 
 - Coefficients $\phi_s$ are free, estimated from the data
-- Observation error is Normal with scale $\sigma$
+- $\varepsilon_t$ is an additive noise term
 - No epidemiological meaning
 :::
 
 ::: {.column width="48%"}
 #### Renewal
 
-$$ I_t \sim \mathrm{Poisson}\!\left(\sum_s R_t\, w_s\, I_{t-s} + \iota_t\right) $$
+$$ I_t = \sum_s R_t\, w_s\, I_{t-s} + \iota_t $$
 
 - Coefficient on each past value is $R_t\, w_s$, the reproduction number times the generation-time weight
-- Observation error is the Poisson (negative binomial when we fit)
-- $\iota_t$ is imported infections, set to zero here
+- $\iota_t$ sits where the ARIMA has $\varepsilon_t$, and is imported infections, set to zero here
+- Every term is an epidemiological quantity
 :::
 ::::
 
 Here $I_t$ is the number of new infections, $R_t$ is the reproduction number, and $w_s$ is the **generation-time distribution**, the probability that an infection caused $s$ days ago transmits now [@wallingaDifferentEpidemicCurves2004].
-Written this way the two models have the same shape: an observation drawn from a distribution whose mean is a weighted sum of past values.
+Written this way the two models have the same structure: the current value is a weighted sum of past values plus an additive term.
 The ARIMA weights are free, while the renewal weights are the reproduction number times the generation-time distribution, so the epidemiology sets the coefficients.
-The renewal also carries an imports term $\iota_t$ for infections arriving from outside the population, which we set to zero here; an ARIMA has no natural way to represent it.
+Where the ARIMA has a noise term $\varepsilon_t$, the renewal has an imports term $\iota_t$ for infections arriving from outside the population, which we set to zero here.
+This is the deterministic renewal equation; when we fit it we add an observation model (negative binomial) on top to account for noise in the reported counts.
 The generation-time weights $w_s$ are not free but must form a valid probability distribution, and are typically estimated from data on serial intervals or generation times, not from the incidence curve itself.
 
 # Simulating an outbreak

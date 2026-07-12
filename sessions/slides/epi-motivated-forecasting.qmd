@@ -64,25 +64,26 @@ Past infections convolved with the generation time, scaled by $R_t$.
 ::: {.column width="48%"}
 #### ARIMA
 
-$$ y_t \sim \mathrm{Normal}\!\left(\sum_s \phi_s\, y_{t-s},\ \sigma\right) $$
+$$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 
 - Coefficients $\phi_s$ are free parameters
-- Normal observation error, scale $\sigma$
+- $\varepsilon_t$ is an additive noise term
 :::
 
 ::: {.column width="48%"}
 #### Renewal
 
-$$ I_t \sim \mathrm{Poisson}\!\left(\sum_s R_t\, w_s\, I_{t-s} + \iota_t\right) $$
+$$ I_t = \sum_s R_t\, w_s\, I_{t-s} + \iota_t $$
 
 - Coefficient is $R_t\, w_s$, reproduction number times generation-time weight
-- Poisson observation error
-- $\iota_t$ is imported infections, set to zero here
+- $\iota_t$ (imports) sits where the ARIMA has $\varepsilon_t$, set to zero here
 :::
 
 ::::
 
-Both are an observation drawn from a distribution around a weighted sum of past values; the renewal fixes the weights to $R_t$ times the generation time, and can add imports $\iota_t$, which we set to zero.
+Same structure: a weighted sum of past values plus an additive term.
+The renewal fixes the weights to $R_t$ times the generation time, and its imports $\iota_t$ sit where the ARIMA has $\varepsilon_t$.
+This is the deterministic renewal; fitting adds a negative binomial observation model on top.
 
 ### From infection to report: delays {.smaller}
 
