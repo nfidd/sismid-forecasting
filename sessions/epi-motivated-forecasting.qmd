@@ -17,6 +17,7 @@ They do not know anything about *how* infections arise, how they are transmitted
 In this session we add epidemiological mechanism to the forecast.
 The key idea is the **renewal equation**, a model of incidence that is mathematically an autoregression whose coefficients are the generation-time distribution and whose scale is the reproduction number $R_t$ [@bhattSemiMechanisticBayesianModeling2020; @coriNewFrameworkSoftware2013].
 This gives the forecast access to information that a pure time-series model cannot use.
+Renewal models are sometimes referred to as "semi-mechanistic" because they start to inject some epidemiological knowledge into the model, without developing a fully mechanistic compartmental or agent-based model (see Note below).
 
 We will account for the delay between infection and case report, and for susceptible depletion that bends the epidemic curve over at the peak.
 We then backtest a set of models with different amounts of epidemiological mechanism, making forecasts from a series of past dates and scoring them against what happened next.
@@ -29,6 +30,16 @@ Finally we deliberately break the mechanism with a wrong population size to see 
 We fit these models with the [`EpiNow2`](https://epiforecasts.io/EpiNow2/) R package [@abbottEpiNow2EstimateRealtime2025].
 `EpiNow2` combines the renewal equation, the delays from infection to report, and optional susceptible depletion, and fits them with [Stan](https://mc-stan.org/).
 The same model structure fit with other software would give the same forecasts, so the focus here is on the structure rather than the package.
+:::
+
+::: callout-note
+## What about SIR-style models?
+
+The classic "mechanistic" model is one that uses a variation on the Susceptible-Infectious-Recovered compartmental model.[@kermack_contribution_1927]
+Some researchers have adapted the key ideas from this framework to build successful predictive models.[@shaman_forecasting_2012;@osthus_dynamic_2019]
+However, setting up the conceptual motivation and inferential toolkit for these models is beyond the scope of this class. 
+If you are interested in experimenting with these models, we encourage you to try out the [epydemix suite](https://www.epydemix.org/) of Python packages and desktop apps.[@gozzi_epydemix_2025]
+
 :::
 
 ## Slides
@@ -110,7 +121,7 @@ $$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
 
 - Coefficients $\phi_s$ are free, estimated from the data
 - $\varepsilon_t$ is an additive noise term
-- No epidemiological meaning
+- No explicit epidemiological meaning
 :::
 
 ::: {.column width="48%"}
@@ -631,6 +642,7 @@ ggplot(by_horizon, aes(x = horizon, y = crps, colour = model)) +
 
 On the natural scale the gap between models opens at longer horizons, where the forecasts run into the peak.
 On the log scale the differences are smaller and steadier, because log scoring down-weights the large counts that dominate the natural scale.
+Interestingly, the `rw_estimated` model that estimates the population size compares reasonably well to the other good models for the first few horizons, but then at longer horizons you really notice the difference, especially on the natural scale. 
 
 ## Coverage
 
