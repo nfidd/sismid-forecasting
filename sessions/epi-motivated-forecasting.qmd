@@ -701,9 +701,10 @@ Which models are over-confident, with intervals too narrow to reach nominal cove
 ::: {.callout-note collapse="true"}
 ## Solution
 
-- The depletion models (`constant_rt_fixed`, `rw_fixed` and `rw_estimated`) are close to their nominal coverage.
+- The depletion models (`constant_rt_fixed`, `rw_fixed` and `rw_estimated`) are close to their nominal coverage, and `rw_estimated` over-covers at the 90% level, meaning its intervals are wider than they need to be.
 - The ARIMA is badly over-confident on both intervals, and the `default` renewal is over-confident at the 90% level, with intervals too narrow to contain the observations around the peak they miss.
-- Coverage is a joint check on the centre and the spread of a forecast. A model can reach nominal coverage by being wide as well as by being accurate, so read it alongside the CRPS rather than on its own.
+- These are different failures. Over-confidence means the intervals are too narrow to be trusted, while over-coverage means they are too wide to be useful.
+- Coverage is a joint check on the centre and the spread of a forecast. A model can reach nominal coverage by being wide as well as by being accurate, as `rw_estimated` shows, so read it alongside the CRPS rather than on its own.
 :::
 
 # When the modeller is misinformed: a demonstration
@@ -794,8 +795,8 @@ Could the data available at the forecast date have told the model that its popul
 -   Give the ARIMA baseline some mechanism. Build a susceptible-fraction covariate, for example `1 - cumsum(confirm) / pop_size`, and add it as a regressor with `ARIMA(my_fourth_root(confirm) ~ susceptible_fraction)`. Because the covariate depends on the cases, you would forecast one step ahead at a time, updating the cumulative cases with each prediction. Does a statistical model with a depletion covariate close the gap to the renewal models?
 -   Push this further and make the ARIMA renewal-like, by giving it a covariate that plays the role of the renewal equation's weighted sum of past infections.
     - The renewal equation is $I_t = R_t \sum_s w_s\, I_{t-s}$, so taking logs gives $\log I_t = \log R_t + \log\left(\sum_s w_s\, I_{t-s}\right)$.
-    - We do not observe infections, so substitute reported cases and build the covariate $f_t = \sum_s w_s\, y_{t-s}$, with $w_s$ from the generation-time distribution used above. This gives the approximate relation $\log y_t \approx \log R_t + \log f_t$.
-    - So on a log-transformed response the covariate enters as $\log f_t$ with a coefficient of one, and the intercept plays the role of $\log R_t$. Fitting `ARIMA(log(confirm + 1) ~ log(foi + 1), pdq(d = 0))` and letting the coefficient be estimated relaxes that constraint, while the ARIMA error terms let $\log R_t$ drift over time. Leaving the series undifferenced (`d = 0`) keeps the intercept that stands in for $\log R_t$.
+    - We do not observe infections, so substitute reported cases and build the covariate $f_t = \sum_s w_s\, y_{t-s}$, with $w_s$ from the generation-time distribution used above. Call this column `foi`, for force of infection. This gives the approximate relation $\log y_t \approx \log R_t + \log f_t$.
+    - So on a log-transformed response the covariate enters as $\log f_t$ with a coefficient of one, and the intercept plays the role of $\log R_t$. Fitting `ARIMA(log(confirm + 1) ~ log(foi + 1) + pdq(d = 0))` and letting the coefficient be estimated relaxes that constraint, while the ARIMA error terms let $\log R_t$ drift over time. Leaving the series undifferenced (`pdq(d = 0)`) keeps the intercept that stands in for $\log R_t$.
     - Reported cases are a delayed and noisy version of infections, so this approximates the renewal equation rather than reproducing it, and it still has no susceptible depletion unless you add the covariate above as well. As with the susceptible fraction, the covariate depends on past cases, so forecast one step ahead at a time.
     - How close does this get you to the renewal models?
 -   Add a Gaussian process (`gp = gp_opts()`, from EpiNow2) instead of a random walk on $R_t$. Does smoothing $R_t$ change the peak forecast?
