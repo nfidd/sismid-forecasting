@@ -381,9 +381,16 @@ It appears later as a standalone demonstration.
 ```{r model-specs}
 epi_models <- list(
   default           = rt_opts(rw = 7),
-  constant_rt_fixed = rt_opts(pop = Fixed(pop_size), future = "latest", pop_period = "all"),
-  rw_fixed          = rt_opts(rw = 7, pop = Fixed(pop_size), future = "latest", pop_period = "all"),
-  rw_estimated      = rt_opts(rw = 7, pop = Normal(mean = pop_size, sd = pop_size / 2), future = "latest", pop_period = "all")
+  constant_rt_fixed = rt_opts(
+    pop = Fixed(pop_size), future = "latest", pop_period = "all"
+  ),
+  rw_fixed          = rt_opts(
+    rw = 7, pop = Fixed(pop_size), future = "latest", pop_period = "all"
+  ),
+  rw_estimated      = rt_opts(
+    rw = 7, pop = Normal(mean = pop_size, sd = pop_size / 2),
+    future = "latest", pop_period = "all"
+  )
 )
 ```
 
@@ -568,7 +575,9 @@ overall <- summarise_scores(scores, by = c("model", "scale")) |>
   arrange(scale, crps)
 
 overall |>
-  select(model, scale, crps, bias, dispersion, underprediction, overprediction) |>
+  select(
+    model, scale, crps, bias, dispersion, underprediction, overprediction
+  ) |>
   knitr::kable()
 ```
 
