@@ -48,8 +48,6 @@ $$ I_t = R_t \times \sum_{t' < t} I_{t'}\, g(t - t') $$
 
 ![](figures/r_convolution_sketch.png)
 
-Past infections convolved with the generation time, scaled by $R_t$.
-
 ### A renewal equation is an epidemiologically-informed autoregression {.smaller}
 
 :::: {.columns}
@@ -70,13 +68,10 @@ $$ I_t = \sum_s R_t\, w_s\, I_{t-s} + \iota_t $$
 
 - Coefficient is $R_t\, w_s$, reproduction number times generation-time weight
 - $\iota_t$ (imports) sits where the ARIMA has $\varepsilon_t$, set to zero here
+- Fitting adds a negative binomial observation model on top
 :::
 
 ::::
-
-Same structure: a weighted sum of past values plus an additive term.
-The renewal fixes the weights to $R_t$ times the generation time, and its imports $\iota_t$ sit where the ARIMA has $\varepsilon_t$.
-This is the deterministic renewal; fitting adds a negative binomial observation model on top.
 
 ### From infection to report: delays {.smaller}
 
