@@ -25,9 +25,9 @@ Does the model that matches the data-generating process win, and do unnecessary 
 Finally we deliberately break the mechanism with a wrong population size to see the cost of a wrong model up close.
 
 ::: callout-note
-## EpiNow2 is the tool, not the point
-We fit these models with the EpiNow2 R package [@abbottEpiNow2EstimateRealtime2025].
-EpiNow2 combines the renewal equation, the delays from infection to report, and optional susceptible depletion, and fits them in Stan.
+## `EpiNow2` is the tool, not the point
+We fit these models with the [`EpiNow2`](https://epiforecasts.io/EpiNow2/) R package [@abbottEpiNow2EstimateRealtime2025].
+`EpiNow2` combines the renewal equation, the delays from infection to report, and optional susceptible depletion, and fits them with [Stan](https://mc-stan.org/).
 The same model structure fit with other software would give the same forecasts, so the focus here is on the structure rather than the package.
 :::
 
@@ -86,7 +86,8 @@ inv_fourth_root <- function(x) x^4
 my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
 ```
 
-We also set the inference configuration that every EpiNow2 fit in this session will use, so we can change it in one place if we want different inference later.
+We set the inference configuration used for the `EpiNow2` fits in this session.
+We use Markov-chain Monte Carlo (MCMC) sampling, which gives the most honest posterior; you could increase the warmup and sampling iterations for your own runs.
 
 ```{r}
 stan_config <- stan_opts(
@@ -94,29 +95,6 @@ stan_config <- stan_opts(
   chains = 2, warmup = 300, samples = 1000
 )
 ```
-:::
-
-::: {.callout-note collapse="true"}
-## Inference in this session, and how to switch to a faster approximation
-
-EpiNow2 fits a Bayesian model in Stan, and we refit it many times across forecast dates and models.
-Because we hold the generation time and delays fixed and turn off the day-of-week effect, the model is small, so full Markov-chain Monte Carlo (MCMC) sampling is fast enough to use here and gives the most honest posterior.
-We use reduced warmup and sampling iterations to keep the runtime manageable; a real-world analysis would use more for better-calibrated uncertainty.
-
-If the backtest is too slow on your machine, switch to a faster approximate method by changing the single `stan_config` line above.
-Variational Bayes (`vb`) gives an approximate posterior in a second or two via the `rstan` backend that ships with EpiNow2:
-
-```r
-stan_config <- stan_opts(method = "vb", backend = "rstan", samples = 1000)
-```
-
-If you have the `cmdstanr` package and a CmdStan install, pathfinder is usually a better approximation than `vb`:
-
-```r
-stan_config <- stan_opts(method = "pathfinder", backend = "cmdstanr")
-```
-
-Every fit in the session picks up the change automatically.
 :::
 
 # From autoregression to the renewal equation
@@ -128,41 +106,48 @@ A renewal equation has the same autoregressive shape, but every piece is given e
 ::: {.column width="48%"}
 #### ARIMA
 
-$$ y_t = \sum_s \phi_s\, y_{t-s} + \varepsilon_t $$
+$$ y_t \sim \mathrm{Normal}\!\left(\sum_s \phi_s\, y_{t-s},\ \sigma\right) $$
 
 - Coefficients $\phi_s$ are free, estimated from the data
-- $\varepsilon_t$ is the observation error
+- Observation error is Normal with scale $\sigma$
 - No epidemiological meaning
 :::
 
 ::: {.column width="48%"}
 #### Renewal
 
-$$ I_t \sim \mathrm{Poisson}\!\left(R_t \sum_s w_s\, I_{t-s} + \iota_t\right) $$
+$$ I_t \sim \mathrm{Poisson}\!\left(\sum_s R_t\, w_s\, I_{t-s} + \iota_t\right) $$
 
-- Coefficients are $R_t\, w_s$, the reproduction number times the generation-time weight
-- The sampling distribution is the observation error, in place of $\varepsilon_t$
+- Coefficient on each past value is $R_t\, w_s$, the reproduction number times the generation-time weight
+- Observation error is the Poisson (negative binomial when we fit)
 - $\iota_t$ is imported infections, set to zero here
 :::
 ::::
 
 Here $I_t$ is the number of new infections, $R_t$ is the reproduction number, and $w_s$ is the **generation-time distribution**, the probability that an infection caused $s$ days ago transmits now [@wallingaDifferentEpidemicCurves2004].
-Both models carry an observation error: the ARIMA adds it as $\varepsilon_t$, while the renewal draws the counts from a sampling distribution (negative binomial when we fit).
-The additive $\iota_t$ is separate: it is infections imported from outside the population, which we set to zero here.
+Written this way the two models have the same shape: an observation drawn from a distribution whose mean is a weighted sum of past values.
+The ARIMA weights are free, while the renewal weights are the reproduction number times the generation-time distribution, so the epidemiology sets the coefficients.
+The renewal also carries an imports term $\iota_t$ for infections arriving from outside the population, which we set to zero here; an ARIMA has no natural way to represent it.
 The generation-time weights $w_s$ are not free but must form a valid probability distribution, and are typically estimated from data on serial intervals or generation times, not from the incidence curve itself.
 
 # Simulating an outbreak
 
-We simulate a single outbreak to forecast, using `simulate_infections()` from EpiNow2.
+We simulate a single outbreak to forecast, using `simulate_infections()` from `EpiNow2`.
 We set a constant reproduction number above 1 and a fixed population size, which produces an epidemic that grows, peaks, and then declines as susceptibles are depleted.
 Setting `pop_period = "all"` applies the depletion across the whole simulated period, so the turnover is built into the data-generating process.
-The generation time and delays are the example distributions supplied with EpiNow2, fixed to point values with `fix_parameters()`.
+The generation time and delays are the example distributions supplied with `EpiNow2`, fixed to point values with `fix_parameters()`.
 The observations are negative binomial with a fixed, moderate overdispersion, which is the observation model our forecasts will also use.
 
-```{r simulate}
+The simulation and the backtest that follows are run ahead of time in `data-raw/epi_forecasts.R` and saved with the `nfidd.forecasting` package, so the session renders quickly.
+We define the fixed distributions we need for the live fits, show the simulation code for reference, and load the saved series.
+
+```{r sim-params}
 gen_time <- fix_parameters(example_generation_time)
 delays <- fix_parameters(example_incubation_period + example_reporting_delay)
 pop_size <- 100000
+```
+
+```{r simulate-code, eval = FALSE}
 dates <- seq.Date(as.Date("2023-01-01"), by = "day", length.out = 170)
 R <- data.frame(date = dates, R = 1.25)
 
@@ -180,6 +165,11 @@ reported <- sim |>
   as_tibble() |>
   filter(variable == "reported_cases") |>
   transmute(date, confirm = value)
+```
+
+```{r load-reported}
+data(epi_reported)
+reported <- epi_reported
 ```
 
 The simulated series of reported cases rises to a peak in late March before declining.
@@ -253,7 +243,7 @@ We plot both forecasts against the data that were later observed, on the natural
 The shaded ribbons are the 50% and 90% credible intervals, the lines are the posterior medians, and the points are the observations.
 A renewal model with no susceptible depletion can grow explosively past the peak, so on the natural scale we cap the axis to keep the plot readable; the log scale shows the full range.
 
-```{r plot-single-forecast, fig.width = 10, fig.height = 5}
+```{r plot-single-forecast, fig.width = 10, fig.height = 5, warning = FALSE, message = FALSE}
 single_fc <- bind_rows(
   get_predictions(en2_default, format = "sample") |>
     as_tibble() |>
@@ -308,7 +298,7 @@ plot_single <- function(log_scale = FALSE) {
   if (log_scale) {
     g + scale_y_log10(limits = c(1, NA)) + labs(title = "Log scale")
   } else {
-    g + coord_cartesian(ylim = c(0, max(obs_window$confirm) * 3)) +
+    g + coord_cartesian(ylim = c(0, max(obs_window$confirm) * 1.8)) +
       labs(title = "Natural scale")
   }
 }
@@ -388,8 +378,9 @@ length(forecast_dates)
 ```
 
 At each forecast date we fit all four EpiNow2 models and the ARIMA baseline with the helpers defined above, and combine the sample-level predictions into a single tibble.
+This backtest fits 60 models, so we run it ahead of time in `data-raw/epi_forecasts.R` and load the saved result; the code is shown for reference.
 
-```{r backtest, results = "hide", warning = FALSE, message = FALSE}
+```{r backtest-code, eval = FALSE}
 backtest_one <- function(fdate) {
   train <- reported |> filter(date <= fdate)
   en2 <- map_dfr(names(epi_models), function(m) {
@@ -408,6 +399,11 @@ backtest_one <- function(fdate) {
 
 all_forecasts <- map_dfr(forecast_dates, backtest_one) |>
   filter(!is.na(predicted))
+```
+
+```{r load-backtest}
+data(epi_forecasts)
+all_forecasts <- epi_forecasts
 ```
 
 ## Visualising the backtested forecasts
@@ -442,7 +438,7 @@ plot_trajectories <- function(log_scale = FALSE) {
   if (log_scale) {
     g + scale_y_log10(limits = c(1, NA)) + labs(title = "Log scale")
   } else {
-    g + coord_cartesian(ylim = c(0, max(obs_windows$confirm) * 2.5)) +
+    g + coord_cartesian(ylim = c(0, max(obs_windows$confirm) * 1.8)) +
       labs(title = "Natural scale (capped)")
   }
 }
@@ -452,7 +448,7 @@ plot_trajectories <- function(log_scale = FALSE) {
 plot_trajectories(FALSE)
 ```
 
-```{r plot-backtests-log, fig.width = 11, fig.height = 11}
+```{r plot-backtests-log, fig.width = 11, fig.height = 11, warning = FALSE, message = FALSE}
 plot_trajectories(TRUE)
 ```
 
@@ -526,7 +522,8 @@ overall <- summarise_scores(scores, by = c("model", "scale")) |>
   arrange(scale, crps)
 
 overall |>
-  select(model, scale, crps, bias, dispersion, underprediction, overprediction)
+  select(model, scale, crps, bias, dispersion, underprediction, overprediction) |>
+  knitr::kable()
 ```
 
 ::: callout-tip
@@ -629,7 +626,7 @@ coverage <- score_data |>
   ) |>
   arrange(model)
 
-coverage
+coverage |> knitr::kable()
 ```
 
 ::: callout-tip
@@ -647,13 +644,13 @@ Which models are over-confident, with intervals too narrow to reach nominal cove
 - Coverage is a joint check on the median and the spread: a model can have reasonable coverage by being wide as well as by being accurate, so read it alongside the CRPS rather than on its own.
 :::
 
-# When the mechanism is wrong: a demonstration
+# When the analyst is misinformed: a demonstration
 
 The backtest showed that knowing the population matters.
-Here we compare a well-specified population against a badly-specified one, the kind of mistake you could make in practice.
+The model is only ever as good as the information we give it, so here we misinform it, the kind of mistake an analyst could make in practice.
 We fit two models at the peak forecast date, both with constant $R_t$ and susceptible depletion.
-One is told the true population.
-The other is given a prior centred on a population ten times too small, `Normal(mean = pop_size / 10, sd = pop_size / 20)`, a misinformed but honestly uncertain analyst.
+One is given the true population.
+The other is given a prior centred on a population ten times too small, `Normal(mean = pop_size / 10, sd = pop_size / 20)`, an honest but mistaken guess by whoever set the model up.
 
 ```{r mechanism-demo, results = "hide", warning = FALSE, message = FALSE}
 demo_date <- as.Date("2023-03-18")
