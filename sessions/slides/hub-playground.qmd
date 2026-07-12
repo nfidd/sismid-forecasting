@@ -161,11 +161,11 @@ ggplot(splits, aes(week, origin_f, fill = status)) +
 ### Score against the "oracle"
 
 - Collect all forecasts from the hub (**including yours**).
-- Compare to observed truth with `hubEvals::score_model_out()` → **WIS**.
+- Compare to the **season-final** truth with `hubEvals::score_model_out()` → **WIS**.
 
 ::: {.fragment .fade-in}
-::: callout-caution
-You forecast with **finalized** data; the hub's original models used data **as it was in real time**. Interpret head-to-head comparisons with care.
+::: callout-tip
+Your models train on the **vintage** data available in real time — just like the original hub models — so this is a fair, apples-to-apples comparison.
 :::
 :::
 

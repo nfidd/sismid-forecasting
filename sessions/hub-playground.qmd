@@ -313,6 +313,63 @@ ggplot(splits, aes(week, origin_f, fill = status)) +
 
 
 
+## Real-time data and reporting backfill
+
+When these seasons were forecast in real time, forecasters did **not** have the finalized wILI values plotted above.
+ILINet is revised for weeks after it is first reported, as additional outpatient-provider reports arrive — a phenomenon known as **backfill**.
+The course package includes `flu_data_hhs_versions`, which records every reported version of each week's wILI, with the `as_of` column giving the date each version was published.
+
+```{r backfill-explore}
+data(flu_data_hhs_versions)
+
+flu_data_hhs_versions |>
+  filter(location == "US National",
+         origin_date %in% as.Date(c("2016-01-02", "2016-01-30", "2016-02-27"))) |>
+  ggplot(aes(as_of, wili, colour = factor(origin_date))) +
+  geom_line() +
+  geom_point(size = 1) +
+  labs(x = "data version (as_of date)",
+       y = "% of visits due to ILI",
+       colour = "week ending",
+       title = "Reporting backfill: revisions to US National wILI")
+```
+
+Each line shows how the estimate for a single week changed as later releases revised it.
+The leftmost point is the *first reported* value — what a forecaster targeting the following weeks would actually have seen — and it often drifts substantially before settling.
+
+Another way to see backfill is to overlay several **versions of the recent series** — how the last weeks of data looked at each successive weekly release around the 2015/2016 peak.
+
+```{r backfill-versions}
+win_start <- as.Date("2015-12-01")
+
+focus_versions <- flu_data_hhs_versions |>
+  filter(location == "US National",
+         as_of >= as.Date("2015-12-01"), as_of <= as.Date("2016-03-12")) |>
+  distinct(as_of) |>
+  arrange(as_of) |>
+  pull(as_of)
+
+cols <- scales::seq_gradient_pal("blue", "red", "Lab")(seq(0,1,length.out=length(focus_versions)))
+
+flu_data_hhs_versions |>
+  filter(location == "US National",
+         as_of %in% focus_versions,
+         origin_date >= win_start, origin_date <= as_of) |>
+  ggplot(aes(origin_date, wili, colour = factor(as_of), group = as_of)) +
+  geom_line() +
+  geom_point(size = 1) +
+  labs(x = NULL, y = "% of visits due to ILI",
+       colour = "data version\n(as_of)",
+       title = "US National wILI near the 2015/2016 peak, by data version") +
+  scale_color_manual(values = cols)
+```
+
+Each line is the series as it stood at one release date, showing only the most recent weeks.
+The right-most point of each line is a week's *first-reported* value; following that same week across the later releases shows how it was subsequently revised.
+A forecaster working in late January had only one of the purple lines to go on — the later weeks had not been reported yet, and even the reported ones would still later be corrected.
+
+To make our retrospective experiment realistic, the cross-validation datasets used below are built from these **vintage** snapshots: for each forecast date, a split contains only the data that had actually been reported by then.
+
 ## Validation-phase forecasts
 
 We'll follow the same [time-series cross-validation recipe that we used in the session on forecast evaluation](forecast-evaluation.html#time-series-cross-validation) to run multiple forecasts at once for our validation phase.
@@ -321,27 +378,20 @@ You could adapt the code below to run validation-phase forecasts.
 
 Here are all the valid `origin_dates` that we could submit forecasts for, read directly from the hub:
 ```{r origin_dates}
-origin_dates <- hub_path |> 
-  read_config("tasks") |> 
+origin_dates <- hub_path |>
+  read_config("tasks") |>
   get_round_ids()
 origin_dates
 ```
 
-We will define time-series cross-validation datasets for each season separately, as we want to make sure that we start and end each season at the correct time.
+We provide a ready-made time-series cross-validation dataset for each season in the course package (`flu_data_hhs_tscv_season1` through `flu_data_hhs_tscv_season5`), one row per location, week, and split.
+Each `.split` is one forecast date, and its `wili` values are the **vintage** values available in real time at that date — so the same week can take different values in different splits, exactly as backfill produced them.
+The datasets are constructed like a `tsibble::stretch_tsibble()` expanding window, but with the finalized values swapped for the real-time ones.
 
 ### Make season 1 forecasts
-Here, we define a time-series cross-validation dataset for the first season
+The cross-validation dataset for the first season (2015/2016) is `flu_data_hhs_tscv_season1`:
 ```{r make-season1-tscv}
-flu_data_hhs_tscv_season1 <- flu_data_hhs |> 
-  filter(
-    origin_date <= "2016-05-07"  ## last 2015/2016 date
-    ) |> 
-  tsibble::stretch_tsibble(
-    .init = 634, ## flu_data_hhs |> filter(location == "HHS Region 1", origin_date <= "2015-10-17") |> nrow()
-    .step = 1,
-    .id = ".split"
-    )
-
+data(flu_data_hhs_tscv_season1)
 flu_data_hhs_tscv_season1
 ```
 
@@ -398,41 +448,50 @@ The above table has `r nrow(cv_forecasts_season1)` rows, which makes sense becau
 And $30 \cdot 11 \cdot 4 \cdot 23 = 30,360$. 
 
 Let's plot one set of forecasts as a visual sanity check to make sure our reformatting has worked.
+The coloured observations are the data **as it was available on the forecast date** (2015-12-19) — what the model was actually working from — while the grey line shows the **finalized** data for the whole season, i.e. what eventually happened.
+Where the two diverge in the weeks just before the forecast, you are seeing reporting backfill.
 
 ```{r plot-one-forecast}
-cv_forecasts_season1 |> 
-  filter(origin_date == "2015-12-19") |> 
+## observed data as it was available on the 2015-12-19 forecast date (vintage)
+obs_asof <- flu_data_hhs_tscv_season1 |>
+  tibble::as_tibble() |>
+  group_by(.split) |>
+  filter(max(origin_date) == as.Date("2015-12-19")) |>
+  ungroup() |>
+  filter(origin_date >= as.Date("2015-10-01")) |>
+  rename(observation = wili)
+
+## finalized data for the whole season, shown in grey for context
+finalized_season <- flu_data_hhs |>
+  tibble::as_tibble() |>
+  filter(origin_date >= as.Date("2015-10-01"), origin_date <= as.Date("2016-05-15"))
+
+cv_forecasts_season1 |>
+  filter(origin_date == "2015-12-19") |>
   plot_step_ahead_model_output(
-    flu_data_hhs |> 
-      filter(origin_date >= "2015-10-01", 
-             origin_date <= "2015-12-19") |> 
-      rename(observation = wili),
+    obs_asof,
     x_target_col_name = "origin_date",
     x_col_name = "target_end_date",
     use_median_as_point = TRUE,
     facet = "location",
     facet_scales = "free_y",
-    facet_nrow=3
-  )
+    facet_nrow = 3,
+    interactive = FALSE
+  ) +
+  geom_line(
+    data = finalized_season,
+    aes(x = origin_date, y = wili),
+    colour = "grey60", linewidth = 0.4, inherit.aes = FALSE
+  ) +
+  theme(legend.position = "bottom")
 ```
 
 ### Make season 2 forecasts
 
-Here, we define a time-series cross-validation dataset for the second season.
+The cross-validation dataset for the second season (2016/2017) is `flu_data_hhs_tscv_season2`:
 ```{r make-season2-tscv}
-first_idx_season2 <- flu_data_hhs |> 
-  filter(location == "HHS Region 1", 
-         origin_date <= "2016-10-22") |> ## first 2016/2017 date
-  nrow()
-flu_data_hhs_tscv_season2 <- flu_data_hhs |> 
-  filter(
-    origin_date <= "2017-05-06"  ## last 2016/2017 date
-    ) |> 
-  tsibble::stretch_tsibble(
-    .init = first_idx_season2,
-    .step = 1,
-    .id = ".split"
-    )
+data(flu_data_hhs_tscv_season2)
+flu_data_hhs_tscv_season2
 ```
 
 Generate and reformat season 2 forecasts:
@@ -564,12 +623,13 @@ hubEvals::score_model_out(
   knitr::kable(digits = 2)
 ```
 
-Here we can see that our new `sismid-arima210` model has a bit lower probabilistic accuracy (higher WIS) than the `delphi-epicast` model, and has better accuracy than the `hist-avg` model.
-Also, it shows less bias than either of the other models, although a bit more dispersion (it is less sharp) than the `delphi-epicast` model.
+Here we can see that our new `sismid-arima210` model has lower probabilistic accuracy (higher WIS) than the `delphi-epicast` model, and has better accuracy than the `hist-avg` model.
+Also, it shows less bias than `hist-avg` or `delphi-epicast`, although a bit more dispersion (it is less sharp) than the `delphi-epicast` model.
 
-::: callout-caution
-Note that the forecasts that we make are using the finalized version of the data, whereas the pre-existing models that are in the hub were generated using data that was available in real-time.
-This is potentially a considerable disadvantage, if data ended up being substantially revised, therefore these evaluations against the "real" models should be interpreted with caution.
+::: callout-tip
+Our cross-validation datasets use the **vintage** data available at each forecast date — the same real-time data (including backfill) that the pre-existing hub models had to work with.
+That makes this a fairer comparison than if we had trained on finalized data.
+The scoring truth (the oracle output) is, by contrast, each season's *final settled value* (the data as of the following summer): we judge every model against what actually happened, but without letting later cross-season revisions leak in.
 :::
 
 # Going further
