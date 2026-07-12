@@ -29,7 +29,7 @@ The source file of this session is located at `sessions/advanced-forecast-evalua
 
 ## Libraries used
 
-In this session we will use the `fable` package for forecasting, the `dplyr`, `tidyr` and `tsibble` packages for data wrangling, the `ggplot2` package for plotting, the `scoringRules` and `scoringutils` packages for scoring, and the `mgcv` package for modelling the scores.
+In this session we will use the `fable` package for forecasting, the `dplyr`, `tidyr` and `tsibble` packages for data wrangling, the `ggplot2` package for plotting, the `scoringRules` package for scoring, and the `mgcv` package for modelling the scores.
 
 ```{r libraries, message = FALSE}
 library("nfidd.forecasting")
@@ -39,7 +39,6 @@ library("fable")
 library("tidyr")
 library("ggplot2")
 library("scoringRules")
-library("scoringutils")
 library("mgcv")
 theme_set(theme_bw())
 ```
@@ -231,63 +230,31 @@ Before reading on, write down two reasons a single average CRPS could give a mis
 :::
 
 A more useful approach is to treat the scores themselves as data and model them.
-Let's run a small backtest over several forecast dates with three contrasting models.
+We use a set of CRPS scores that we have pre-computed from a small backtest of three contrasting models over several forecast dates.
 
-```{r partB-backtest}
-flu_sub <- flu_data_hhs |> filter(location %in% sel_locations)
-
-init_n <- flu_sub |>
-  filter(location == "HHS Region 1", origin_date <= as.Date("2018-12-01")) |>
-  nrow()
-
-flu_tscv <- flu_sub |>
-  filter(origin_date <= as.Date("2019-03-16")) |>
-  tsibble::stretch_tsibble(.init = init_n, .step = 2, .id = ".split")
-
-cv_samples <- flu_tscv |>
-  model(
-    rw       = RW(my_fourth_root(wili)),
-    arima210 = ARIMA(my_fourth_root(wili) ~ pdq(2, 1, 0)),
-    fourier  = ARIMA(my_fourth_root(wili) ~ pdq(2, 0, 0) + fourier(period = "year", K = 3))
-  ) |>
-  generate(h = 4, times = 500, bootstrap = TRUE) |>
-  group_by(.split, .model, location, .rep) |>
-  mutate(horizon = row_number()) |>
-  ungroup() |>
-  as_tibble()
+```{r partB-data}
+data(advanced_scores)
+advanced_scores
 ```
 
-We score each forecast unit (a model, location, horizon and origin date) with the CRPS using `scoringutils`.
+::: {.callout-note collapse="true"}
+## How these scores were produced
 
-```{r partB-score}
-truth <- flu_data_hhs |> as_tibble() |>
-  filter(location %in% sel_locations) |>
-  select(location, target_end_date = origin_date, observed = wili)
-
-fc_samples <- cv_samples |>
-  rename(target_end_date = origin_date, predicted = .sim, model = .model) |>
-  left_join(truth, by = c("location", "target_end_date")) |>
-  mutate(origin_date = target_end_date - horizon * 7L) |>
-  filter(!is.na(observed))
-
-scores <- fc_samples |>
-  as_forecast_sample(
-    forecast_unit = c("model", "location", "horizon", "origin_date"),
-    observed = "observed", predicted = "predicted", sample_id = ".rep"
-  ) |>
-  score(metrics = list(crps = crps_sample))
-```
+The scores come from a time-series cross-validation backtest of three models (a random walk, an ARIMA(2,1,0), and an ARIMA(2,0,0) plus Fourier terms) for three HHS regions over eight forecast dates in the 2018/2019 season, scored with the CRPS.
+This follows the same [time-series cross-validation](forecast-evaluation.qmd#time-series-cross-validation) and `scoringutils` scoring you saw in the earlier sessions.
+The full code is in `data-raw/advanced_scores.R`.
+:::
 
 Here is the naive summary: the average CRPS per model.
 
 ```{r partB-naive}
-scores |> as_tibble() |>
+advanced_scores |>
   group_by(model) |>
   summarise(mean_crps = mean(crps), sd_crps = sd(crps), n = n()) |>
   arrange(mean_crps)
 
 ## the scores are strongly right-skewed
-quantile(scores$crps, c(.1, .5, .9, .99))
+quantile(advanced_scores$crps, c(.1, .5, .9, .99))
 ```
 
 The `fourier` model has the lowest average, but the standard deviations are large and the scores are heavily skewed.
@@ -307,7 +274,7 @@ If instead you want to reward performance on the log scale, transform the *forec
 :::
 
 ```{r partB-model}
-sdf <- scores |> as_tibble() |>
+sdf <- advanced_scores |>
   mutate(model = relevel(factor(model), ref = "arima210"),
          location = factor(location))
 
