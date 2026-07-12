@@ -199,6 +199,10 @@ Every renewal fit in this session uses `fit_epinow2()` from the `nfidd.forecasti
 It holds the generation time and delays fixed at the values used to simulate the data, turns off the day-of-week effect because the simulation has none, and uses a negative binomial observation model to match the simulation.
 The same helper runs the backtest in `data-raw/epi_forecasts.R`, and you can reuse it for your own real-time estimates.
 
+Under the hood `fit_epinow2()` calls `estimate_infections()`, which combines the renewal infection model, the delay convolution, and the observation model in a single Bayesian fit.
+
+![The `EpiNow2` model architecture. Diagram from the [EpiNow2 model overview](https://epiforecasts.io/EpiNow2/articles/estimate_infections.html).](slides/figures/epinow2-architecture.png)
+
 ::: callout-tip
 ## Prototyping with faster inference
 
@@ -365,6 +369,15 @@ epi_models <- list(
 )
 ```
 
+::: callout-note
+## What the `rt_opts()` settings mean
+
+- `rw = 7` puts a weekly random walk on $R_t$; leave it out for a constant $R_t$ (`rw = 0`).
+- `pop = Fixed(...)` or `Normal(...)` sets the population at risk, which turns on susceptible depletion; without it there is no depletion.
+- `future = "latest"` carries the last estimated $R_t$ forward across the forecast horizon.
+- `pop_period = "all"` applies the depletion across the whole period.
+:::
+
 # Backtesting across forecast dates
 
 We backtest each model from 12 forecast dates, one week apart, spanning the growth phase, the peak, and the decline.
@@ -411,7 +424,7 @@ all_forecasts <- epi_forecasts
 
 Before scoring, we look at the forecast trajectories themselves.
 Each panel is a forecast date, with the 50% and 90% credible intervals as ribbons, the posterior medians as lines, and the observed data as points.
-The no-depletion models can grow explosively, so we show the trajectories on both a capped natural scale and a log scale.
+The no-depletion models can grow explosively, so we give each panel its own y axis and show the trajectories on both the natural and the log scale.
 
 ```{r plot-backtests}
 trajectory_summary <- band_summary(
@@ -425,8 +438,24 @@ obs_windows <- map_dfr(forecast_dates, function(fd) {
     mutate(forecast_date = fd)
 })
 
+# each panel gets its own y axis; on the natural scale we clip the ribbons
+# to twice that panel's observed peak so the exploding no-depletion models
+# do not dominate the axis
+panel_caps <- obs_windows |>
+  group_by(forecast_date) |>
+  summarise(cap = max(confirm) * 2, .groups = "drop")
+
 plot_trajectories <- function(log_scale = FALSE) {
-  g <- add_bands(ggplot(trajectory_summary, aes(x = date))) +
+  dat <- trajectory_summary
+  if (!log_scale) {
+    dat <- dat |>
+      left_join(panel_caps, by = "forecast_date") |>
+      mutate(across(
+        c(lower_30, upper_30, lower_60, upper_60, lower_90, upper_90),
+        \(x) pmin(x, cap)
+      ))
+  }
+  add_bands(ggplot(dat, aes(x = date))) +
     geom_point(data = obs_windows, aes(y = confirm), size = 0.5) +
     geom_vline(
       data = tibble(forecast_date = forecast_dates),
@@ -435,13 +464,12 @@ plot_trajectories <- function(log_scale = FALSE) {
     facet_wrap(~forecast_date, scales = "free", ncol = 3) +
     labs(x = "Date", y = "Reported cases", fill = "Model") +
     theme_bw() +
-    theme(legend.position = "bottom")
-  if (log_scale) {
-    g + scale_y_log10(limits = c(1, NA)) + labs(title = "Log scale")
-  } else {
-    g + coord_cartesian(ylim = c(0, max(obs_windows$confirm) * 1.8)) +
-      labs(title = "Natural scale (capped)")
-  }
+    theme(legend.position = "bottom") +
+    (if (log_scale) {
+      list(scale_y_log10(limits = c(1, NA)), labs(title = "Log scale"))
+    } else {
+      labs(title = "Natural scale")
+    })
 }
 ```
 
@@ -645,10 +673,10 @@ Which models are over-confident, with intervals too narrow to reach nominal cove
 - Coverage is a joint check on the median and the spread: a model can have reasonable coverage by being wide as well as by being accurate, so read it alongside the CRPS rather than on its own.
 :::
 
-# When the analyst is misinformed: a demonstration
+# When the modeller is misinformed: a demonstration
 
 The backtest showed that knowing the population matters.
-The model is only ever as good as the information we give it, so here we misinform it, the kind of mistake an analyst could make in practice.
+The model is only ever as good as the information we give it, so here we misinform it, the kind of mistake a modeller could make in practice.
 We fit two models at the peak forecast date, both with constant $R_t$ and susceptible depletion.
 One is given the true population.
 The other is given a prior centred on a population ten times too small, `Normal(mean = pop_size / 10, sd = pop_size / 20)`, an honest but mistaken guess by whoever set the model up.
@@ -725,7 +753,7 @@ Is the wrong forecast simply noisier, or is it wrong in a systematic way?
 ## Challenge
 
 -   Change the simulation and see how the rankings move. Try a different reproduction number, a different population size, or a reproduction number that varies over time (`R` as a time series in `simulate_infections()`). Note that a time-varying `R` in the simulation is the effective reproduction number for a wholly susceptible population, before susceptible depletion is applied on top.
--   Give the ARIMA baseline some mechanism. Build a susceptible-fraction covariate, for example `1 - cumsum(confirm) / pop_size`, and add it as a regressor with `ARIMA(my_fourth_root(confirm) ~ susceptible_fraction)`. You will need to project the covariate forward over the forecast horizon, for instance by extrapolating the cumulative cases. Does a statistical model with a depletion covariate close the gap to the renewal models?
+-   Give the ARIMA baseline some mechanism. Build a susceptible-fraction covariate, for example `1 - cumsum(confirm) / pop_size`, and add it as a regressor with `ARIMA(my_fourth_root(confirm) ~ susceptible_fraction)`. Because the covariate depends on the cases, you would forecast one step ahead at a time, updating the cumulative cases with each prediction. Does a statistical model with a depletion covariate close the gap to the renewal models?
 -   Add a Gaussian process (`gp = gp_opts()`, from EpiNow2) instead of a random walk on $R_t$. Does smoothing $R_t$ change the peak forecast?
 -   Swap the inference to variational Bayes or pathfinder by changing the single `stan_config` line. How much faster is the backtest, and does the coverage change?
 -   Extend the forecast horizon to 28 days. Which model degrades fastest?

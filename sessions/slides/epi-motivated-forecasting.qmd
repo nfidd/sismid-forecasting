@@ -144,10 +144,11 @@ ggplot(data, aes(x = t, y = value)) +
   theme_bw()
 ```
 
-### EpiNow2
+### EpiNow2 {.smaller}
 
-We fit these models with the EpiNow2 package.
-It estimates the reproduction number from the case data, maps infections to reports through the delays, and can include susceptible depletion, in one Bayesian model fit with Stan.
+`estimate_infections()` fits the renewal infection model, the delay convolution, and the observation model together in Stan.
+
+![](figures/epinow2-architecture.png)
 
 ## `r fontawesome::fa("laptop-code", "white")` Your turn {background-color="#447099" transition="fade-in"}
 
