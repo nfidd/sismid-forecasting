@@ -20,11 +20,11 @@ Depends:
     R (>= 4.2.0)
 Imports:
     dplyr,
+    EpiNow2,
     tibble,
     tidyr
 Suggests:
     covr,
-    EpiNow2,
     epidatr,
     fable,
     feasts,

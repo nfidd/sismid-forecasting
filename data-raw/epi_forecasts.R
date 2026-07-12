@@ -13,6 +13,7 @@
 #
 # Runtime is a few minutes because of the MCMC.
 
+library("nfidd.forecasting")
 library("EpiNow2")
 library("fable")
 library("dplyr")
@@ -60,19 +61,9 @@ reported <- sim |>
 # The full simulated series, saved for the session to reuse.
 epi_reported <- reported
 
-# EpiNow2 fitting helper: same generation time and delays as the simulation,
-# no day-of-week effect, negative binomial observations, 14-day horizon.
-fit_epinow2 <- function(rt, data) {
-  estimate_infections(
-    data,
-    generation_time = gt_opts(gen_time),
-    delays = delay_opts(delays),
-    obs = obs_opts(family = "negbin", week_effect = FALSE),
-    rt = rt, gp = NULL,
-    forecast = forecast_opts(horizon = 14),
-    stan = stan_config
-  )
-}
+# EpiNow2 fitting uses the exported package helper fit_epinow2(), which
+# applies the same generation time, delays, negative binomial observations,
+# no day-of-week effect, and 14-day horizon used to simulate the data.
 
 # ARIMA baseline helper returning sample-level predictions.
 forecast_arima_samples <- function(train, horizon = 14, times = 1000) {
@@ -115,7 +106,7 @@ forecast_dates <- seq.Date(
 backtest_one <- function(fdate) {
   train <- reported |> filter(date <= fdate)
   en2 <- map_dfr(names(epi_models), function(m) {
-    fit <- fit_epinow2(epi_models[[m]], train)
+    fit <- fit_epinow2(epi_models[[m]], train, stan = stan_config)
     get_predictions(fit, format = "sample") |>
       as_tibble() |>
       filter(horizon > 0) |>
