@@ -17,13 +17,6 @@ library("tibble")
 theme_set(theme_bw())
 ```
 
-### Goals
-
-- Recognise the renewal equation as an epidemiologically-informed autoregression
-- Add mechanism to a forecast: generation time, delays, and susceptible depletion
-- Backtest models with more and less mechanism and score them
-- See what a misspecified mechanism does to a forecast
-
 ### Forecasting so far
 
 In earlier sessions we used statistical models such as ARIMA that find patterns in the reported series and project them forward.
