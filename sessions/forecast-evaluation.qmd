@@ -359,12 +359,12 @@ Which of the additional dimensions mentioned at the top of the lesson would you 
 :::
 
 
-# Comparing three models at multiple time-points
+# Comparing models at multiple time-points
 
 Let's run a real-life forecasting experiment now, comparing three different models.
 The experimental set-up will be:
 
--   we will forecast from 3 different models
+-   we will forecast from 5 different models
 -   each model will make forecasts at every fourth week throughout the 2017/2018 season.
 -   for each time a model makes a forecast, it will make it for 8 steps into the future.
 
@@ -457,23 +457,29 @@ flu_data_tscv
 
 The resulting dataset (the top of which is shown above), now has many more rows than the initial dataset, since it basically is creating duplicate versions of the dataset, one for each unique value in the `.split` column.
 
-For this experiment, let's define four models:
+For this experiment, let's define five models:
 
 1.  a random walk: this is what it sounds like. Each forecast takes a random walk from the last observed value. This is equivalent to an ARIMA(0,1,0) model.
 2.  the ARIMA(2,0,0), also sometimes just shortened into AR(2), model that we fit earlier.
 3.  a seasonal baseline model that just has fourier terms and no ARIMA terms.
 4.  a model that has both the AR(2) and fourier terms.
+5.  a **copycat** model: a probabilistic *method of analogues*. Rather than extrapolating a parametric time-series model, it matches the current season's recent growth pattern against a library of past influenza seasons and reuses the subsequent growth of the closest analogues, re-anchored to the most recent observed value.
+
+::: callout-tip
+The `COPYCAT()` model and its analogue library `copycat_db` come with the course package. The library holds every US influenza season before 2015/16 (National, the HHS regions, and the states), drawn from ILINet. It stores each season as a **log weekly growth rate** by week-of-season, which is scale-free — so seasons from locations of very different sizes are directly comparable, and the model can forecast the national wILI series directly (no transformation needed). It is a reimplementation of the [copycat model](https://github.com/sjfox/copycat) by Spencer Fox / epiENGAGE. The copycat model is similar in spirit to other method of analogue implementations for infectious disease forecasting.[@viboud_prediction_2003;@ray_infectious_2017]
+:::
 
 The following code generates the forecasts for each cross-validation split and for all horizons.
 
 ```{r}
-cv_forecasts <- flu_data_tscv |> 
+cv_forecasts <- flu_data_tscv |>
   model(
     rw = RW(my_fourth_root(wili)),
     ar2 = ARIMA(my_fourth_root(wili) ~ pdq(2,0,0)),
     fourier = ARIMA(my_fourth_root(wili) ~ pdq(0,0,0) + fourier(period = "year", K=3)),
-    fourier_ar2 = ARIMA(my_fourth_root(wili) ~ pdq(2,0,0) + fourier(period = "year", K=3))
-  ) |> 
+    fourier_ar2 = ARIMA(my_fourth_root(wili) ~ pdq(2,0,0) + fourier(period = "year", K=3)),
+    copycat = COPYCAT(wili)
+  ) |>
   forecast(h = 8) |> 
   ## the following 3 lines of code ensure that there is a horizon variable in the forecast data
   group_by(.split, .model) |> 
@@ -550,7 +556,9 @@ cv_forecasts |>
   arrange(crps)
 ```
 
-According to each metric, the `fourier_ar2` model is the most accurate overall.
+Sorted by CRPS, the `copycat` analogue model comes out on top: its *probabilistic* forecasts — which is what CRPS rewards — are the most accurate overall, and by a clear margin.
+Notice, though, that `fourier_ar2` has the lowest **MAE** and **RMSE**: its *point* forecasts (the median) are closest on average, even though its prediction *intervals* are less well calibrated than copycat's.
+This is a good reminder that point accuracy and probabilistic accuracy can rank models differently — a model can have a well-placed central estimate but poorly-calibrated uncertainty, or vice versa.
 
 Often, results show differences across some of the experimental dimensions.
 Here, re-calculate the forecast errors and we plot the CRPS values as a function of horizon
@@ -608,7 +616,8 @@ What do these results this tell you about the models?
 
 -   Notably, the accuracy declines (the CRPS increases) for all models across horizons except for the `fourier` model. This is because the fourier model is predicting the same thing every week: seasonal average. The forecast does not align itself with recent data observations, it just predicts the historical seasonal average.
 -   At horizons 1 and 2 the errors are similar for the `ar2`, `fourier_ar2` and `rw` models, although the `rw` model has moderately higher CRPS.
--   At larger horizons, there is a clearer distinction between the models, with the `fourier` and `fourier_ar2` models lower than the others, and `fourier_ar2` showing the best accuracy of any of the models.
+-   At larger horizons, there is a clearer distinction between the models. Among the ARIMA-type models, `fourier` and `fourier_ar2` are lower than the others, with `fourier_ar2` the best of the parametric models.
+-   The `copycat` analogue model, however, has the lowest CRPS at **every** horizon, and its advantage grows with horizon. Matching against whole past seasons lets it anticipate the peak and decline — and represent the uncertainty around them — better than extrapolating a parametric model.
 -   It is interesting to see that around 8 weeks the `fourier_ar2` and `fourier` models converge in terms of accuracy. It seems that the auto-regressive components of the model seem to "add benefit" to the forecast accuracy for around 8 weeks. After that, a seasonal average is doing about the same.
 
 **By forecast date**
@@ -616,7 +625,7 @@ What do these results this tell you about the models?
 -   By forecast_date, the models show similar forecast error for dates early and late in the season with the larger differences coming at the weeks with higher incidence.
 
 -   Projecting a flat line from the data (what the random walk does, essentially) does not do well at the important and dynamic times of the season.
-    The combination of factoring in some auto-regressive and seasonal dynamics appears to do the best over this experiment.
+    Among the parametric models, the combination of factoring in some auto-regressive and seasonal dynamics does best; the analogue (`copycat`) approach, which borrows whole-season shapes rather than extrapolating, does better still on CRPS.
 :::
 
 # Going further
