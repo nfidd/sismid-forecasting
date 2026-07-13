@@ -1,0 +1,139 @@
+---
+title: "Selecting test-phase models for the local hub"
+order: 11
+bibliography: ../nfidd.bib
+---
+
+```{r echo=FALSE}
+options(width=100)
+```
+
+# Introduction
+
+In this session you will continue the work in the [Local hub playground session](hub-playground.qmd), where you started to build and fit your own models on the first few seasons of ILI data.
+Using results from those first few seasons of forecasting, you will now select 1-2 models to officially "submit" to the online forecast hub. 
+
+## Slides
+
+-   [Selecting test-phase models](slides/hub-playground-testing.qmd)
+
+## Objectives
+
+The aims of this session are 
+
+1. to practice building forecasting models using real data, with a focus on selecting parsimonious models for a "testing" phase, and
+2. to develop skills around using GitHub and interactions with collaborative forecasting tools.
+
+::: {.callout-note collapse="true"}
+# Setup
+
+## Source file
+
+The source file of this session is located at `sessions/hub-playground-testing.qmd`.
+
+## Libraries used
+
+In this session we will use the `dplyr` package for data wrangling, the `ggplot2` and `ggtime` packages for plotting, the `fable` package for building forecasting models, and the `epidatr` package for downloading epidemiological surveillance data.
+
+Additionally, we will use some [hubverse](https://hubverse.io/) packages such as `hubEvals`, `hubUtils`, `hubData`, `hubVis`, `hubEnsembles` packages for building ensembles.
+
+
+```{r libraries, message = FALSE}
+library("nfidd.forecasting")
+library("dplyr")
+library("ggplot2")
+library("epidatr")
+library("fable")
+library("ggtime")
+library("hubUtils")
+library("hubEvals")
+library("hubVis")
+library("hubData")
+library("hubEnsembles")
+theme_set(theme_bw())
+```
+
+::: callout-tip
+The best way to interact with the material is via the [Visual Editor](https://docs.posit.co/ide/user/ide/guide/documents/visual-editor.html) of RStudio.
+:::
+
+:::
+
+
+# A flu forecasting hub for model dev
+
+Recall that we have built [a live modeling hub](https://github.com/reichlab/sismid-ili-forecasting-sandbox/) for all participants of the class to use as a "sandbox" for building models and running analyses.
+
+If you can get through this session, the reward will be seeing your forecasts alongside the other forecasts at [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html?as_of=2016-01-16&interval=95%25&target_var=ili+perc&xaxis_range=2015-12-02&xaxis_range=2016-07-13&yaxis_range=0.03190391899589995&yaxis_range=11.26564457976691&model=delphi-epicast&model=hist-avg&location=US+National).
+
+Complete [the setup from the first local hub session](hub-playground.qmd#a-flu-forecasting-hub-for-model-dev) if you haven't already.
+
+
+# Selecting models for the "testing phase"
+
+This hub contains five seasons for which you can submit forecasts, starting with 2015/2016 and ending with 2019/2020.
+Our recommended procedure from [the first session](hub-playground.qmd) is to use the first two seasons as a place to do as much model fitting as you have time for.
+If you did not have a chance to get 2-3 models to fit and generate predictions for the first two seasons, we suggest that you return to that session and complete that task before starting here. 
+
+You could create multiple flavors of ARIMA, or any of the more complex models suggested in the first session or in the [epidemiologically-motivated models](epi-motivated-forecasting.qmd).
+To do this in a "complete" way, you might create between 10 and 100 different variations of models. 
+
+Then, from those models, select the few that you think will do the best in the final three seasons.
+(We can think of the last three years as our real-time forecast "testing phase".)
+This selection process is important, and tricky to think about.
+
+::: callout-tip
+In general you want to pick models that have performed well in some time-series cross-validation (similar to [the analysis in the first local hub session](hub-playground.qmd#local-hub-evaluation)).
+But, you might also want to prioritize choosing models that are simpler (i.e., have fewer parameters) and therefore are less likely to be "overfit" to the cross-validation phase.
+
+You could also consider splitting the models into a few different classes and picking 1-2 models from each class, e.g. your best `ARIMA` model, your best `NNETAR` model, your best ensemble, etc...
+:::
+
+Once you've selected the models, you can generate and submit forecasts for the test phase to your local hub.
+
+
+# Submitting test-phase forecasts to an online hub
+
+If you've gotten this far, congratulations!
+
+As a last test of your forecasting prowess, we invite you to submit the forecasts for your test-phase models to our [online `sismid-ili-forecasting-sandbox` hub](https://github.com/reichlab/sismid-ili-forecasting-sandbox).
+
+If you can get through this process, the reward will be seeing your forecasts on [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html?as_of=2016-01-16&interval=95%25&target_var=ili+perc&xaxis_range=2015-12-02&xaxis_range=2016-07-13&yaxis_range=0.03190391899589995&yaxis_range=11.26564457976691&model=delphi-epicast&model=hist-avg&location=US+National).
+
+## Process of submitting to an online hub
+
+The best way to submit to an online hub is via a [pull request initiated through GitHub](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/proposing-changes-to-your-work-with-pull-requests/about-pull-requests).
+
+### Drag and drop
+
+If you're not that familiar with GitHub and you have forecasts that you'd like to upload, work with an instructor or another participant who does have access to the hub. 
+They will be able to create a subfolder of [the model-output directory of the hub](https://github.com/reichlab/sismid-ili-forecasting-sandbox/tree/main/model-output) for you to upload forecasts to via a Drag and Drop.
+
+You still will need a GitHub account ([sign up here](https://github.com/signup) if you don't have one).
+
+
+### Cloning repo, submitting via PR
+
+::: callout-caution
+The following assumes that you have a GitHub account and some basic working knowledge of GitHub interactions and terminology.
+:::
+
+
+1. Fork the [`sismid-ili-forecasting-sandbox` hub](https://github.com/reichlab/sismid-ili-forecasting-sandbox) so you have a copy of this repository owned by your GitHub user account.
+
+2. Clone your fork of the repo to your laptop (ideally, it should live at the top level within the `sismid` directory with these course materials).
+
+3. Put whatever model-metadata and forecasts you want to submit into the correct locations in the hub.
+
+4. Commit these changes to your local clone and push those changes to your fork on GitHub.
+
+5. Open a Pull Request (PR) back to the primary repository with your changes.
+
+6. Once the PR is open, watch the validations, and inspect/fix any errors that appear.
+
+7. If your forecasts pass validations, then an instructor will merge them in.
+
+# References
+
+::: {#refs}
+:::
