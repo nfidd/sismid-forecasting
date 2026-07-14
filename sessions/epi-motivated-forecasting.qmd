@@ -702,9 +702,7 @@ growth_rates <- tibble(forecast_date = forecast_dates) |>
 
 by_growth <- by_date |>
   left_join(growth_rates, by = "forecast_date") |>
-  # split at 0 (declining vs growing) and at a daily rate of 0.06,
-  # which separates the early fast-growth dates from the slower dates
-  # near the turnover
+  # split at 0 (declining vs growing) and 0.06 (slow vs fast)
   mutate(phase = cut(
     growth_rate,
     breaks = c(-Inf, 0, 0.06, Inf),
