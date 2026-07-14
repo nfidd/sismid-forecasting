@@ -731,7 +731,6 @@ Look in particular at the fast-growing forecasts on the right of the plot: how d
 
 - When growth is fast, on the right of the plot and early in the epidemic, all the renewal models score about the same and clearly beat the ARIMA. Susceptible depletion has not started to matter yet, so the no-depletion `rw_nopop` is as good as the models that include it.
 - The models only pull apart as the growth rate falls towards zero, around the turnover. There the `rw_nopop` renewal and the ARIMA blow up, because they keep projecting the growth, while the fixed-population depletion models bend over.
-- So the growth rate shows *when* mechanism matters: not during fast growth, but as the epidemic turns. The scores by date and by horizon hint at this, but here it is tied directly to the quantity, the recent growth rate, that drives it.
 :::
 
 ## Coverage
