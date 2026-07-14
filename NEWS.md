@@ -1,5 +1,9 @@
 # nfidd.forecasting (development version)
 
+- Added `urca` to `Suggests`. The auto-ARIMA baseline in the
+  epi-motivated-forecasting session needs it for the unit-root test used to
+  select the differencing order. Without it `fable` returned a null model and
+  the ARIMA forecast silently vanished from the rendered plot.
 - Split the combined SISMID course into two: this `nfidd.forecasting` package
   and course covers forecasting & evaluation (second half of the week). The
   companion `nfidd.nowcasting` package covers nowcasting & Rt estimation.
