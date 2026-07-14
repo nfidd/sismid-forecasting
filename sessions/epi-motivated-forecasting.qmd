@@ -319,7 +319,10 @@ floor_bands <- function(df, m = 1) {
   ))
 }
 
-single_sum <- band_summary(single_fc, c("model", "date"))
+# draw rw_nopop first so the narrower arima bands sit on top and stay
+# visible where the two forecasts overlap
+single_sum <- band_summary(single_fc, c("model", "date")) |>
+  mutate(model = factor(model, levels = c("rw_nopop", "arima")))
 
 obs_window <- reported |>
   filter(date > forecast_date - 14, date <= forecast_date + 14)
