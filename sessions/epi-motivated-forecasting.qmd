@@ -374,15 +374,9 @@ We have already met two of them, the ARIMA baseline and the `rw_nopop` renewal m
 
 - **arima**. `ARIMA(my_fourth_root(confirm))` with auto-ARIMA, so fable selects the order automatically from the data. It may select different orders at different forecast dates.
 - **rw_nopop**. A renewal model with a weekly random walk on $R_t$ and no susceptible depletion, the model we used for the single forecast.
-- **const_pop**. Constant reproduction number (the default `rw = 0`) with the *true* population size. This matches the data-generating process of constant $R_t$ plus susceptible depletion.
+- **const_pop**. A single constant reproduction number, still estimated from the data (`rw = 0`), with the population fixed at its *true* value. This matches the data-generating process of constant $R_t$ plus susceptible depletion.
 - **rw_pop**. Adds a weekly random walk on $R_t$ (`rw = 7`) with the true population. The random walk is insurance in case our assumptions about the data-generating process turn out not to be fully correct, letting $R_t$ drift if the data ask for it.
 - **rw_pop_est**. Weekly random walk on $R_t$ with an estimated population (`Normal(mean = pop_size, sd = pop_size / 2)`). In the real world we would not know the exact effective population size, so this is the model we would be able to fit.
-
-- **arima**. `ARIMA(my_fourth_root(confirm))` with auto-ARIMA. A fair statistical baseline with no epidemiological mechanism.
-- **rw_nopop**. Random-walk $R_t$, no population and so no susceptible depletion. It knows about transmission and delays but has nothing to bend the curve at the peak, and is the model we used for the single forecast.
-- **const_pop**. Constant $R_t$ with the true population, so it includes depletion. This matches the data-generating process.
-- **rw_pop**. Random-walk $R_t$ with the true population. The random walk is extra flexibility the data-generating process does not require.
-- **rw_pop_est**. Random-walk $R_t$ with an estimated population (`Normal(mean = pop_size, sd = pop_size / 2)`). The population is weakly identified from a single outbreak, so estimating it adds uncertainty.
 
 The four renewal models share the same structure and differ only in the `rt_opts()` arguments.
 The ARIMA baseline is fit separately with `fable`, using the same fourth-root transformation as in earlier sessions.
