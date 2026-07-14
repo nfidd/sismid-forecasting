@@ -9,9 +9,25 @@ The skills and methods taught in this course apply broadly across infectious dis
 ## Forecasting
 
 - understanding of forecasting as an epidemiological problem
+- familiarity with visualising probabilistic forecasts and their uncertainty
 - familiarity with ARIMA models for forecasting epidemiological time series
 - understanding of autocorrelation and partial autocorrelation functions for time series analysis
 - understanding of stationarity and data transformations for forecasting
+
+## Baselines and seasonality
+
+- understanding of baseline (reference) models and their role as a comparison point
+- familiarity with persistence, mean, and seasonal baseline models
+- familiarity with representing seasonality using Fourier terms
+- understanding of residual diagnostics for judging whether a model has captured the structure in the data
+
+## Evaluating forecasts
+
+- understanding of the four principles of good probabilistic forecasts: calibration, unbiasedness, accuracy, and sharpness
+- familiarity with scoring metrics: Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), and Continuous Ranked Probability Score (CRPS)
+- understanding of time-series cross-validation for forecast evaluation
+- familiarity with visual assessment of forecasts
+- understanding of the multiple dimensions (time, location, horizon, and model) that complicate forecast evaluation
 
 ## Epidemiologically-motivated forecasting
 
@@ -20,26 +36,26 @@ The skills and methods taught in this course apply broadly across infectious dis
 - understanding of susceptible depletion as a mechanism that bends the epidemic curve at the peak
 - understanding how a wrong mechanism produces systematic, directional forecast errors
 
-## Evaluating forecasts
+## Evaluating real-world forecasts
 
-- understanding of the four principles of good probabilistic forecasts: calibration, unbiasedness, accuracy, and sharpness
-- familiarity with scoring metrics: Mean Absolute Error (MAE), Root Mean Squared Error (RMSE), and Continuous Ranked Probability Score (CRPS)
-- understanding of time-series cross-validation for forecast evaluation
-- familiarity with visual assessment of forecasts
-- understanding the challenges with, and possible solutions for, evaluating datasets with incomplete or missing forecast data
-
-## Multivariate forecast evaluation
-
-- understanding of the difference between marginal and joint forecasts across horizons (and locations)
-- familiarity with the energy score as a multivariate generalisation of the CRPS
-- understanding of why marginal scores cannot capture dependence across horizons or locations
+- experience working with forecasts from a real collaborative forecasting hub (the US COVID-19 Forecast Hub)
+- appreciation of the practical challenges of real-time forecasting, including data revisions and incomplete or missing forecasts
+- familiarity with the Weighted Interval Score (WIS) and relative skill for comparing models
+- familiarity with prediction interval coverage as a diagnostic, and its limitations
 
 ## Ensemble models
 
 - understanding of predictive ensembles and their properties
 - familiarity with different forecast representation formats (samples, quantiles, bins)
 - understanding of linear opinion pools and Vincent averaging for ensemble methods
+- understanding of weighted ensembles and the challenge of estimating model weights
 - familiarity with hubverse data standards for collaborative forecasting
+
+## Multivariate forecast evaluation
+
+- understanding of the difference between marginal and joint forecasts across horizons (and locations)
+- familiarity with the energy score as a multivariate generalisation of the CRPS
+- understanding of why marginal scores cannot capture dependence across horizons or locations
 
 ## Collaborative modeling
 
