@@ -319,7 +319,10 @@ floor_bands <- function(df, m = 1) {
   ))
 }
 
-single_sum <- band_summary(single_fc, c("model", "date"))
+# draw rw_nopop first so the narrower arima bands sit on top and stay
+# visible where the two forecasts overlap
+single_sum <- band_summary(single_fc, c("model", "date")) |>
+  mutate(model = factor(model, levels = c("rw_nopop", "arima")))
 
 obs_window <- reported |>
   filter(date > forecast_date - 14, date <= forecast_date + 14)
@@ -687,6 +690,7 @@ Interestingly, the `rw_pop_est` model that estimates the population size compare
 
 The forecast date is only a proxy for where we are in the epidemic.
 A more direct summary is the recent growth rate, how fast cases were changing in the week before each forecast.
+We group the forecast dates into growth phases and compare the CRPS distributions, on a log scale so the large scores near the turnover do not swamp the rest.
 
 ```{r scores-by-growth}
 growth_rates <- tibble(forecast_date = forecast_dates) |>
@@ -698,15 +702,22 @@ growth_rates <- tibble(forecast_date = forecast_dates) |>
 
 by_growth <- by_date |>
   left_join(growth_rates, by = "forecast_date") |>
-  arrange(model, growth_rate)
+  # split at 0 (declining vs growing) and 0.06 (slow vs fast)
+  mutate(phase = cut(
+    growth_rate,
+    breaks = c(-Inf, 0, 0.06, Inf),
+    labels = c("declining", "slow growth", "fast growth")
+  ))
 
-ggplot(by_growth, aes(x = growth_rate, y = crps, colour = model)) +
-  geom_point() +
-  geom_line() +
+ggplot(by_growth, aes(x = phase, y = crps, fill = model)) +
+  geom_boxplot(
+    position = position_dodge(preserve = "single"), outlier.size = 0.6
+  ) +
   facet_wrap(~scale, scales = "free_y") +
+  scale_y_log10() +
   labs(
-    x = "Average daily growth rate over the previous week",
-    y = "CRPS", colour = "Model"
+    x = "Recent growth phase (previous week)",
+    y = "CRPS (log scale)", fill = "Model"
   ) +
   theme_bw() +
   theme(legend.position = "bottom")
@@ -852,6 +863,7 @@ Could the data available at the forecast date have told the model that its popul
 ## Challenge
 
 -   Change the simulation and see how the rankings move. Try a different reproduction number, a different population size, or a reproduction number that varies over time (`R` as a time series in `simulate_infections()`). Note that a time-varying `R` in the simulation is the effective reproduction number for a wholly susceptible population, before susceptible depletion is applied on top.
+-   Try a different variance-stabilising transform for the ARIMA baseline. The session uses a fourth root, but exponential growth is linear on the log scale, so a log transform matches the growth process more closely. Compare the fourth root, the square root, and the log by swapping `my_fourth_root(confirm)` for `sqrt(confirm)` or `log(confirm + 1)` in the ARIMA call. Does the log transform improve the scores, especially on the log scale where the fourth-root mismatch is exposed (see the scores by scale above)?
 -   Give the ARIMA baseline some mechanism. Build a susceptible-fraction covariate, for example `1 - cumsum(confirm) / pop_size`, and add it as a regressor with `ARIMA(my_fourth_root(confirm) ~ susceptible_fraction)`. Because the covariate depends on the cases, you would forecast one step ahead at a time, updating the cumulative cases with each prediction. Does a statistical model with a depletion covariate close the gap to the renewal models?
 -   Push this further and make the ARIMA renewal-like, by giving it a covariate that plays the role of the renewal equation's weighted sum of past infections.
     - The renewal equation is $I_t = R_t \sum_s w_s\, I_{t-s}$, so taking logs gives $\log I_t = \log R_t + \log\left(\sum_s w_s\, I_{t-s}\right)$.
