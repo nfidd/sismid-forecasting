@@ -62,7 +62,7 @@ From 2020 through summer 2024, [the project](https://covid19forecasthub.org/) wa
 The short-term forecasts were published on the US CDC website as the official forecasts of record from the federal government.
 
 During this time, the project collected over 9,000 forecast submissions from 130 models.
-The project collected nearly 1 billion rows of model output data, and has led to multiple research papers on epidemiological forecasting.[@ray_comparing_2023; @cramer_evaluation_2022; @fox_optimizing_2024; @kim_beyond_2024]
+The project collected nearly 1 billion rows of model output data, and has led to multiple research papers on epidemiological forecasting.[@ray_comparing_2023; @cramer_evaluation_2022; @fox_optimizing_2024; @kim_beyond_2026]
 
 The project paused forecasting during the 2024 summer, and restarted in late fall 2024 under the purview of the US CDC Centers for Forecasting and Outbreak Analytics (CFA).
 When it re-started, the hub was launched using hubverse-style forecast guidelines.
