@@ -28,7 +28,7 @@ The skills and methods taught in this course apply broadly across infectious dis
 - familiarity with visual assessment of forecasts
 - understanding the challenges with, and possible solutions for, evaluating datasets with incomplete or missing forecast data
 
-## Advanced forecast evaluation
+## Multivariate forecast evaluation
 
 - understanding of the difference between marginal and joint forecasts across locations
 - familiarity with the energy score as a multivariate generalisation of the CRPS

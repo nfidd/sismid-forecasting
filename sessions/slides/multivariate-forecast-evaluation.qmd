@@ -1,14 +1,15 @@
 ---
-title: "Advanced forecast evaluation"
+title: "Multivariate forecast evaluation"
 author: "Nowcasting and forecasting of infectious disease dynamics"
 bibliography: ../../nfidd.bib
 engine: knitr
 format:
   revealjs:
-    output: slides/advanced-forecast-evaluation.html
-    footer: "Advanced forecast evaluation"
+    output: slides/multivariate-forecast-evaluation.html
+    footer: "Multivariate forecast evaluation"
     chalkboard: true
     slide-level: 3
+    html-math-method: katex
 ---
 
 ```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
@@ -72,12 +73,14 @@ What are we missing when we only score **one horizon and location at a time**?
 - A **joint distribution** describes multiple variables and how they move together.
 :::
 
-We can think of probabilistic forecasts in similar terms.
+::: callout-tip
+## We can think of probabilistic forecasts in similar terms
 
 - Quantile forecasts are always marginal.
 - Samples can be joint across dimensions like horizon and/or location.
+:::
 
-### Marginal quantiles vs. joint trajectories
+### Marginal vs. joint predictions
 
 
 ```{r fig-two-views, echo=FALSE, fig.width=9, fig.height=3.4}
@@ -103,18 +106,18 @@ p_marg <- ggplot(qs) +
                colour = "#4477AA", linewidth = 1) +
   scale_x_continuous(breaks = seq_len(H)) +
   coord_cartesian(xlim = c(0.5, H + 0.5), ylim = yl) +
-  labs(title = "Marginal quantiles (per horizon)", x = "horizon", y = "ILI %")
+  labs(title = "Marginal per horizon (quantiles)", x = "horizon", y = "ILI %")
 
 p_traj <- ggplot(dplyr::filter(long, id <= 60), aes(h, value, group = id)) +
   geom_line(alpha = .25, colour = "#4477AA") +
   scale_x_continuous(breaks = seq_len(H)) +
   coord_cartesian(ylim = yl) +
-  labs(title = "Sample trajectories (joint)", x = "horizon", y = "ILI %")
+  labs(title = "Joint trajectories (samples)", x = "horizon", y = "ILI %")
 
 gridExtra::grid.arrange(p_marg, p_traj, nrow = 1)
 ```
 
-Same numbers, different meaning.
+Here the same quantitative forecasts have different meanings.
 
 
 ### The energy score {.smaller}
@@ -125,16 +128,16 @@ $$
 \text{ES}(F, \mathbf{y}) = \mathbb{E}\lVert \mathbf{X} - \mathbf{y} \rVert - \tfrac{1}{2}\,\mathbb{E}\lVert \mathbf{X} - \mathbf{X}' \rVert
 $$
 
-With $m$ sample trajectories $\mathbf{x}_1, \dots, \mathbf{x}_m$ from the forecast, we estimate it by
+With $m$ sample trajectories $\mathcal{X}=\{\mathbf{x}_1, \dots, \mathbf{x}_m\}$ from the forecast, we estimate it by
 
 $$
-\widehat{\text{ES}} = \frac{1}{m}\sum_{i=1}^{m}\lVert \mathbf{x}_i - \mathbf{y} \rVert - \frac{1}{2m^2}\sum_{i=1}^{m}\sum_{j=1}^{m}\lVert \mathbf{x}_i - \mathbf{x}_j \rVert
+\widehat{\text{ES}}(\mathcal{X},\mathbf{y}) = \frac{1}{m}\sum_{i=1}^{m}\lVert \mathbf{x}_i - \mathbf{y} \rVert - \frac{1}{2m^2}\sum_{i=1}^{m}\sum_{j=1}^{m}\lVert \mathbf{x}_i - \mathbf{x}_j \rVert
 $$
 
 - $\mathbf{X}, \mathbf{X}'$ are independent draws from the forecast, $\lVert\cdot\rVert$ is Euclidean distance
 - First term rewards **accuracy**, second rewards **sharpness**
 - In one dimension it **is** the CRPS
-- Needs **joint samples**, so need a modeling approach that can generate trajectories
+- Needs **joint samples** from a modeling approach that can generate trajectories
 
 ### Same marginals, different energy score {.smaller}
 
@@ -183,7 +186,7 @@ y <- y_obs
 Tc <- gen(6000, sdv,     rho = 0.9, seed = 1); Ti <- apply(Tc, 2, sample)
 Wc <- gen(6000, 2 * sdv, rho = 0.9, seed = 3); Wi <- apply(Wc, 2, sample)
 
-lw <- c("Tight", "Wide"); ld <- c("Independent", "Correlated")
+lw <- c("Tight", "Wide"); ld <- c("Correlated", "Independent")
 cell <- function(M, wd, dp) mk(M[1:60, ], "") |> dplyr::mutate(width = wd, dep = dp)
 sco  <- function(M, wd, dp) tibble::tibble(width = wd, dep = dp,
   lab = sprintf("ES = %.2f\nCRPS = %.2f", ES(y, M), MCR(y, M)))
@@ -210,14 +213,29 @@ ggplot(d, aes(h, value, group = id)) +
 Across a **row** (same marginals) CRPS is identical, yet ES drops when horizons are correlated. ES also rewards being sharper. 
 
 
+### Multivariate forecasts: higher dimensions {.smaller}
+
+Some (not all) models can make forecasts that are joint across horizons AND locations.
+
+Forecasts that are joint across locations could enable decision-support for:
+
+ - resource allocation
+ 
+ > what is the optimal allocation of a fixed resource, like PPE or ventilators?
+ 
+ - assessing multi-location peak timings
+ 
+ > what is the likelihood that all locations peak at the same time?
+
+
 ## `r fontawesome::fa("laptop-code", "white")` Your Turn {background-color="#447099" transition="fade-in"}
 
-1. Score multi-location forecasts jointly with the energy score.
+1. Score multi-horizon forecasts jointly with the energy score.
 2. Show that dependence changes the energy score but not the marginal CRPS.
 
 #
 
-[Return to the session](../advanced-forecast-evaluation.qmd)
+[Return to the session](../multivariate-forecast-evaluation.qmd)
 
 ### References
 

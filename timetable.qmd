@@ -28,7 +28,7 @@ It is paired with the companion [nowcasting course](https://nfidd.github.io/sism
 | | 10.30–11.00 | *Coffee break* | |
 | | 11.00–12.30 | Session 9 · Local hub playground: building forecasts | [Slides](sessions/slides/hub-playground.qmd), [Practice](sessions/hub-playground.qmd) |
 | | 12.30–13.30 | *Lunch* | |
-| | 13.30–14.00 | Session 10 · Advanced forecast evaluation | [Slides](sessions/slides/advanced-forecast-evaluation.qmd), [Practice](sessions/advanced-forecast-evaluation.qmd) |
+| | 13.30–14.00 | Session 10 · Multivariate forecast evaluation | [Slides](sessions/slides/multivariate-forecast-evaluation.qmd), [Practice](sessions/multivariate-forecast-evaluation.qmd) |
 | | 14.00–15.00 | Session 11 · Local hub playgroud: testing & submitting | [Slides](sessions/slides/hub-playground-testing.qmd), [Practice](sessions/hub-playground-testing.qmd) |
 | | 15.00–15.30 | *Coffee break* | |
 | | 15.30–16.30 | Session 12 · Research talks | TBD |

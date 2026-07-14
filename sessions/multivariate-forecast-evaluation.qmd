@@ -1,5 +1,5 @@
 ---
-title: "Advanced forecast evaluation"
+title: "Multivariate forecast evaluation"
 order: 9
 bibliography: ../nfidd.bib
 ---
@@ -13,7 +13,7 @@ The energy score is a multivariate extension of the CRPS and allows you to score
 
 ## Slides
 
--   [Advanced forecast evaluation](slides/advanced-forecast-evaluation.qmd)
+-   [Multivariate forecast evaluation](slides/multivariate-forecast-evaluation.qmd)
 
 ## Objectives
 
@@ -24,7 +24,7 @@ The aims of this session are to introduce methods for scoring multivariate proba
 
 ## Source file
 
-The source file of this session is located at `sessions/advanced-forecast-evaluation.qmd`.
+The source file of this session is located at `sessions/multivariate-forecast-evaluation.qmd`.
 
 ## Libraries used
 
@@ -152,7 +152,7 @@ To compute it we replace the expectations with averages over our predictive samp
 ## Interactive: the energy score
 
 ```{=html}
-<iframe class="nfidd-embed" src="../interactive/advanced-forecast-evaluation.html?embed=energy" title="Energy score interactive" loading="lazy" style="width:100%;height:820px;border:1px solid #e5e7eb;border-radius:10px;background:#fff"></iframe>
+<iframe class="nfidd-embed" src="../interactive/multivariate-forecast-evaluation.html?embed=energy" title="Energy score interactive" loading="lazy" style="width:100%;height:820px;border:1px solid #e5e7eb;border-radius:10px;background:#fff"></iframe>
 <script>(function(){if(window.__nfiddEmbedInit)return;window.__nfiddEmbedInit=1;window.addEventListener('message',function(ev){var h=ev&&ev.data&&ev.data.nfiddEmbedHeight;if(!h)return;document.querySelectorAll('iframe.nfidd-embed').forEach(function(f){if(f.contentWindow===ev.source)f.style.height=(h+24)+'px';});});})();</script>
 ```
 

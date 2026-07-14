@@ -1,7 +1,7 @@
-## advanced-forecast-evaluation-figures.R
+## multivariate-forecast-evaluation-figures.R
 ##
 ## Teaching figures for the "marginal is not joint" scoring motivation
-## in the advanced forecast evaluation slides.
+## in the multivariate forecast evaluation slides.
 ##
 ## Produces three PNGs in sessions/slides/figures/:
 ##   1. ili-forecast-ribbon.png       one region, quantile fan (marginal)
