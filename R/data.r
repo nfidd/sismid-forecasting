@@ -226,3 +226,30 @@
 #' @rdname flu_data_hhs_tscv
 #' @format NULL
 "flu_data_hhs_tscv_season5"
+
+#' Historical ILI trajectory library for the copycat analog forecast model
+#'
+#' A library of past US influenza seasons used by the [COPYCAT()] "method of
+#' analogues" model. It covers the US National level, the 10 HHS regions, and the
+#' states + DC, for every season before the 2015/2016 season (1997/98 through
+#' 2014/15), drawn from ILINet via the Delphi Epidata API. Each (location,
+#' season) trajectory is represented in the scale-free form the method matches
+#' on: a GAM-smoothed log weekly growth rate by week-of-season, with its standard
+#' error. Magnitudes are not stored or standardised -- forecasts are re-anchored
+#' to the series being predicted. The code that produced it is in
+#' `data-raw/copycat_db.R`. Method after Fox / epiENGAGE
+#' (\url{https://github.com/sjfox/copycat}).
+#'
+#' @format A [tibble::tibble()] with 5 columns.
+#' \describe{
+#'   \item{location}{ILINet location code ("nat", "hhs1"-"hhs10", or a
+#'   lower-case state/DC abbreviation)}
+#'   \item{resp_season}{the respiratory season, labelled by its starting year
+#'   (e.g. 2014 = the 2014/2015 season)}
+#'   \item{resp_season_week}{week index within the season (1 = first observed
+#'   week, seasons begin around MMWR week 40)}
+#'   \item{pred}{GAM-smoothed log weekly growth rate,
+#'   `log((value[t+1] + 1) / (value[t] + 1))`}
+#'   \item{pred_se}{standard error of `pred` from the smoother}
+#' }
+"copycat_db"

@@ -19,10 +19,17 @@ BugReports: https://github.com/nfidd/sismid-forecasting/issues
 Depends:
     R (>= 4.2.0)
 Imports:
+    distributional,
     dplyr,
     EpiNow2,
+    fabletools,
+    lubridate,
+    rlang,
+    stats,
     tibble,
-    tidyr
+    tidyr,
+    tsibble,
+    utils
 Suggests:
     covr,
     epidatr,
@@ -44,8 +51,7 @@ Suggests:
     roxyglobals,
     scoringutils,
     stringr,
-    testthat (>= 3.0.0),
-    tsibble
+    testthat (>= 3.0.0)
 Remotes:
     hubverse-org/hubData,
     hubverse-org/hubEvals,
@@ -58,4 +64,4 @@ Roxygen: list(roclets = c("collate", "namespace", "rd",
     "roxyglobals::global_roclet"))
 Config/roxyglobals/filename: globals.R
 Config/roxyglobals/unique: FALSE
-Config/roxygen2/version: 8.0.0
+Config/roxygen2/version: 8.0.0.9000
