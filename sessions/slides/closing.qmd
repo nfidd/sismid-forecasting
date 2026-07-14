@@ -2,6 +2,7 @@
 title: "End of course summary"
 author: "Nowcasting and forecasting of infectious disease dynamics"
 engine: knitr
+bibliography: ../../nfidd.bib
 format:
   revealjs:
     output: slides/closing.html
@@ -12,71 +13,32 @@ format:
 
 ### Aim of this course:
 
-How can we use data typically collected in an outbreak to answer questions like
+How can we use data typically collected in an outbreak to answer questions in real-time like
 
-- what **is** the number of cases now? (*nowcasting*)
-- is it rising/falling and by how much? (*$R_t$ estimation*)
-- what does this mean for the near future (*forecasting*)
+- what does the recent trend mean for the near future?
+- how good are our predictions, and how can we tell?
+- how can we combine and share models?
 
-in real time.
 
-### Timeline
+# Key takeaways {background-color="#447099"}
 
-::: {.incremental}
-- delay distributions and how to estimate them (day 1)
-- $R_t$ estimation and nowcasting (day 2)
-- forecasting, evaluation, and ensemble methods (day 2)
-- forecasting hubs, applications, and linking nowcasting and forecasting (day 3)
-:::
-
-# Key takeaways
-
-### Day 1: Delay distributions {.smaller}
-
-- delays play a fundamental role in nowcasting/forecasting
-- we characterise them with probability distributions
-- estimating delays requires correction for biases due to
-  - **double interval censoring** (daily data)
-  - **right truncation** (real-time analysis)
-  
-![](figures/truncation_final.png)
-
-### Day 2: $R_t$ estimation {.smaller}
-
-- **$R_t$ estimation** using the renewal equation is a convolution problem
-- improving the generative model leads to improvements in estimation (**geometric random walk** vs. independent priors)
-- **generation time** is a key delay distribution for transmission dynamics
-- understanding the role of the generative model in the estimation of $R_t$
-
-![](figures/r_convolution_sketch.png)
-
-### Day 2: Nowcasting {.smaller}
-
-- **nowcasting** is the task of predicting what data will look once delays have resolved
-- it is a **right truncation problem** (same as discussed before)
-- a **joint generative model** can combine delay estimation, nowcasting and $R_t$ estimation
-
-![](figures/complete_reporting_triangle.png)
-
-### Day 2 (cont.): Forecasting and evaluation {.smaller}
+### Forecasting and evaluation {.smaller}
 
 - **forecasting** is the task of making unconditional statements about the future
-- meaningful forecasts are **probabilistic**
-- we can assess forecasts using **proper scoring rules** (MAE, RMSE, CRPS)
-- methods include **ARIMA models**, **ensemble approaches**, and **time-series cross-validation**
+- meaningful forecasts are often **probabilistic**
+- we can assess forecasts using **proper scoring rules** (e.g., WIS, CRPS, log score, energy score)
+- methods include statistical ARIMA models, semi-mechanistic renewal models, non-parametric trajectory matching, and ensemble approaches
 - we can use visualisation and scoring to understand the predictive performance of different models
 
-![](figures/pit-log-scale.png)
 
-### Day 3: Collaborative modelling and applications {.smaller}
+### Collaborative modelling and applications {.smaller}
 
 - **forecasting hubs** enable collaborative modelling efforts across institutions
 - **hubverse tools** provide standardised formats for forecast submission and evaluation
-- linking **nowcasting and forecasting** through joint or pipeline approaches
 - the methods introduced here have **wide applications** in infectious disease epidemiology
 - **open-source tools** are available to make this task easier in practice
 
-### Outlook: Contributing to forecast hubs {.smaller}
+### What's next: Contributing forecasts {.smaller}
 
 - apply these methods in practice to learn about typical nowcast/forecast performance
 - contribute to **collaborative forecast hubs** to compare approaches
@@ -87,11 +49,65 @@ in real time.
 
 [https://respicast.ecdc.europa.eu/](https://respicast.ecdc.europa.eu/)
 
+# Important topics we wished we had time for {background-color="#447099"}
+
+### SIR models
+
+- True mechanistic models but require additional assumptions, software (e.g., ODE solvers) & data to fit appropriately.[@shaman_forecasting_2012;@osthus_forecasting_2017;@osthus_dynamic_2019;@gozzi_epydemix_2025]
+
+![From [@osthus_forecasting_2017]](figures/sir-framework.png)
+
+
+### Integrating reporting process in models
+
+- How to integrate a model of reporting delays (e.g., scaling up counts due to underreporting, accounting for backfill) into a forecast model?
+
+### Decision-relevant scoring
+
+How can we better align forecast evaluation with policy decisions?[@gerding_evaluating_2024;@mills_metric_2026]
+
+![Figure from [@mills_metric_2026]](figures/decision-making-framework.png)
+
+
+### Model importance in ensemble
+
+What if we measured models not by how accurate they were but by their unique contributions improved an ensemble? [@kim_beyond_2026]
+
+![](figures/model-importance.png)
+
+### Formal inference comparing models
+
+When comparing two models' accuracy measures, how do you know if an observed difference is significant?
+
+- Some work on simple hypothesis testing [@diebold_comparing_2002]
+- More recently, regression models with complex correlation structures [@lopezChallengesCOVID19Case2024;@sherratt_predictive_2023]
+
+
+### Models for count data
+
+Some modeling frameworks require count data (or require a lot of adjustments to use rates/percentages). These include:
+
+- most SIR modeling frameworks
+- most semi-mechanistic renewal models
+- the HHH4 spatial-temporal modeling framework [@held_statistical_2005]
+
+## Measuring Predictability
+
+Lots of interesting thinking going on about how to assess how "predictable" a given epidemic time-series is.
+
+# Wrap-up {background-color="#447099"}
+
 ### Feedback {.smaller}
 
-- please tell us if you enjoyed the course, what worked / didn't work etc.
-- we will send out a survey for feedback
+- Please tell us if you enjoyed the course, what worked / didn't work etc.
+- Fill out the SISMID survey!
 
 # Thank you for attending!
 
+# 
+
 [Return to the session](../end-of-course-summary-and-discussion.qmd)
+
+### References
+
+
