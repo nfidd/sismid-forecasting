@@ -690,6 +690,7 @@ Interestingly, the `rw_pop_est` model that estimates the population size compare
 
 The forecast date is only a proxy for where we are in the epidemic.
 A more direct summary is the recent growth rate, how fast cases were changing in the week before each forecast.
+We group the forecast dates into growth phases and compare the CRPS distributions, on a log scale so the large scores near the turnover do not swamp the rest.
 
 ```{r scores-by-growth}
 growth_rates <- tibble(forecast_date = forecast_dates) |>
@@ -701,15 +702,21 @@ growth_rates <- tibble(forecast_date = forecast_dates) |>
 
 by_growth <- by_date |>
   left_join(growth_rates, by = "forecast_date") |>
-  arrange(model, growth_rate)
+  mutate(phase = cut(
+    growth_rate,
+    breaks = c(-Inf, 0, 0.06, Inf),
+    labels = c("declining", "slow growth", "fast growth")
+  ))
 
-ggplot(by_growth, aes(x = growth_rate, y = crps, colour = model)) +
-  geom_point() +
-  geom_line() +
+ggplot(by_growth, aes(x = phase, y = crps, fill = model)) +
+  geom_boxplot(
+    position = position_dodge(preserve = "single"), outlier.size = 0.6
+  ) +
   facet_wrap(~scale, scales = "free_y") +
+  scale_y_log10() +
   labs(
-    x = "Average daily growth rate over the previous week",
-    y = "CRPS", colour = "Model"
+    x = "Recent growth phase (previous week)",
+    y = "CRPS (log scale)", fill = "Model"
   ) +
   theme_bw() +
   theme(legend.position = "bottom")
