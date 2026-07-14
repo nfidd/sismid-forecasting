@@ -1,0 +1,243 @@
+---
+title: "Multivariate forecast evaluation"
+author: "Nowcasting and forecasting of infectious disease dynamics"
+bibliography: ../../nfidd.bib
+engine: knitr
+format:
+  revealjs:
+    output: slides/multivariate-forecast-evaluation.html
+    footer: "Multivariate forecast evaluation"
+    chalkboard: true
+    slide-level: 3
+    html-math-method: katex
+---
+
+```{r setup, echo=FALSE, message=FALSE, warning=FALSE}
+library(dplyr); library(tidyr); library(ggplot2)
+theme_set(theme_bw(base_size = 14))
+
+## An epidemic curve over 6 horizons: exponential growth (weeks 1-3), a peak
+## with growth slowing (week 4), then a slow decline that stays above baseline.
+mu  <- c(1.0, 1.8, 3.2, 4.0, 3.5, 3.1)
+H   <- length(mu)                                  # 6 horizons
+sdv <- 0.12 * mu                                   # marginal SD ~ 12% of the level
+y_obs <- mu + 0.9 * sdv                            # a coherent observed path (same shape, a bit high)
+
+## Draw n sample trajectories: `sd` = marginal SD per horizon, `rho` = AR(1)
+## correlation across horizons (rho = 0 => independent horizons). Floored at 0
+## so simulated ILI stays non-negative.
+gen <- function(n, sd, rho, seed) {
+  set.seed(seed)
+  z <- matrix(rnorm(n * H), n, H)
+  if (rho != 0) for (j in 2:H) z[, j] <- rho * z[, j - 1] + sqrt(1 - rho^2) * z[, j]
+  pmax(sweep(sweep(z, 2, sd, "*"), 2, mu, "+"), 0)
+}
+ES  <- function(y, M) scoringRules::es_sample(y, t(M))              # energy score
+MCR <- function(y, M) mean(vapply(seq_len(H),                       # mean marginal CRPS
+  function(j) scoringRules::crps_sample(y[j], M[, j]), numeric(1)))
+
+## Re-pair fixed marginals under a chosen rank-dependence pattern `key`: keeps
+## each horizon's set of values (so CRPS is unchanged) but changes the joint.
+impose <- function(vals, key) {
+  for (j in seq_len(ncol(vals)))
+    vals[, j] <- sort(vals[, j])[rank(key[, j], ties.method = "first")]
+  vals
+}
+
+## long format for plotting an n x H matrix of trajectories
+mk <- function(M, lab) tibble::as_tibble(M, .name_repair = ~ paste0("h", seq_along(.x))) |>
+  dplyr::mutate(id = dplyr::row_number(), ens = lab) |>
+  tidyr::pivot_longer(dplyr::starts_with("h"), names_to = "h", values_to = "value") |>
+  dplyr::mutate(h = as.integer(sub("h", "", h)))
+
+## the ensemble used in the first figure (many samples -> smooth marginals)
+A <- gen(1000, sdv, rho = 0.9, seed = 1)
+```
+
+### Scoring more than one prediction task
+
+- We can build forecasts for **many horizons and locations at once**
+- We can score them with the **CRPS** and summarise across dimensions
+- So far we have scored each horizon and location **on its own** and averaged
+
+::: callout-caution
+What are we missing when we only score **one horizon and location at a time**?
+:::
+
+### Marginal vs joint forecasts
+
+::: callout-note
+## Statistics refresher
+
+- A **marginal distribution** describes a single variable.
+- A **joint distribution** describes multiple variables and how they move together.
+:::
+
+::: callout-tip
+## We can think of probabilistic forecasts in similar terms
+
+- Quantile forecasts are always marginal.
+- Samples can be joint across dimensions like horizon and/or location.
+:::
+
+### Marginal vs. joint predictions
+
+
+```{r fig-two-views, echo=FALSE, fig.width=9, fig.height=3.4}
+long <- mk(A, "")
+
+qs <- long |> dplyr::group_by(h) |>
+  dplyr::summarize(med = median(value),
+                   lo50 = quantile(value, .25), hi50 = quantile(value, .75),
+                   lo90 = quantile(value, .05), hi90 = quantile(value, .95),
+                   .groups = "drop")
+
+w <- 0.30
+yl <- c(0, max(c(qs$hi90, dplyr::filter(long, id <= 60)$value)))
+
+## discrete boxes at each horizon -- deliberately NOT connected, to make the
+## marginal (per-horizon, standalone) nature of a quantile forecast obvious
+p_marg <- ggplot(qs) +
+  geom_rect(aes(xmin = h - w, xmax = h + w, ymin = lo90, ymax = hi90),
+            fill = "#4477AA", alpha = .25) +
+  geom_rect(aes(xmin = h - w, xmax = h + w, ymin = lo50, ymax = hi50),
+            fill = "#4477AA", alpha = .55) +
+  geom_segment(aes(x = h - w, xend = h + w, y = med, yend = med),
+               colour = "#4477AA", linewidth = 1) +
+  scale_x_continuous(breaks = seq_len(H)) +
+  coord_cartesian(xlim = c(0.5, H + 0.5), ylim = yl) +
+  labs(title = "Marginal per horizon (quantiles)", x = "horizon", y = "ILI %")
+
+p_traj <- ggplot(dplyr::filter(long, id <= 60), aes(h, value, group = id)) +
+  geom_line(alpha = .25, colour = "#4477AA") +
+  scale_x_continuous(breaks = seq_len(H)) +
+  coord_cartesian(ylim = yl) +
+  labs(title = "Joint trajectories (samples)", x = "horizon", y = "ILI %")
+
+gridExtra::grid.arrange(p_marg, p_traj, nrow = 1)
+```
+
+Here the same quantitative forecasts have different meanings.
+
+
+### The energy score {.smaller}
+
+A proper scoring rule for a **vector** outcome $\mathbf{y}$, generalising the CRPS.
+
+$$
+\text{ES}(F, \mathbf{y}) = \mathbb{E}\lVert \mathbf{X} - \mathbf{y} \rVert - \tfrac{1}{2}\,\mathbb{E}\lVert \mathbf{X} - \mathbf{X}' \rVert
+$$
+
+With $m$ sample trajectories $\mathcal{X}=\{\mathbf{x}_1, \dots, \mathbf{x}_m\}$ from the forecast, we estimate it by
+
+$$
+\widehat{\text{ES}}(\mathcal{X},\mathbf{y}) = \frac{1}{m}\sum_{i=1}^{m}\lVert \mathbf{x}_i - \mathbf{y} \rVert - \frac{1}{2m^2}\sum_{i=1}^{m}\sum_{j=1}^{m}\lVert \mathbf{x}_i - \mathbf{x}_j \rVert
+$$
+
+- $\mathbf{X}, \mathbf{X}'$ are independent draws from the forecast, $\lVert\cdot\rVert$ is Euclidean distance
+- First term rewards **accuracy**, second rewards **sharpness**
+- In one dimension it **is** the CRPS
+- Needs **joint samples** from a modeling approach that can generate trajectories
+
+### Same marginals, different energy score {.smaller}
+
+The marginal CRPS is the same for all three forecasts below, but ES are larger with less correlation.
+
+```{r fig-energy, echo=FALSE, fig.width=10, fig.height=3.7}
+## the SAME per-horizon marginals, re-paired under three dependence structures
+n2 <- 60
+vals <- sapply(seq_len(H), function(j) mu[j] + sdv[j] * qnorm(ppoints(n2)))
+set.seed(12)
+perfect <- impose(vals, matrix(seq_len(n2), n2, H))               # comonotonic (rho = 1)
+g       <- rnorm(n2)                                              # shared common component
+some    <- impose(vals, sqrt(0.85) * matrix(g, n2, H) +          # equicorrelated (rho = 0.85)
+                        sqrt(0.15) * matrix(rnorm(n2 * H), n2, H))
+indep   <- impose(vals, matrix(runif(n2 * H), n2, H))            # independent horizons
+
+esP <- ES(y_obs, perfect); esS <- ES(y_obs, some); esI <- ES(y_obs, indep)
+crps <- MCR(y_obs, perfect)
+labs <- c(sprintf("Perfect correlation\nES = %.2f", esP),
+          sprintf("Some correlation\nES = %.2f", esS),
+          sprintf("Independent\nES = %.2f", esI))
+
+d <- dplyr::bind_rows(mk(perfect, labs[1]), mk(some, labs[2]), mk(indep, labs[3])) |>
+  dplyr::mutate(ens = factor(ens, labs))
+obs <- tidyr::expand_grid(ens = factor(labs, labs), h = seq_len(H)) |>
+  dplyr::mutate(value = rep(y_obs, 3))
+
+## lines only; the sampled values are identical across the three panels
+ggplot(d, aes(h, value, group = id)) +
+  geom_line(alpha = .18, colour = "#4477AA") +
+  geom_line(data = obs, aes(group = 1), colour = "black", linewidth = 1.1) +
+  facet_wrap(~ens, nrow = 1) +
+  scale_x_continuous(breaks = seq_len(H)) + coord_cartesian(ylim = c(0, NA)) +
+  labs(subtitle = sprintf("identical marginals -> identical CRPS (%.2f); black = observed path", crps),
+       x = "horizon", y = "ILI %")
+```
+
+
+### Sharpness vs dependence {.smaller}
+
+
+```{r fig-tradeoff, echo=FALSE, fig.width=9, fig.height=5.2}
+y <- y_obs
+## correlated ensembles; the independent counterpart is a column-permutation, so
+## marginals (hence CRPS) are identical within a width and only dependence differs
+Tc <- gen(6000, sdv,     rho = 0.9, seed = 1); Ti <- apply(Tc, 2, sample)
+Wc <- gen(6000, 2 * sdv, rho = 0.9, seed = 3); Wi <- apply(Wc, 2, sample)
+
+lw <- c("Tight", "Wide"); ld <- c("Correlated", "Independent")
+cell <- function(M, wd, dp) mk(M[1:60, ], "") |> dplyr::mutate(width = wd, dep = dp)
+sco  <- function(M, wd, dp) tibble::tibble(width = wd, dep = dp,
+  lab = sprintf("ES = %.2f\nCRPS = %.2f", ES(y, M), MCR(y, M)))
+fac  <- function(x) dplyr::mutate(x, width = factor(width, lw), dep = factor(dep, ld))
+
+d <- fac(dplyr::bind_rows(cell(Ti, "Tight", "Independent"), cell(Tc, "Tight", "Correlated"),
+                          cell(Wi, "Wide", "Independent"),  cell(Wc, "Wide", "Correlated")))
+L <- fac(dplyr::bind_rows(sco(Ti, "Tight", "Independent"), sco(Tc, "Tight", "Correlated"),
+                          sco(Wi, "Wide", "Independent"),  sco(Wc, "Wide", "Correlated")))
+obs <- tidyr::expand_grid(width = factor(lw, lw), dep = factor(ld, ld), h = seq_len(H)) |>
+  dplyr::mutate(value = rep(y, 4))
+
+ggplot(d, aes(h, value, group = id)) +
+  geom_line(alpha = .12, colour = "#CC6677") +
+  geom_line(data = obs, aes(group = 1), colour = "black", linewidth = 1) +
+  geom_point(data = obs, aes(group = 1), colour = "black", size = 1.3) +
+  geom_text(data = L, aes(x = 0.7, y = Inf, label = lab), hjust = 0, vjust = 1.15,
+            size = 3.1, inherit.aes = FALSE) +
+  facet_grid(width ~ dep) + scale_x_continuous(breaks = seq_len(H)) +
+  coord_cartesian(ylim = c(0, NA)) +
+  labs(x = "horizon", y = "ILI %")
+```
+
+Across a **row** (same marginals) CRPS is identical. ES improves when horizons are correlated. 
+
+
+### Multivariate forecasts: higher dimensions {.smaller}
+
+Some (not all) models can make forecasts that are joint across horizons AND locations.
+
+Forecasts that are joint across locations could enable decision-support for:
+
+ - resource allocation
+ 
+ > what is the optimal allocation of a fixed resource, like PPE or ventilators?
+ 
+ - assessing multi-location peak timings
+ 
+ > what is the likelihood that all locations peak at the same time?
+
+
+## `r fontawesome::fa("laptop-code", "white")` Your Turn {background-color="#447099" transition="fade-in"}
+
+1. Score multi-horizon forecasts jointly with the energy score.
+2. Show that dependence changes the energy score but not the marginal CRPS.
+
+#
+
+[Return to the session](../multivariate-forecast-evaluation.qmd)
+
+### References
+
+::: {#refs}
+:::
