@@ -21,6 +21,7 @@ Depends:
 Imports:
     distributional,
     dplyr,
+    EpiNow2,
     fabletools,
     lubridate,
     rlang,

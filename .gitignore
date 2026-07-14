@@ -24,3 +24,8 @@ _freeze/
 # Local scratch notes
 NOTES.md
 
+
+# Agent working artifacts
+.agents/
+.pi-subagents/
+.pi/

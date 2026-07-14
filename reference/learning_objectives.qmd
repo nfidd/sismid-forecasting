@@ -13,6 +13,13 @@ The skills and methods taught in this course apply broadly across infectious dis
 - understanding of autocorrelation and partial autocorrelation functions for time series analysis
 - understanding of stationarity and data transformations for forecasting
 
+## Epidemiologically-motivated forecasting
+
+- understanding of the renewal equation as an epidemiologically-informed autoregression
+- familiarity with generation-time distributions and the delays from infections to reported cases
+- understanding of susceptible depletion as a mechanism that bends the epidemic curve at the peak
+- understanding how a wrong mechanism produces systematic, directional forecast errors
+
 ## Evaluating forecasts
 
 - understanding of the four principles of good probabilistic forecasts: calibration, unbiasedness, accuracy, and sharpness
