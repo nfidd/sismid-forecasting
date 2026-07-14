@@ -285,7 +285,14 @@ Let's implement a transformation to try to get something closer to constant vari
 Through a lot of experimentation, we've found that a fourth-root transformation often does a reasonable job at stabilizing variance.[@ray_flusion_2025] And, it has the added benefit of making it so that predictions will never be negative.
 (Remember that problem from last session?) Other transformations might be reasonable too (there is [a whole section on them in the FPP3 textbook](https://otexts.com/fpp3/transformations.html#transformations)), and this is something often worth doing a bit of exploration for with your particular dataset.
 
-The course package provides a fourth-root transformation, `my_fourth_root`, defined with `fable`'s `new_transformation()` standard from `fourth_root(x) = x^0.25` and its inverse `inv_fourth_root(x) = x^4`. We use it throughout the course.
+The course package provides a fourth-root transformation, `my_fourth_root`, defined with `fable`'s `new_transformation()` standard. We use it throughout the course. This is the code for the transformation:
+
+```{r, eval=FALSE}
+fourth_root <- function(x) x^0.25
+inv_fourth_root <- function(x) x^4
+
+my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
+```
 
 And then we can plot the data using this transformation:
 

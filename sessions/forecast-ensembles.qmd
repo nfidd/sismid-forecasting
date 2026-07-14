@@ -409,7 +409,6 @@ oracle_output <- flu_data |>
   rename(target_epiweek = epiweek,
          oracle_value = wili) |> 
   select(-region)
-
 ```
 
 ::: callout-note
@@ -476,7 +475,7 @@ In the real world you would not do this as you would not have access to the test
 
 ```{r remove-rw}
 filtered_forecasts <- quantile_forecasts |>
-  filter(!(model_id %in% c("rw", "fourier")))
+  filter(model_id != "rw")
 ```
 
 We then need to recalculate the ensembles.
