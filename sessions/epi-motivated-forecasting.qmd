@@ -21,7 +21,7 @@ Renewal models are sometimes referred to as "semi-mechanistic" because they star
 We also account for the delay between infection and case report, and for susceptible depletion, which bends the epidemic curve over at the peak.
 
 ::: callout-note
-## `EpiNow2` is the tool, not the point
+## Fitting the model with `EpiNow2`
 We fit these models with the [`EpiNow2`](https://epiforecasts.io/EpiNow2/) R package [@abbottEpiNow2EstimateRealtime2025].
 `EpiNow2` combines the renewal equation, the delays from infection to report, and optional susceptible depletion, and fits them with [Stan](https://mc-stan.org/).
 The same model structure fit with other software would give the same forecasts, so the focus here is on the structure rather than the package.
