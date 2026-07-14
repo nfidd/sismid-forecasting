@@ -126,13 +126,7 @@ flu_data <- epidatr::pub_fluview(regions = c("nat"),
 data(flu_data)
 ```
 
-and define a fourth-root transformation for our forecast models
-
-```{r fourth-root}
-fourth_root <- function(x) x^0.25
-inv_fourth_root <- function(x) x^4
-my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
-```
+Our forecast models use the `my_fourth_root` transformation, which the course package provides.
 
 # Individual forecast models
 
@@ -162,7 +156,8 @@ cv_models <- flu_data_tscv |>
     rw = RW(my_fourth_root(wili)),
     ar2 = ARIMA(my_fourth_root(wili) ~ pdq(2,0,0)),
     fourier = ARIMA(my_fourth_root(wili) ~ pdq(0,0,0) + fourier(period = "year", K=3)),
-    fourier_ar2 = ARIMA(my_fourth_root(wili) ~ pdq(2,0,0) + fourier(period = "year", K=3))
+    fourier_ar2 = ARIMA(my_fourth_root(wili) ~ pdq(2,0,0) + fourier(period = "year", K=3)),
+    copycat = COPYCAT(wili)
   ) 
 
 cv_forecasts <- cv_models |> 
@@ -481,7 +476,7 @@ In the real world you would not do this as you would not have access to the test
 
 ```{r remove-rw}
 filtered_forecasts <- quantile_forecasts |>
-  filter(model_id != "rw")
+  filter(!(model_id %in% c("rw", "fourier")))
 ```
 
 We then need to recalculate the ensembles.
@@ -687,6 +682,7 @@ forecast_scores <- hubEvals::score_model_out(
 forecast_scores|> 
   arrange(wis) |> 
   knitr::kable(digits = 2)
+
 ```
 
 ## Weighted ensembles

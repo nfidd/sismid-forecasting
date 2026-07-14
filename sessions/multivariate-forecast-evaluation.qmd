@@ -56,10 +56,6 @@ set.seed(755) # for Hank Aaron
 We reuse the same fourth-root transformation and multi-location flu data (`flu_data_hhs`) from the [local hub playground session](hub-playground.qmd).
 
 ```{r transform}
-fourth_root <- function(x) x^0.25
-inv_fourth_root <- function(x) x^4
-my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
-
 data(flu_data_hhs)
 ```
 :::

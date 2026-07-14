@@ -176,10 +176,6 @@ Let's try, for starters, an ARIMA(2,1,0) with a fourth-root transformation.
 Recall, that this means we are using two auto-regressive terms with one set of differencing of the data.
 
 ```{r}
-fourth_root <- function(x) x^0.25
-inv_fourth_root <- function(x) x^4
-my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
-
 fit_arima210 <- flu_data_hhs |>
   filter(origin_date <= "2015-10-24") |> 
   model(ARIMA(my_fourth_root(wili) ~ pdq(2,1,0)))

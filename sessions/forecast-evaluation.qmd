@@ -119,11 +119,6 @@ Note that we filter the data to start at the beginning of the season!
 This way, the model can't see the data from later in the season when making the prediction (although we still could look at it).
 
 ```{r simple-forecasts}
-## remember to define the transformation
-fourth_root <- function(x) x^0.25
-inv_fourth_root <- function(x) x^4
-my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
-
 ## here is the model
 fit_fourier_ar2 <- flu_data |>
   filter(epiweek <= "2017-08-27") |> 

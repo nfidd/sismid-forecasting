@@ -56,12 +56,8 @@ We set a random seed for reproducibility, load the same flu data as in the previ
 ```{r}
 set.seed(123)
 data(flu_data)
-flu_data <- flu_data |> 
+flu_data <- flu_data |>
   filter(epiweek <= as.Date("2018-01-01"))
-
-fourth_root <- function(x) x^0.25
-inv_fourth_root <- function(x) x^4
-my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
 ```
 :::
 

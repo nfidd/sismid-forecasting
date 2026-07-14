@@ -30,9 +30,9 @@ The skills and methods taught in this course apply broadly across infectious dis
 
 ## Multivariate forecast evaluation
 
-- understanding of the difference between marginal and joint forecasts across horizons
+- understanding of the difference between marginal and joint forecasts across horizons (and locations)
 - familiarity with the energy score as a multivariate generalisation of the CRPS
-- understanding of why marginal scores are blind to cross-location dependence
+- understanding of why marginal scores cannot capture dependence across horizons or locations
 
 ## Ensemble models
 
