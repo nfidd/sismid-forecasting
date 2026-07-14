@@ -105,23 +105,6 @@
 #' }
 "flu_data_hhs"
 
-#' Pre-computed CRPS scores for the advanced forecast evaluation session
-#'
-#' CRPS scores from a small backtest of three forecasting models (a random walk,
-#' an ARIMA(2,1,0) and an ARIMA(2,0,0) plus Fourier terms) for three HHS regions
-#' over eight forecast dates in the 2018/2019 season, scored with the CRPS. The
-#' scores are pre-computed so the session can focus on modelling them. The code
-#' that produced this dataset is in `data-raw/advanced_scores.R`.
-#'
-#' @format A [tibble::tibble()] with 5 columns and 288 rows
-#' \describe{
-#'   \item{model}{the forecasting model: "rw", "arima210" or "fourier"}
-#'   \item{location}{the HHS region the forecast was made for}
-#'   \item{horizon}{the forecast horizon in weeks, 1 through 4}
-#'   \item{origin_date}{the date the forecast was made}
-#'   \item{crps}{the continuous ranked probability score for that forecast unit}
-#' }
-"advanced_scores"
 #' Simulated reported cases for the epidemiologically-motivated session
 #'
 #' The full 170-day series of simulated reported cases used in the
