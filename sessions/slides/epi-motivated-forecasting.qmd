@@ -147,6 +147,11 @@ ggplot(data, aes(x = t, y = value)) +
 
 ## `r fontawesome::fa("laptop-code", "white")` Your turn {background-color="#447099" transition="fade-in"}
 
+1.  Fit a renewal model and the ARIMA baseline for a single forecast before the peak.
+2.  Compare five models, turning the $R_t$ and population knobs, across 12 forecast dates.
+3.  Score them on the natural and log scale, and see where mechanism matters most.
+4.  Misinform a model with the wrong population and see the cost.
+
 #
 
 [Return to the session](../epi-motivated-forecasting.qmd)

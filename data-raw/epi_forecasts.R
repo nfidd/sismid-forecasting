@@ -84,14 +84,14 @@ forecast_arima_samples <- function(train, horizon = 14, times = 1000) {
 
 # The four EpiNow2 models compared in the backtest.
 epi_models <- list(
-  default           = rt_opts(rw = 7),
-  constant_rt_fixed = rt_opts(
+  rw_nopop   = rt_opts(rw = 7),
+  const_pop  = rt_opts(
     pop = Fixed(pop_size), future = "latest", pop_period = "all"
   ),
-  rw_fixed          = rt_opts(
+  rw_pop     = rt_opts(
     rw = 7, pop = Fixed(pop_size), future = "latest", pop_period = "all"
   ),
-  rw_estimated      = rt_opts(
+  rw_pop_est = rt_opts(
     rw = 7, pop = Normal(mean = pop_size, sd = pop_size / 2),
     future = "latest", pop_period = "all"
   )

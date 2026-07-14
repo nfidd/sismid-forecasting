@@ -130,7 +130,7 @@ $$ I_t = \sum_s R_t\, w_s\, I_{t-s} + \iota_t $$
 :::
 ::::
 
-Here $I_t$ is the number of new infections, $R_t$ is the reproduction number, and $w_s$ is the **generation-time distribution**, the probability that an infection caused $s$ days ago transmits now [@wallingaDifferentEpidemicCurves2004].
+Here $I_t$ is the number of new infections, $R_t$ is the reproduction number, and $w_s$ is the generation-time distribution, the probability that an infection caused $s$ days ago transmits now [@wallingaDifferentEpidemicCurves2004].
 
 ::: callout-tip
 ## Take 5 minutes
@@ -168,6 +168,10 @@ gen_time <- fix_parameters(example_generation_time)
 delays <- fix_parameters(example_incubation_period + example_reporting_delay)
 pop_size <- 100000
 ```
+
+::: callout-warning
+The block below is shown for reference and is **not run** when the session renders (`eval = FALSE`). Do not copy and run it blindly; it needs the setup above and reproduces the saved data.
+:::
 
 ```{r simulate-code, eval = FALSE}
 dates <- seq.Date(as.Date("2023-01-01"), by = "day", length.out = 170)
@@ -224,7 +228,7 @@ Under the hood `fit_epinow2()` calls `estimate_infections()`, which combines the
 
 ![The `EpiNow2` model architecture. Diagram from the [EpiNow2 model overview](https://epiforecasts.io/EpiNow2/articles/estimate_infections.html).](slides/figures/epinow2-architecture.png)
 
-::: callout-tip
+::: {.callout-tip collapse="true"}
 ## Prototyping with faster inference
 
 The fits here use MCMC, defined in `stan_config` above and passed to `fit_epinow2()`.
@@ -257,7 +261,7 @@ forecast_arima_samples <- function(train, horizon = 14, times = 1000) {
 }
 ```
 
-We fit the EpiNow2 default renewal model, a weekly random walk on $R_t$ with no susceptible depletion, and the ARIMA baseline.
+We fit the `rw_nopop` renewal model (a weekly random walk on $R_t$ with no susceptible depletion) and the ARIMA baseline.
 Both use a 14-day forecast horizon.
 
 ```{r single-forecast, warning = FALSE, message = FALSE}
@@ -276,7 +280,7 @@ single_fc <- bind_rows(
     as_tibble() |>
     filter(horizon > 0) |>
     transmute(date, sample = as.integer(sample), predicted,
-              model = "epi_default"),
+              model = "rw_nopop"),
   arima_default |> transmute(date, sample, predicted, model)
 ) |>
   filter(!is.na(predicted))
@@ -307,18 +311,27 @@ add_bands <- function(g) {
                 alpha = 0.40)
 }
 
+# floor the band bounds at 1 so the log scale has no log(0) artefacts
+floor_bands <- function(df, m = 1) {
+  df |> mutate(across(
+    c(lower_30, upper_30, lower_60, upper_60, lower_90, upper_90),
+    \(x) pmax(x, m)
+  ))
+}
+
 single_sum <- band_summary(single_fc, c("model", "date"))
 
 obs_window <- reported |>
   filter(date > forecast_date - 14, date <= forecast_date + 14)
 
 plot_single <- function(log_scale = FALSE) {
-  g <- add_bands(ggplot(single_sum, aes(x = date))) +
+  dat <- if (log_scale) floor_bands(single_sum) else single_sum
+  g <- add_bands(ggplot(dat, aes(x = date))) +
     geom_point(data = obs_window, aes(x = date, y = confirm),
                inherit.aes = FALSE, size = 1.2) +
     geom_vline(xintercept = forecast_date, linetype = "dashed") +
     scale_fill_manual(
-      values = c("epi_default" = "#4292C6", "arima" = "#E6550D")) +
+      values = c("rw_nopop" = "#4292C6", "arima" = "#E6550D")) +
     labs(x = "Date", y = "Reported cases", fill = "Model") +
     theme_bw() +
     theme(legend.position = "bottom")
@@ -334,7 +347,7 @@ gridExtra::grid.arrange(plot_single(FALSE), plot_single(TRUE), ncol = 2)
 ```
 
 Neither model knows that the epidemic is about to turn over.
-The ARIMA projects the recent trend forward, and the renewal default does the same because it has no mechanism for susceptible depletion.
+The ARIMA projects the recent trend forward, and the `rw_nopop` renewal does the same because it has no mechanism for susceptible depletion.
 Both over-shoot the peak.
 
 ::: callout-tip
@@ -350,29 +363,35 @@ What single piece of information would either model need to predict the turning 
 
 Over the first few days both forecasts sit close to the observations, and there is little to choose between them.
 As the horizon grows both drift above the truth and over-shoot the peak, because neither has any mechanism to stop growth.
-The renewal default grows fastest, since it projects the recent reproduction number forward with nothing to bend it down.
+The `rw_nopop` renewal grows fastest, since it projects the recent reproduction number forward with nothing to bend it down.
 To predict the turning point either model would need to know that the susceptible pool is running out, which means knowing the population at risk and how much of it has already been infected.
 :::
 
 # The models we will compare
 
 We compare five models that differ in how much epidemiological mechanism and flexibility they include.
-We have already met two of them, the ARIMA baseline and the EpiNow2 default renewal model.
+We have already met two of them, the ARIMA baseline and the `rw_nopop` renewal model.
 
 - **arima**. `ARIMA(my_fourth_root(confirm))` with auto-ARIMA, so fable selects the order automatically from the data. It may select different orders at different forecast dates.
-- **default**. A renewal model with a weekly random walk on $R_t$ and no susceptible depletion, the EpiNow2 default we used for the single forecast.
-- **constant_rt_fixed**. Constant reproduction number (the default `rw = 0`) with the *true* population size. This matches the data-generating process of constant $R_t$ plus susceptible depletion.
-- **rw_fixed**. Adds a weekly random walk on $R_t$ (`rw = 7`) with the true population. The random walk is insurance in case our assumptions about the data-generating process turn out not to be fully correct, letting $R_t$ drift if the data ask for it.
-- **rw_estimated**. Weekly random walk on $R_t$ with an estimated population (`Normal(mean = pop_size, sd = pop_size / 2)`). In the real world we would not know the exact effective population size, so this is the model we would be able to fit.
+- **rw_nopop**. A renewal model with a weekly random walk on $R_t$ and no susceptible depletion, the model we used for the single forecast.
+- **const_pop**. Constant reproduction number (the default `rw = 0`) with the *true* population size. This matches the data-generating process of constant $R_t$ plus susceptible depletion.
+- **rw_pop**. Adds a weekly random walk on $R_t$ (`rw = 7`) with the true population. The random walk is insurance in case our assumptions about the data-generating process turn out not to be fully correct, letting $R_t$ drift if the data ask for it.
+- **rw_pop_est**. Weekly random walk on $R_t$ with an estimated population (`Normal(mean = pop_size, sd = pop_size / 2)`). In the real world we would not know the exact effective population size, so this is the model we would be able to fit.
 
-The four EpiNow2 models share the same renewal structure and differ only in the `rt_opts()` arguments.
+- **arima**. `ARIMA(my_fourth_root(confirm))` with auto-ARIMA. A fair statistical baseline with no epidemiological mechanism.
+- **rw_nopop**. Random-walk $R_t$, no population and so no susceptible depletion. It knows about transmission and delays but has nothing to bend the curve at the peak, and is the model we used for the single forecast.
+- **const_pop**. Constant $R_t$ with the true population, so it includes depletion. This matches the data-generating process.
+- **rw_pop**. Random-walk $R_t$ with the true population. The random walk is extra flexibility the data-generating process does not require.
+- **rw_pop_est**. Random-walk $R_t$ with an estimated population (`Normal(mean = pop_size, sd = pop_size / 2)`). The population is weakly identified from a single outbreak, so estimating it adds uncertainty.
+
+The four renewal models share the same structure and differ only in the `rt_opts()` arguments.
 The ARIMA baseline is fit separately with `fable`, using the same fourth-root transformation as in earlier sessions.
 
 ::: callout-note
 ## What is a random walk on $R_t$?
 We met the random walk in earlier sessions as a baseline that carries the last value forward with added noise.
 Here we place the random walk on $R_t$ rather than on the cases, so $R_t$ drifts from week to week instead of being held constant.
-This is a common default for $R_t$ estimation, because it lets the reproduction number change over time without assuming a particular shape.
+This is a common choice for $R_t$ estimation, because it assumes $R_t$ this week is close to last week's with some added uncertainty, letting it drift over time rather than following a fixed trend.
 :::
 
 The misinformed-modeller demonstration is deliberately left out of the backtest.
@@ -380,14 +399,14 @@ It appears later as a standalone demonstration.
 
 ```{r model-specs}
 epi_models <- list(
-  default           = rt_opts(rw = 7),
-  constant_rt_fixed = rt_opts(
+  rw_nopop   = rt_opts(rw = 7),
+  const_pop = rt_opts(
     pop = Fixed(pop_size), future = "latest", pop_period = "all"
   ),
-  rw_fixed          = rt_opts(
+  rw_pop          = rt_opts(
     rw = 7, pop = Fixed(pop_size), future = "latest", pop_period = "all"
   ),
-  rw_estimated      = rt_opts(
+  rw_pop_est      = rt_opts(
     rw = 7, pop = Normal(mean = pop_size, sd = pop_size / 2),
     future = "latest", pop_period = "all"
   )
@@ -415,8 +434,12 @@ forecast_dates <- seq.Date(
 length(forecast_dates)
 ```
 
-At each forecast date we fit all four EpiNow2 models and the ARIMA baseline with the helpers defined above, and combine the sample-level predictions into a single tibble.
-This backtest fits 60 models, so we run it ahead of time in `data-raw/epi_forecasts.R` and load the saved result; the code is shown for reference.
+At each forecast date we fit all four `EpiNow2` models and the ARIMA baseline with the helpers defined above, and combine the sample-level predictions into a single tibble.
+This backtest fits 60 models, so we run it ahead of time in [`data-raw/epi_forecasts.R`](https://github.com/nfidd/sismid-forecasting/blob/main/data-raw/epi_forecasts.R) and load the saved result; the code is shown for reference.
+
+::: callout-warning
+The block below is shown for reference and is **not run** when the session renders (`eval = FALSE`). It fits 60 models and takes several minutes, so do not copy and run it blindly.
+:::
 
 ```{r backtest-code, eval = FALSE}
 backtest_one <- function(fdate) {
@@ -471,7 +494,9 @@ panel_caps <- obs_windows |>
 
 plot_trajectories <- function(log_scale = FALSE) {
   dat <- trajectory_summary
-  if (!log_scale) {
+  if (log_scale) {
+    dat <- floor_bands(dat)
+  } else {
     dat <- dat |>
       left_join(panel_caps, by = "forecast_date") |>
       mutate(across(
@@ -506,7 +531,7 @@ plot_trajectories(TRUE)
 ```
 
 During growth the models agree and track the data.
-Around the peak the depletion models (`constant_rt_fixed`, `rw_fixed`, `rw_estimated`) bend over with the observations, while the `default` renewal and the ARIMA project growth forward and over-shoot.
+Around the peak the depletion models (`const_pop`, `rw_pop`, `rw_pop_est`) bend over with the observations, while the `rw_nopop` renewal and the ARIMA project growth forward and over-shoot.
 In the decline the downturn is already visible in the data, so all models project a fall and the gap between them narrows again.
 
 ::: callout-tip
@@ -519,16 +544,16 @@ Does your prediction change if we score on the natural scale versus the log scal
 ::: {.callout-note collapse="true"}
 ## Solution
 
-The depletion models should score best, because they can bend the curve at the peak, and the model that matches the data-generating process, `constant_rt_fixed`, should be the best of them.
+The depletion models should score best, because they can bend the curve at the peak, and the model that matches the data-generating process, `const_pop`, should be the best of them.
 The models should differ most around the peak, where a mechanism for the turnover matters most.
 During early growth the data already contain the stable trend, so the models converge.
-The `default` renewal and the ARIMA should do worst on the natural scale, where over-shooting the large peak counts is heavily penalised.
+The `rw_nopop` renewal and the ARIMA should do worst on the natural scale, where over-shooting the large peak counts is heavily penalised.
 :::
 
 # Scoring
 
 We merge the forecasts with the observed values, keeping only out-of-sample horizons (`horizon > 0`).
-The ARIMA returns 1000 samples while the EpiNow2 fits occasionally drop one, so we take the same number of samples from every forecast before scoring, which keeps `score()` from warning about uneven sample counts.
+The ARIMA returns 1000 samples while the `EpiNow2` fits occasionally drop one, so we take the same number of samples from every forecast before scoring, which keeps `score()` from warning about uneven sample counts.
 
 ```{r build-forecast-sample}
 obs <- reported |> transmute(date, observed = confirm)
@@ -593,45 +618,50 @@ How does the ranking change between the natural and the log scale, and why?
 ::: {.callout-note collapse="true"}
 ## Solution
 
-- `constant_rt_fixed`, the model that matches the data-generating process, has the best CRPS on both scales, with `rw_fixed` just behind.
-- The `default` renewal and the ARIMA are far worse, and their error is dominated by overprediction because they sail past the peak.
-- On the natural scale the `default` is worst; on the log scale the ARIMA is worst. The order of the two swaps between the scales, and this makes sense. The `default` renewal models exponential growth, which is a process on the log scale, while the ARIMA uses a fourth-root transform that does not match the data-generating process. On the log scale every time point is weighted about equally, so the ARIMA's mismatched transform is exposed. On the natural scale the exponential growth of the `default` supports very large forecasts at the peak, and those are penalised heavily.
-- `rw_estimated` sits in between, because estimating the population from a single outbreak adds uncertainty, so it pays a little over the fixed-population models.
+- `const_pop`, the model that matches the data-generating process, has the best CRPS on both scales, with `rw_pop` just behind.
+- The `rw_nopop` renewal and the ARIMA are far worse, and their error is dominated by overprediction because they sail past the peak.
+- On the natural scale the `rw_nopop` is worst; on the log scale the ARIMA is worst. The order of the two swaps between the scales, and this makes sense. The `rw_nopop` renewal models exponential growth, which is a process on the log scale, while the ARIMA uses a fourth-root transform that does not match the data-generating process. On the log scale every time point is weighted about equally, so the ARIMA's mismatched transform is exposed. On the natural scale the exponential growth of the `rw_nopop` supports very large forecasts at the peak, and those are penalised heavily.
+- `rw_pop_est` sits in between, because estimating the population from a single outbreak adds uncertainty, so it pays a little over the fixed-population models.
 - On the log scale the gaps shrink, because log scoring down-weights the large peak counts that dominate the natural scale, but the depletion models still lead.
-- The fixed-population models use the true population, which you would not know in the real world, so `rw_estimated` is closer to what you would actually run.
+- The fixed-population models use the true population, which you would not know in the real world, so `rw_pop_est` is closer to what you would actually run.
 :::
 
 ## Scores by forecast date
 
 Breaking the CRPS down by forecast date shows how the ranking shifts across the epidemic's phases.
 
-```{r scores-by-date}
+```{r scores-by-date, fig.height = 8}
 by_date <- summarise_scores(
   scores, by = c("model", "forecast_date", "scale")
 ) |>
   as_tibble()
 
+x_range <- c(min(forecast_dates), max(forecast_dates) + 14)
+
 scores_plot <- by_date |>
   ggplot(aes(x = forecast_date, y = crps, colour = model)) +
   geom_point() +
   geom_line() +
-  facet_wrap(~scale, scales = "free_y") +
-  labs(x = "Forecast date", y = "CRPS", colour = "Model") +
+  facet_wrap(~scale, scales = "free_y", ncol = 1) +
+  scale_x_date(limits = x_range) +
+  labs(x = NULL, y = "CRPS", colour = "Model") +
   theme_bw() +
   theme(legend.position = "bottom")
 
 obs_plot <- reported |>
-  filter(date >= min(forecast_dates), date <= max(forecast_dates) + 14) |>
+  filter(date >= x_range[1], date <= x_range[2]) |>
   ggplot(aes(x = date, y = confirm)) +
   geom_col(fill = "#4292C6") +
+  scale_x_date(limits = x_range) +
   labs(x = "Date", y = "Reported cases") +
   theme_bw()
 
-gridExtra::grid.arrange(scores_plot, obs_plot, heights = c(2, 1))
+# stack the natural and log CRPS panels over the data so the dates line up
+gridExtra::grid.arrange(scores_plot, obs_plot, ncol = 1, heights = c(3, 1))
 ```
 
 The models are close early in growth, because the data already contain the stable trend.
-Around the peak the gap is largest: `constant_rt_fixed` and `rw_fixed` stay accurate while the `default` renewal and the ARIMA blow up by over-shooting, and `rw_estimated` struggles a little because its population is weakly identified.
+Around the peak the gap is largest: `const_pop` and `rw_pop` stay accurate while the `rw_nopop` renewal and the ARIMA blow up by over-shooting, and `rw_pop_est` struggles a little because its population is weakly identified.
 Into the decline the downturn is visible in the data and the models come back together.
 On the log scale the same pattern appears but is less pronounced, because log scoring down-weights the large peak counts that dominate the natural scale.
 
@@ -657,7 +687,52 @@ ggplot(by_horizon, aes(x = horizon, y = crps, colour = model)) +
 
 On the natural scale the gap between models opens at longer horizons, where the forecasts run into the peak.
 On the log scale the differences are smaller and steadier, because log scoring down-weights the large counts that dominate the natural scale.
-Interestingly, the `rw_estimated` model that estimates the population size compares reasonably well to the other good models for the first few horizons, but then at longer horizons you really notice the difference, especially on the natural scale.
+Interestingly, the `rw_pop_est` model that estimates the population size compares reasonably well to the other good models for the first few horizons, but then at longer horizons you really notice the difference, especially on the natural scale.
+
+## Scores by recent growth rate
+
+The forecast date is only a proxy for where we are in the epidemic.
+A more direct summary is the recent growth rate, how fast cases were changing in the week before each forecast.
+
+```{r scores-by-growth}
+growth_rates <- tibble(forecast_date = forecast_dates) |>
+  mutate(growth_rate = map_dbl(forecast_date, function(fd) {
+    now <- reported$confirm[reported$date == fd]
+    prev <- reported$confirm[reported$date == fd - 7]
+    log((now + 1) / (prev + 1)) / 7
+  }))
+
+by_growth <- by_date |>
+  left_join(growth_rates, by = "forecast_date") |>
+  arrange(model, growth_rate)
+
+ggplot(by_growth, aes(x = growth_rate, y = crps, colour = model)) +
+  geom_point() +
+  geom_line() +
+  facet_wrap(~scale, scales = "free_y") +
+  labs(
+    x = "Average daily growth rate over the previous week",
+    y = "CRPS", colour = "Model"
+  ) +
+  theme_bw() +
+  theme(legend.position = "bottom")
+```
+
+::: callout-tip
+## Take 5 minutes
+
+This view lines the forecasts up by recent growth rate instead of the calendar.
+What does it show that the scores by forecast date and by horizon do not?
+Look in particular at the fast-growing forecasts on the right of the plot: how do the models compare there, and why?
+:::
+
+::: {.callout-note collapse="true"}
+## Solution
+
+- When growth is fast, on the right of the plot and early in the epidemic, all the renewal models score about the same and clearly beat the ARIMA. Susceptible depletion has not started to matter yet, so the no-depletion `rw_nopop` is as good as the models that include it.
+- The models only pull apart as the growth rate falls towards zero, around the turnover. There the `rw_nopop` renewal and the ARIMA blow up, because they keep projecting the growth, while the fixed-population depletion models bend over.
+- So the growth rate shows *when* mechanism matters: not during fast growth, but as the epidemic turns. The scores by date and by horizon hint at this, but here it is tied directly to the quantity, the recent growth rate, that drives it.
+:::
 
 ## Coverage
 
@@ -701,13 +776,13 @@ Which models are over-confident, with intervals too narrow to reach nominal cove
 ::: {.callout-note collapse="true"}
 ## Solution
 
-- The depletion models (`constant_rt_fixed`, `rw_fixed` and `rw_estimated`) are close to their nominal coverage, and `rw_estimated` over-covers at the 90% level, meaning its intervals are wider than they need to be.
-- The ARIMA is badly over-confident on both intervals, and the `default` renewal is over-confident at the 90% level, with intervals too narrow to contain the observations around the peak they miss.
+- The depletion models (`const_pop`, `rw_pop` and `rw_pop_est`) are close to their nominal coverage, and `rw_pop_est` over-covers at the 90% level, meaning its intervals are wider than they need to be.
+- The ARIMA is badly over-confident on both intervals, and the `rw_nopop` renewal is over-confident at the 90% level, with intervals too narrow to contain the observations around the peak they miss.
 - These are different failures. Over-confidence means the intervals are too narrow to be trusted, while over-coverage means they are too wide to be useful.
-- Coverage is a joint check on the centre and the spread of a forecast. A model can reach nominal coverage by being wide as well as by being accurate, as `rw_estimated` shows, so read it alongside the CRPS rather than on its own.
+- Coverage is a joint check on the centre and the spread of a forecast. A model can reach nominal coverage by being wide as well as by being accurate, as `rw_pop_est` shows, so read it alongside the CRPS rather than on its own.
 :::
 
-# When the modeller is misinformed: a demonstration
+# When the modeller is misinformed
 
 The backtest showed that knowing the population matters.
 The model is only ever as good as the information we give it, so here we misinform it.
@@ -732,27 +807,19 @@ demo_wrong <- fit_epinow2(
   demo_train, stan = stan_config
 )
 
-mechanism_compare <- bind_rows(
+mechanism_samples <- bind_rows(
   get_predictions(demo_correct, format = "sample") |>
     as_tibble() |> filter(horizon > 0) |> mutate(model = "correct_prior"),
   get_predictions(demo_wrong, format = "sample") |>
     as_tibble() |> filter(horizon > 0) |> mutate(model = "wrong_prior")
 ) |>
-  filter(!is.na(predicted)) |>
-  group_by(model, date) |>
-  summarise(
-    median = median(predicted, na.rm = TRUE),
-    lower_90 = quantile(predicted, 0.05, na.rm = TRUE),
-    upper_90 = quantile(predicted, 0.95, na.rm = TRUE),
-    .groups = "drop"
-  )
+  filter(!is.na(predicted))
+
+mechanism_compare <- band_summary(mechanism_samples, c("model", "date"))
 ```
 
 ```{r plot-mechanism-demo}
-ggplot(mechanism_compare, aes(x = date, fill = model, colour = model)) +
-  geom_ribbon(aes(ymin = lower_90, ymax = upper_90), alpha = 0.2,
-              colour = NA) +
-  geom_line(aes(y = median)) +
+add_bands(ggplot(mechanism_compare, aes(x = date))) +
   geom_point(
     data = reported |> filter(date > demo_date - 14, date <= demo_date + 14),
     aes(x = date, y = confirm), inherit.aes = FALSE
@@ -799,7 +866,7 @@ Could the data available at the forecast date have told the model that its popul
     - So on a log-transformed response the covariate enters as $\log f_t$ with a coefficient of one, and the intercept plays the role of $\log R_t$. Fitting `ARIMA(log(confirm + 1) ~ log(foi + 1) + pdq(d = 0))` and letting the coefficient be estimated relaxes that constraint, while the ARIMA error terms let $\log R_t$ drift over time. Leaving the series undifferenced (`pdq(d = 0)`) keeps the intercept that stands in for $\log R_t$.
     - Reported cases are a delayed and noisy version of infections, so this approximates the renewal equation rather than reproducing it, and it still has no susceptible depletion unless you add the covariate above as well. As with the susceptible fraction, the covariate depends on past cases, so forecast one step ahead at a time.
     - How close does this get you to the renewal models?
--   Add a Gaussian process (`gp = gp_opts()`, from EpiNow2) instead of a random walk on $R_t$. Does smoothing $R_t$ change the peak forecast?
+-   Add a Gaussian process (`gp = gp_opts()`, from `EpiNow2`) instead of a random walk on $R_t$. Does smoothing $R_t$ change the peak forecast?
 -   Swap the inference to variational Bayes or pathfinder by changing the single `stan_config` line. How much faster is the backtest, and does the coverage change?
 -   Extend the forecast horizon to 28 days. Which model degrades fastest?
 
