@@ -49,6 +49,7 @@ Suggests:
     purrr,
     rmarkdown,
     roxyglobals,
+    scoringRules,
     scoringutils,
     stringr,
     testthat (>= 3.0.0),
