@@ -617,7 +617,7 @@ What do these results this tell you about the models?
 -   Notably, the accuracy declines (the CRPS increases) for all models across horizons except for the `fourier` model. This is because the fourier model is predicting the same thing every week: seasonal average. The forecast does not align itself with recent data observations, it just predicts the historical seasonal average.
 -   At horizons 1 and 2 the errors are similar for the `ar2`, `fourier_ar2` and `rw` models, although the `rw` model has moderately higher CRPS.
 -   At larger horizons, there is a clearer distinction between the models. Among the ARIMA-type models, `fourier` and `fourier_ar2` are lower than the others, with `fourier_ar2` the best of the parametric models.
--   The `copycat` analogue model, however, has the lowest CRPS at **every** horizon, and its advantage grows with horizon. Matching against whole past seasons lets it anticipate the peak and decline — and represent the uncertainty around them — better than extrapolating a parametric model.
+-   The `copycat` analogue model, however, has the lowest CRPS at **every** horizon, and its advantage grows with horizon. Its performance also varies quite a bit by forecast date, so it appears that it was able to predict a few key moments (the steep rise) very well, while not predicting the initial decline as well as other models.
 -   It is interesting to see that around 8 weeks the `fourier_ar2` and `fourier` models converge in terms of accuracy. It seems that the auto-regressive components of the model seem to "add benefit" to the forecast accuracy for around 8 weeks. After that, a seasonal average is doing about the same.
 
 **By forecast date**
