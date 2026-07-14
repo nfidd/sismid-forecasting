@@ -151,7 +151,7 @@ Let's start with the "easy" part, building the unweighted ensembles.
 ### LOP details
 
 Note that when we build LOPs with quantile based forecasts, the algorithm needs to approximate a full distribution (the tails are not well-defined in a quantile representation).
-There are some assumptions made under the hood about how this is approximated.
+There are some assumptions made about how this is approximated.
 For the really gory details, you can check out [the `hubEnsembles` documentation](https://hubverse-org.github.io/hubEnsembles/dev/articles/hubEnsembles.html?q=weight#creating-ensembles-with-linear_pool)
 :::
 
@@ -302,7 +302,7 @@ Over time, `CMU-TimeSeries` and `COVIDHub-baseline` earned back some "trust" wit
 In general, the weights did not change much after the first few weeks (except in the last week when `UM-DeepOutbreak` wasn't submitted.)
 :::
 
-Now that we have the weights and we've checked them, let's start building some ensembles!
+Now that we have the weights and we've checked them, we can build some ensembles.
 First, we will build the median ensembles, both weighted and unweighted.
 
 ```{r build-ensemble}

@@ -84,13 +84,7 @@ This is not strictly necessary but will help us talk about the models.
 set.seed(7321)
 ```
 
-We also define the fourth-root transformation used in earlier sessions, so that our ARIMA baseline is the same model that you are already familiar with.
-
-```{r}
-fourth_root <- function(x) x^0.25
-inv_fourth_root <- function(x) x^4
-my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
-```
+Our ARIMA baseline uses the `my_fourth_root` transformation from earlier sessions (provided by the course package), so it is the same model you are already familiar with.
 
 We set the inference configuration used for the `EpiNow2` fits in this session.
 We use Markov-chain Monte Carlo (MCMC) sampling, which gives the most honest posterior; you could increase the warmup and sampling iterations for your own runs.
@@ -224,7 +218,7 @@ Every renewal fit in this session uses `fit_epinow2()` from the `nfidd.forecasti
 It holds the generation time and delays fixed at the values used to simulate the data, and uses a negative binomial observation model to match the simulation.
 The same helper runs the backtest in `data-raw/epi_forecasts.R`, and you can reuse it for your own real-time estimates.
 
-Under the hood `fit_epinow2()` calls `estimate_infections()`, which combines the renewal infection model, the delay convolution, and the observation model in a single Bayesian fit.
+Internally, `fit_epinow2()` calls `estimate_infections()`, which combines the renewal infection model, the delay convolution, and the observation model in a single Bayesian fit.
 
 ![The `EpiNow2` model architecture. Diagram from the [EpiNow2 model overview](https://epiforecasts.io/EpiNow2/articles/estimate_infections.html).](slides/figures/epinow2-architecture.png)
 

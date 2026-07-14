@@ -469,7 +469,7 @@ Looking at the relative and absolute WIS scores from the table above, and the nu
 -   The ensemble forecast is the most accurate model overall, by fairly large margin, close to 20% in terms of absolute WIS and 10% in terms of relative skill.
 -   The CovidHub-baseline has basically "average" performance, with a relative WIS score of 0.96.
 -   Five individual models have better performance than the baseline and four have worse performance than the baseline.
--   The worst-performing model is the `CMU-climate_baseline`. This is designed to be a "seasonal average" model, and covid isn't that seasonal at the moment, so it's not super surprising that this is a bad model.
+-   The worst-performing model is the `CMU-climate_baseline`. This is designed to be a "seasonal average" model, and covid isn't that seasonal at the moment, so it's not surprising that this is a bad model.
 -   Tying back to renewal-equation approaches (covered in the companion [Nowcasting & $R_t$ estimation course](https://nfidd.github.io/sismid-nowcasting/sessions/R-estimation-and-the-renewal-equation.html)):
     -   The `CEPH-Rtrend_covid` model is "A renewal equation method based on Bayesian estimation of Rt from hospitalization data." It wasn't as good as pure statistical and ML approaches, but was better than the baseline.
     -   The `MOBS-GLEAM_COVID` model is a mechanistic model (see description above) and was worse than the baseline.
@@ -527,8 +527,7 @@ Prediction interval widths can help assess sharpness.
 ::: callout-tip
 Prediction interval coverage is not a proper score.
 For example, to get perfect 90% PI coverage, you could always make 9 out of every 10 of your intervals infinitely wide and the last one infinitely small.
-Et voila!
-90% PI coverage achieved.
+That achieves 90% PI coverage.
 :::
 
 But, assuming that modelers aren't trying to game the scores, it can generally be a useful and interpretable metric in practice.

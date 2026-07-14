@@ -83,7 +83,7 @@ We're going to set up a hub in the style of [the hubverse](https://hubverse.io/)
 But you could build a local hub however you want for your own modeling experiments.
 :::
 
-If you can get through this session and the next one, the reward will be seeing your forecasts alongside the other forecasts at [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html?as_of=2016-01-16&interval=95%25&target_var=ili+perc&xaxis_range=2015-12-02&xaxis_range=2016-07-13&yaxis_range=0.03190391899589995&yaxis_range=11.26564457976691&model=delphi-epicast&model=hist-avg&location=US+National).
+If you complete this session and the next one, you will be able to see your forecasts alongside the other forecasts at [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html?as_of=2016-01-16&interval=95%25&target_var=ili+perc&xaxis_range=2015-12-02&xaxis_range=2016-07-13&yaxis_range=0.03190391899589995&yaxis_range=11.26564457976691&model=delphi-epicast&model=hist-avg&location=US+National).
 
 
 You should download this hub to your local laptop before continuing this session. 
@@ -176,10 +176,6 @@ Let's try, for starters, an ARIMA(2,1,0) with a fourth-root transformation.
 Recall, that this means we are using two auto-regressive terms with one set of differencing of the data.
 
 ```{r}
-fourth_root <- function(x) x^0.25
-inv_fourth_root <- function(x) x^4
-my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
-
 fit_arima210 <- flu_data_hhs |>
   filter(origin_date <= "2015-10-24") |> 
   model(ARIMA(my_fourth_root(wili) ~ pdq(2,1,0)))
@@ -213,7 +209,7 @@ Here are some ideas of other models you could try:
 
 - use the `fable::VAR()` model to build a multivariate vector auto-regressive model.
 - use the `fable::NNETAR()` model to build a neural network model.
-- add forecasts from the renewal model (this may take some time to run, but it would be interesting!)
+- add forecasts from the renewal model (this may take some time to run)
 - add forecasts from other variants of the `fable::ARIMA()` models
 - try out other specifications of transformations (e.g. a log transformation instead of a fourth-root) or the number of fourier terms.
 - incorporate another model of your choice.
