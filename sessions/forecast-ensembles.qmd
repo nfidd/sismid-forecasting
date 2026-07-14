@@ -126,13 +126,7 @@ flu_data <- epidatr::pub_fluview(regions = c("nat"),
 data(flu_data)
 ```
 
-and define a fourth-root transformation for our forecast models
-
-```{r fourth-root}
-fourth_root <- function(x) x^0.25
-inv_fourth_root <- function(x) x^4
-my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
-```
+Our forecast models use the `my_fourth_root` transformation, which the course package provides.
 
 # Individual forecast models
 
@@ -162,7 +156,8 @@ cv_models <- flu_data_tscv |>
     rw = RW(my_fourth_root(wili)),
     ar2 = ARIMA(my_fourth_root(wili) ~ pdq(2,0,0)),
     fourier = ARIMA(my_fourth_root(wili) ~ pdq(0,0,0) + fourier(period = "year", K=3)),
-    fourier_ar2 = ARIMA(my_fourth_root(wili) ~ pdq(2,0,0) + fourier(period = "year", K=3))
+    fourier_ar2 = ARIMA(my_fourth_root(wili) ~ pdq(2,0,0) + fourier(period = "year", K=3)),
+    copycat = COPYCAT(wili)
   ) 
 
 cv_forecasts <- cv_models |> 
@@ -278,7 +273,7 @@ sampled_forecasts_hub |>
 
 # Building ensembles of `fable` models
 
-Now that we have standardized our data formatting, we will now move to creating forecasts as a combination of multiple forecasts.
+Now that we have standardized our data formatting, we can create forecasts as a combination of multiple forecasts.
 This procedure is also sometimes called *stacking*, and the resulting forecasts are said to come from *ensembles* of forecast models.
 
 ## Quantile-based ensembles
@@ -368,7 +363,8 @@ Here we are using the `hubVis` package which creates (by default) an interactive
 ```{r plot-single-forecasts, fig.height = 12}
 hubVis::plot_step_ahead_model_output(
   model_out_tbl = all_quantile_forecasts,
-  target_data = flu_data |> 
+  pal_color = "Set3",
+  target_data = flu_data |>
     rename(observation = wili) |> 
     filter(epiweek >= as.Date("2017-09-01")),
   use_median_as_point = TRUE,
@@ -400,7 +396,7 @@ However, the median ensemble remains close to the three other models that have c
 #### Evaluation
 
 As in the [forecast evaluation session](forecast-evaluation.qmd), we can evaluate the accuracy of the ensembles.
-Here, instead of using the `fable` utilities, we will start to use the hubverse [`hubEvals` package](https://hubverse-org.github.io/hubEvals/) which relies on [the `scoringutils` package](https://epiforecasts.io/scoringutils/index.html) under the hood.
+Here, instead of using the `fable` utilities, we will start to use the hubverse [`hubEvals` package](https://hubverse-org.github.io/hubEvals/) which relies on [the `scoringutils` package](https://epiforecasts.io/scoringutils/index.html).
 
 In the hubverse, there is a representation of observations called [`oracle output` data](https://docs.hubverse.io/en/latest/user-guide/target-data.html#oracle-output).
 This is a way of representing an observed data point as if it were a prediction from an oracle model, that is, one that knows the future before it happens.
@@ -414,7 +410,6 @@ oracle_output <- flu_data |>
   rename(target_epiweek = epiweek,
          oracle_value = wili) |> 
   select(-region)
-
 ```
 
 ::: callout-note
@@ -522,7 +517,8 @@ As for the simple ensembles, we can plot a single forecast from each model and e
 ```{r plot-single-filtered-forecasts, fig.height = 12}
 hubVis::plot_step_ahead_model_output(
   model_out_tbl = filtered_ensembles,
-  target_data = flu_data |> 
+  pal_color = "Set3",
+  target_data = flu_data |>
     rename(observation = wili) |> 
     filter(epiweek >= as.Date("2017-09-01")),
   use_median_as_point = TRUE,
@@ -687,6 +683,7 @@ forecast_scores <- hubEvals::score_model_out(
 forecast_scores|> 
   arrange(wis) |> 
   knitr::kable(digits = 2)
+
 ```
 
 ## Weighted ensembles

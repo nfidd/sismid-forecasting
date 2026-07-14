@@ -138,7 +138,7 @@ This suggests that we might want to consider a model that can see very recent la
 
 # Some ARIMA model basics
 
-We are not going to give an in-depth review of ARIMA models in this course, but we encourage you to check out the [FPP3 Chapter on ARIMA models](https://otexts.com/fpp3/arima.html), which provides a very accessible introduction to the concepts and math behind this powerful modeling framework.
+We are not going to give an in-depth review of ARIMA models in this course, but we encourage you to check out the [FPP3 Chapter on ARIMA models](https://otexts.com/fpp3/arima.html), which provides a very accessible introduction to the concepts and math behind this modeling framework.
 
 In general, there are three different knobs on ARIMA models that you can fiddle with.
 They are:
@@ -285,9 +285,9 @@ Let's implement a transformation to try to get something closer to constant vari
 Through a lot of experimentation, we've found that a fourth-root transformation often does a reasonable job at stabilizing variance.[@ray_flusion_2025] And, it has the added benefit of making it so that predictions will never be negative.
 (Remember that problem from last session?) Other transformations might be reasonable too (there is [a whole section on them in the FPP3 textbook](https://otexts.com/fpp3/transformations.html#transformations)), and this is something often worth doing a bit of exploration for with your particular dataset.
 
-We're going to use `fable`-specified standards to define two transformation functions
+The course package provides a fourth-root transformation, `my_fourth_root`, defined with `fable`'s `new_transformation()` standard. We use it throughout the course. This is the code for the transformation:
 
-```{r}
+```{r, eval=FALSE}
 fourth_root <- function(x) x^0.25
 inv_fourth_root <- function(x) x^4
 

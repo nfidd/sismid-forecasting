@@ -7,10 +7,14 @@ S3method(model_sum,COPYCAT)
 S3method(residuals,COPYCAT)
 export(COPYCAT)
 export(fit_epinow2)
+export(fourth_root)
+export(inv_fourth_root)
+export(my_fourth_root)
 importFrom(fabletools,
   forecast,
   generate,
-  model_sum
+  model_sum,
+  new_transformation
 )
 importFrom(rlang,
   .data,

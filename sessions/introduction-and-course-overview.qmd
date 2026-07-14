@@ -63,7 +63,7 @@ Broadly, the intended order of content is:
 -   forecast evaluation and ensembles
 -   collaborative forecasting with hubs and course wrap-up
 
-Let's get started!
+To get started:
 
 -   Have a more detailed look at the [learning objectives](../reference/learning_objectives.qmd) or the [class timetable](../timetable.qmd)
 

@@ -94,9 +94,7 @@ Once you've selected the models, you can generate and submit forecasts for the t
 
 # Submitting test-phase forecasts to an online hub
 
-If you've gotten this far, congratulations!
-
-As a last test of your forecasting prowess, we invite you to submit the forecasts for your test-phase models to our [online `sismid-ili-forecasting-sandbox` hub](https://github.com/reichlab/sismid-ili-forecasting-sandbox).
+Once you have selected your test-phase models, you can submit their forecasts to our [online `sismid-ili-forecasting-sandbox` hub](https://github.com/reichlab/sismid-ili-forecasting-sandbox).
 
 If you can get through this process, the reward will be seeing your forecasts on [the online dashboard for this hub](https://reichlab.io/sismid-ili-forecasting-dashboard/forecast.html?as_of=2016-01-16&interval=95%25&target_var=ili+perc&xaxis_range=2015-12-02&xaxis_range=2016-07-13&yaxis_range=0.03190391899589995&yaxis_range=11.26564457976691&model=delphi-epicast&model=hist-avg&location=US+National).
 
