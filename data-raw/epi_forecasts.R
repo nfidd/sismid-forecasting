@@ -99,7 +99,7 @@ epi_models <- list(
 
 # Twelve weekly forecast dates spanning growth, peak, and decline.
 forecast_dates <- seq.Date(
-  from = as.Date("2023-02-01"), to = as.Date("2023-04-19"), by = "week"
+  from = as.Date("2023-01-18"), to = as.Date("2023-04-05"), by = "week"
 )
 
 # Fit all four EpiNow2 models plus ARIMA at a single forecast date.

@@ -423,7 +423,7 @@ Contrasting phases matters because susceptible depletion only shapes the forecas
 
 ```{r forecast-dates}
 forecast_dates <- seq.Date(
-  from = as.Date("2023-02-01"), to = as.Date("2023-04-19"), by = "week"
+  from = as.Date("2023-01-18"), to = as.Date("2023-04-05"), by = "week"
 )
 length(forecast_dates)
 ```
