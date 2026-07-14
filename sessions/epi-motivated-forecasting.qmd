@@ -218,7 +218,7 @@ Every renewal fit in this session uses `fit_epinow2()` from the `nfidd.forecasti
 It holds the generation time and delays fixed at the values used to simulate the data, and uses a negative binomial observation model to match the simulation.
 The same helper runs the backtest in `data-raw/epi_forecasts.R`, and you can reuse it for your own real-time estimates.
 
-Under the hood `fit_epinow2()` calls `estimate_infections()`, which combines the renewal infection model, the delay convolution, and the observation model in a single Bayesian fit.
+Internally, `fit_epinow2()` calls `estimate_infections()`, which combines the renewal infection model, the delay convolution, and the observation model in a single Bayesian fit.
 
 ![The `EpiNow2` model architecture. Diagram from the [EpiNow2 model overview](https://epiforecasts.io/EpiNow2/articles/estimate_infections.html).](slides/figures/epinow2-architecture.png)
 

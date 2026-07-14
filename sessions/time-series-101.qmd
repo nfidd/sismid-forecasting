@@ -138,7 +138,7 @@ This suggests that we might want to consider a model that can see very recent la
 
 # Some ARIMA model basics
 
-We are not going to give an in-depth review of ARIMA models in this course, but we encourage you to check out the [FPP3 Chapter on ARIMA models](https://otexts.com/fpp3/arima.html), which provides a very accessible introduction to the concepts and math behind this powerful modeling framework.
+We are not going to give an in-depth review of ARIMA models in this course, but we encourage you to check out the [FPP3 Chapter on ARIMA models](https://otexts.com/fpp3/arima.html), which provides a very accessible introduction to the concepts and math behind this modeling framework.
 
 In general, there are three different knobs on ARIMA models that you can fiddle with.
 They are:

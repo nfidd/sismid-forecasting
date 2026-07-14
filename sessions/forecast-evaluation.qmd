@@ -266,7 +266,7 @@ The accuracy of the forecast in terms of how close the predicted values are to t
 2.
 The confidence of the forecast in terms of the spread of the predicted values.
 
-By balancing these two aspects, the CRPS provides a comprehensive measure of the quality of probabilistic forecasts.
+By balancing these two aspects, the CRPS provides an overall measure of the quality of probabilistic forecasts.
 
 ::: callout-tip
 ### Key things to note about the CRPS
@@ -551,7 +551,7 @@ cv_forecasts |>
   arrange(crps)
 ```
 
-Sorted by CRPS, the `copycat` analogue model comes out on top: its *probabilistic* forecasts — which is what CRPS rewards — are the most accurate overall, and by a clear margin.
+Sorted by CRPS, the `copycat` analogue model scores best: its *probabilistic* forecasts — which is what CRPS rewards — are the most accurate overall, by a clear margin.
 Notice, though, that `fourier_ar2` has the lowest **MAE** and **RMSE**: its *point* forecasts (the median) are closest on average, even though its prediction *intervals* are less well calibrated than copycat's.
 This is a good reminder that point accuracy and probabilistic accuracy can rank models differently — a model can have a well-placed central estimate but poorly-calibrated uncertainty, or vice versa.
 

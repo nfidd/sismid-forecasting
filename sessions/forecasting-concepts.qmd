@@ -234,8 +234,7 @@ This will be the topic of the upcoming sessions.
 
 ## Anatomy of a fable forecast
 
-We will dive into this in more detail later in the course, but it might be interesting now to look under the hood of what format `fable` uses to store the forecast itself.
-Check it out:
+We will look at this in more detail later in the course, but it is worth seeing now what format `fable` uses to store the forecast itself.
 
 ```{r}
 class(first_forecast)

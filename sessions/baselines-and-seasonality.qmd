@@ -64,7 +64,7 @@ flu_data <- flu_data |>
 # Baseline (reference) models
 
 Before we ask "is my model any good?", we have to ask "good *compared to what*?".
-A **baseline** (or **reference**) model is a deliberately simple, naive forecast that any genuinely useful model ought to beat.
+A **baseline** (or **reference**) model is a deliberately simple, naive forecast that any useful model ought to beat.
 Baselines are worth taking seriously because:
 
 -   they set a floor — if a complicated model can't beat a simple baseline, something is wrong;
@@ -279,12 +279,12 @@ The statistical models we've discussed in this session represent just a subset o
 These models offer a different workflow for thinking about modeling than generative models. There are some good examples of generative models in [the companion nowcasting course](https://nfidd.github.io/sismid-nowcasting/) that we taught earlier this week.
 Whilst Bayesian approaches work forward from domain knowledge to specify data-generating processes, traditional time series methods such as these ARIMA models work backward from observed patterns using standard toolkits (transformations, differencing, residual analysis) to achieve stationarity and improve predictions.
 Both approaches ultimately aim to capture the same underlying data-generating process but from different perspectives.
-Something to think about!
+Something to think about.
 
 # Going further
 
 -   Which of the baselines is hardest to beat, and does that change over the course of a season? (We'll answer this quantitatively in the evaluation session.)
--   The other approach to seasonality mentioned above (a "season-year" re-indexing, i.e. a genuine seasonal ARIMA / SARIMA model) — try implementing it and compare it to the Fourier approach.
+-   The other approach to seasonality mentioned above (a "season-year" re-indexing, i.e. a true seasonal ARIMA / SARIMA model) — try implementing it and compare it to the Fourier approach.
 -   We fixed $K = 3$ Fourier harmonics somewhat arbitrarily. Try $K = 1, 2, 4$ and compare the fits (e.g. with `glance()` and the reported information criteria). What happens to the seasonal shape as $K$ grows?
 -   Read about [dynamic harmonic regression](https://otexts.com/fpp3/dhr.html) and [residual diagnostics](https://otexts.com/fpp3/diagnostics.html) in the FPP3 textbook.
 -   Read recent papers about the choice of baselines.[@stapper_mind_2025; @suez_basic_2026] A key insight from this paper is that the choice of baselines can impact the resulting conclusions and generalizability of the results.

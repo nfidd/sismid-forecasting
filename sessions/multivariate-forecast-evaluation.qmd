@@ -154,7 +154,7 @@ $$
 ### Key things to note about the energy score
 
 -   Small values are better, and it is reported in the units of the data.
--   It is a genuine generalisation of the CRPS, to which it reduces in one dimension.
+-   It generalises the CRPS, to which it reduces in one dimension.
 -   It needs **joint samples**, so a forecast that couples the horizons and one that treats them independently are scored differently.
 -   Like the CRPS it is best used to **compare** forecasts, not read in isolation.
 :::
@@ -235,7 +235,7 @@ The energy score sees this and scores the shuffled forecast worse; the marginal 
 
 ## Challenge
 
--   There are other dimensions that a model could be joint across, e.g., location. You can fit a genuinely joint-across-locations model with `fable::VAR()` and compare its energy score to an independent ARIMA forecast.
+-   There are other dimensions that a model could be joint across, e.g., location. You can fit a model that is joint across locations with `fable::VAR()` and compare its energy score to an independent ARIMA forecast.
 -   Add the variogram score (another multivariate score, available via `scoringRules::vs_sample()`) to the joint comparison. How does it differ from the energy score in what it rewards?
 
 ## Methods in practice

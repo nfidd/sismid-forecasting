@@ -273,7 +273,7 @@ sampled_forecasts_hub |>
 
 # Building ensembles of `fable` models
 
-Now that we have standardized our data formatting, we will now move to creating forecasts as a combination of multiple forecasts.
+Now that we have standardized our data formatting, we can create forecasts as a combination of multiple forecasts.
 This procedure is also sometimes called *stacking*, and the resulting forecasts are said to come from *ensembles* of forecast models.
 
 ## Quantile-based ensembles
@@ -395,7 +395,7 @@ However, the median ensemble remains close to the three other models that have c
 #### Evaluation
 
 As in the [forecast evaluation session](forecast-evaluation.qmd), we can evaluate the accuracy of the ensembles.
-Here, instead of using the `fable` utilities, we will start to use the hubverse [`hubEvals` package](https://hubverse-org.github.io/hubEvals/) which relies on [the `scoringutils` package](https://epiforecasts.io/scoringutils/index.html) under the hood.
+Here, instead of using the `fable` utilities, we will start to use the hubverse [`hubEvals` package](https://hubverse-org.github.io/hubEvals/) which relies on [the `scoringutils` package](https://epiforecasts.io/scoringutils/index.html).
 
 In the hubverse, there is a representation of observations called [`oracle output` data](https://docs.hubverse.io/en/latest/user-guide/target-data.html#oracle-output).
 This is a way of representing an observed data point as if it were a prediction from an oracle model, that is, one that knows the future before it happens.
