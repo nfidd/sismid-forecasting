@@ -363,7 +363,8 @@ Here we are using the `hubVis` package which creates (by default) an interactive
 ```{r plot-single-forecasts, fig.height = 12}
 hubVis::plot_step_ahead_model_output(
   model_out_tbl = all_quantile_forecasts,
-  target_data = flu_data |> 
+  pal_color = "Set3",
+  target_data = flu_data |>
     rename(observation = wili) |> 
     filter(epiweek >= as.Date("2017-09-01")),
   use_median_as_point = TRUE,
@@ -516,7 +517,8 @@ As for the simple ensembles, we can plot a single forecast from each model and e
 ```{r plot-single-filtered-forecasts, fig.height = 12}
 hubVis::plot_step_ahead_model_output(
   model_out_tbl = filtered_ensembles,
-  target_data = flu_data |> 
+  pal_color = "Set3",
+  target_data = flu_data |>
     rename(observation = wili) |> 
     filter(epiweek >= as.Date("2017-09-01")),
   use_median_as_point = TRUE,
