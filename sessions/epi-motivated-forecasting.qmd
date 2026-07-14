@@ -248,6 +248,11 @@ forecast_arima_samples <- function(train, horizon = 14, times = 1000) {
   fit <- train |>
     as_tsibble(index = date) |>
     model(ar2 = ARIMA(my_fourth_root(confirm)))
+  # a failed fit returns a null model whose samples are all NA, which would
+  # drop the ARIMA forecast from the plots without any visible error
+  if (is_null_model(fit$ar2[[1]])) {
+    stop("ARIMA fit failed; check that the urca package is installed.")
+  }
   generate(fit, h = horizon, times = times) |>
     as_tibble() |>
     transmute(
