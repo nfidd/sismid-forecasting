@@ -210,7 +210,7 @@ ggplot(d, aes(h, value, group = id)) +
   labs(x = "horizon", y = "ILI %")
 ```
 
-Across a **row** (same marginals) CRPS is identical, yet ES drops when horizons are correlated. ES also rewards being sharper. 
+Across a **row** (same marginals) CRPS is identical. ES improves when horizons are correlated. 
 
 
 ### Multivariate forecasts: higher dimensions {.smaller}
