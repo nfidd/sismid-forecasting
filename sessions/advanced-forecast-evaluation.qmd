@@ -345,7 +345,8 @@ These are the effects that a single average blends together and hides.
 
 ::: callout-tip
 The standard errors above are still optimistic, because the score rows are correlated: they share origin dates and locations, and horizons are nested within each forecast.
-Adding random effects for date, location and horizon handles this properly, either as a mixed-effects GAM or a Bayesian model, and is the approach taken in large multi-model comparisons.[@sherrattPredictivePerformanceMultimodel2023]
+Adding random effects for date, location and horizon is one way to handle this, either as a mixed-effects GAM or a Bayesian model, and is the approach taken in large multi-model comparisons.[@sherrattPredictivePerformanceMultimodel2023;@lopezChallengesCOVID19Case2024]
+However, even these models may fail to account for all sources of correlation, leading to misspecified standard errors in your model.
 :::
 
 # Going further
