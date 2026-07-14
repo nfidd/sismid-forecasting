@@ -6,11 +6,10 @@ bibliography: ../nfidd.bib
 
 # Introduction
 
-In the last few sessions we built forecasts for many locations at once and scored them with the CRPS.
-We scored each location on its own and then averaged.
-In this session we look at two things that simple approach misses.
-First, scoring locations one at a time is blind to how they move *together*, which the energy score can capture.
-Second, a single averaged score, or a significance test, is a fragile way to compare models, and modelling the scores directly is often better.
+In the last few sessions we built forecasts for many locations and horizons at once and scored them with the CRPS.
+We scored each horizon and location on its own and then averaged.
+In this session we supplement that "marginal" approach to scoring and comparing models by introducing the energy score.
+The energy score is a multivariate extension of the CRPS and allows you to score full trajectories or multiple locations with one score.[@gneiting_assessing_2008;@bay_evaluation_2026;@macarthur_collaborative_2026]
 
 ## Slides
 
@@ -18,7 +17,7 @@ Second, a single averaged score, or a significance test, is a fragile way to com
 
 ## Objectives
 
-The aim of this session is to score joint forecasts across locations and to treat forecast scores as data worth modelling.
+The aims of this session are to introduce methods for scoring multivariate probabilistic forecasts, for example across time horizons and/or locations.
 
 ::: {.callout-note collapse="true"}
 # Setup
@@ -29,7 +28,7 @@ The source file of this session is located at `sessions/advanced-forecast-evalua
 
 ## Libraries used
 
-In this session we will use the `fable` package for forecasting, the `dplyr`, `tidyr` and `tsibble` packages for data wrangling, the `ggplot2` package for plotting, the `scoringRules` package for scoring, and the `mgcv` package for modelling the scores.
+In this session we will use the `fable` package for forecasting, the `dplyr`, `tidyr` and `tsibble` packages for data wrangling, the `ggplot2` package for plotting, and the `scoringRules` package for scoring.
 
 ```{r libraries, message = FALSE}
 library("nfidd.forecasting")
@@ -39,7 +38,6 @@ library("fable")
 library("tidyr")
 library("ggplot2")
 library("scoringRules")
-library("mgcv")
 theme_set(theme_bw())
 ```
 
@@ -52,7 +50,7 @@ The best way to interact with the material is via the [Visual Editor](https://do
 We set a random seed for reproducibility.
 
 ```{r}
-set.seed(406) # for Ted Williams
+set.seed(755) # for Hank Aaron
 ```
 
 We reuse the same fourth-root transformation and multi-location flu data (`flu_data_hhs`) from the [local hub playground session](hub-playground.qmd).
@@ -68,14 +66,13 @@ data(flu_data_hhs)
 
 # From marginal to joint forecasts
 
-A forecast for several regions is not a set of separate numbers.
-It is a distribution over the whole *vector* of outcomes, one value per region.
-When we score each region on its own and average, we only ever use the **marginal** forecasts.
-Two forecasts can share every marginal and still disagree completely about whether regions rise *together*.
+A probabilistic time-series forecast that is generated as a realistic trajectory of possible future values is tying together distributions at each timepoint.
+Mathematically, the forecast is a joint distribution over the whole *vector* of outcomes, where the vector represents values at time $t+1$ through $t+h$.
+When we score each horizon on its own and average, we only ever use the **marginal** forecasts.
 
-That difference matters whenever a decision couples the regions.
-If you hold a fixed stockpile to split across regions, a peak that hits everywhere at once is a very different problem from peaks that arrive one region at a time.
-Marginal scores cannot see this, because the coupling lives in the joint distribution.
+This can be important when, for example, you are trying to assess a forecast near a possible peak, and you are trying to assess what the probability is that a surveillance data signal will decline over the coming weeks. 
+If all you have is quantiles at each horizon, you can't compute directly what the probability is that the peak will be in a given week.
+To make that calculation, you need to see the distribution of the trajectories.
 
 Let's build sample-path forecasts for three regions and pull out the samples we need to score them jointly.
 
@@ -208,159 +205,19 @@ The marginal CRPS is blind to all of this: it is identical either way.
 The lesson is not that dependence is always good, but that the energy score can see it and marginal scores cannot.
 :::
 
-# Modelling scores
-
-When we compare models we usually reach for a single averaged score, and sometimes a significance test on top.
-Both are fragile.
-
-::: callout-tip
-## Take 2 minutes
-
-Before reading on, write down two reasons a single average CRPS could give a misleading comparison of models.
-:::
-
-::: {.callout-note collapse="true"}
-## Solution
-
--   Scores are strongly right-skewed, so a few hard weeks dominate the mean.
--   They vary with the scale of the data, so big locations dominate small ones.
--   They are correlated across dates, locations and horizons, so there is much less information than the number of rows suggests.
--   Forecasts differ in difficulty, so an average rewards whoever predicted the easy targets.
--   A significance test tells you *whether* two models differ, not *where* or *by how much*.
-:::
-
-A more useful approach is to treat the scores themselves as data and model them.
-We use a set of CRPS scores that we have pre-computed from a small backtest of three contrasting models over several forecast dates.
-
-```{r partB-data}
-data(advanced_scores)
-advanced_scores
-```
-
-::: {.callout-note collapse="true"}
-## How these scores were produced
-
-The scores come from a time-series cross-validation backtest of three models (a random walk, an ARIMA(2,1,0), and an ARIMA(2,0,0) plus Fourier terms) for three HHS regions over eight forecast dates in the 2018/2019 season, scored with the CRPS.
-This follows the same [time-series cross-validation](forecast-evaluation.qmd#time-series-cross-validation) and `scoringutils` scoring you saw in the earlier sessions.
-The full code is in `data-raw/advanced_scores.R`.
-:::
-
-Here is the naive summary: the average CRPS per model.
-
-```{r partB-naive}
-advanced_scores |>
-  group_by(model) |>
-  summarise(mean_crps = mean(crps), sd_crps = sd(crps), n = n()) |>
-  arrange(mean_crps)
-
-## the scores are strongly right-skewed
-quantile(advanced_scores$crps, c(.1, .5, .9, .99))
-```
-
-The `fourier` model has the lowest average, but the standard deviations are large and the scores are heavily skewed.
-Now we model the scores instead.
-We adjust for horizon and location difficulty, and we get uncertainty on each model's effect.
-
-::: callout-important
-## Do not transform the score itself
-
-It is tempting to fit `lm(log(crps) ~ ...)` to handle the skew, but this breaks what made the CRPS worth using.
-The CRPS is a *proper* score, so the average CRPS is minimised by the better forecaster.
-The log is nonlinear, so the average *log* CRPS is not, and ranking models by it is no longer a proper comparison.
-
-The fix is to keep the CRPS on its natural scale as the response, and use a **generalised additive model** with a Gamma family and a log **link**.
-The link handles positivity and skew, but the model still describes the mean CRPS, so the comparison stays proper.
-If instead you want to reward performance on the log scale, transform the *forecasts and observations* before scoring (the `transform = log1p` route from the [real-world forecasts session](real-world-forecasts.qmd#log-scale-scores)), which is still proper, and then model those scores.[@bosse2023scorin]
-:::
-
-```{r partB-model}
-sdf <- advanced_scores |>
-  mutate(model = relevel(factor(model), ref = "arima210"),
-         location = factor(location))
-
-## Gamma family + log link models E[CRPS] on its natural scale (the response is
-## never transformed), so the model comparison stays proper. The smooth lets
-## the score vary flexibly with horizon.
-score_model <- mgcv::gam(
-  crps ~ model + location + s(horizon, k = 4),
-  family = Gamma(link = "log"), data = sdf
-)
-round(summary(score_model)$p.table, 3)
-```
-
-The `model` terms are what we care about.
-The smooth term for horizon confirms that horizon drives most of the variation in scores.
-
-```{r partB-smooth}
-round(summary(score_model)$s.table, 3)
-```
-
-We can turn the model coefficients into an adjusted mean CRPS per model with an interval, holding horizon and location fixed.
-
-```{r partB-adjusted}
-newd <- data.frame(
-  model    = factor(levels(sdf$model), levels = levels(sdf$model)),
-  location = factor("HHS Region 1", levels = levels(sdf$location)),
-  horizon  = 2
-)
-pr <- predict(score_model, newd, se.fit = TRUE)  # link (log) scale
-adj_means <- data.frame(
-  model    = as.character(newd$model),
-  adj_crps = exp(pr$fit),
-  lower    = exp(pr$fit - 1.96 * pr$se.fit),
-  upper    = exp(pr$fit + 1.96 * pr$se.fit)
-)
-adj_means
-```
-
-A forest plot makes the overlap easy to read.
-
-```{r partB-forest}
-adj_means |>
-  mutate(model = reorder(model, adj_crps)) |>
-  ggplot(aes(x = adj_crps, y = model)) +
-  geom_pointrange(aes(xmin = lower, xmax = upper)) +
-  labs(x = "Adjusted mean CRPS (horizon 2, Region 1)", y = NULL)
-```
-
-::: callout-tip
-## Take 5 minutes
-
-Compare the naive ranking with the model coefficients and the adjusted intervals.
-Does the model that "wins" on average clearly beat the others?
-What does the model tell you that the average does not?
-:::
-
-::: {.callout-note collapse="true"}
-## Solution
-
-The naive ranking puts `fourier` first, but the score model shows its edge is not distinguishable from noise, with a `modelfourier` coefficient that is small relative to its standard error.
-The `rw` model is effectively tied with `arima210`.
-The adjusted intervals for all three models overlap heavily, so the average overstates a difference that is within noise.
-
-What the model adds is structure.
-The smooth term shows horizon dominates everything, with four-week-ahead scores far worse than one-week-ahead, and Region 2 is systematically harder to predict.
-These are the effects that a single average blends together and hides.
-:::
-
-::: callout-tip
-The standard errors above are still optimistic, because the score rows are correlated: they share origin dates and locations, and horizons are nested within each forecast.
-Adding random effects for date, location and horizon handles this properly, either as a mixed-effects GAM or a Bayesian model, and is the approach taken in large multi-model comparisons.[@sherrattPredictivePerformanceMultimodel2023]
-:::
-
 # Going further
 
 ## Challenge
 
--   Recompute the energy-score comparison at a target date where the regions diverged rather than declining together. Does the independent forecast now score better?
--   Fit a genuinely joint model with `fable::VAR()` and compare its energy score to the independent ARIMA forecast.
--   Add the variogram score (`scoringRules::vs_sample()`) to the joint comparison. How does it differ from the energy score in what it rewards?
--   Let the horizon smooth vary by model in the score model (`s(horizon, by = model)`). Do any models do relatively better at longer horizons?
+-   Fit a genuinely joint-across-locations model with `fable::VAR()` and compare its energy score to an independent ARIMA forecast.
+-   Add the variogram score (another multivariate score, available via `scoringRules::vs_sample()`) to the joint comparison. How does it differ from the energy score in what it rewards?
 
 ## Methods in practice
 
 -   The `scoringRules` package [documentation](https://cran.r-project.org/package=scoringRules) covers multivariate scores including the energy and variogram scores.
 -   Hubs increasingly collect sample (trajectory) forecasts rather than only quantiles, which keeps the joint distribution across locations and horizons.[@hubverseModelOutput2026]
+-   @bay_evaluation_2026 describe using the energy score to assess trajectories in longer-term scenario predictions.
+-   @macarthur_collaborative_2026 use an adapted energy score to evaluate nowcasts of the proportions of SARS-CoV-2 variants circulating at different timepoints.
 
 # Wrap up
 
