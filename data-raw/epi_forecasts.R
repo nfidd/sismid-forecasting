@@ -33,7 +33,7 @@ my_fourth_root <- new_transformation(fourth_root, inv_fourth_root)
 # Shared inference configuration for every EpiNow2 fit.
 stan_config <- stan_opts(
   method = "sampling", backend = "rstan",
-  chains = 2, warmup = 300, samples = 1000
+  chains = 4, warmup = 500, samples = 2000
 )
 
 # Simulate a single outbreak to forecast.
