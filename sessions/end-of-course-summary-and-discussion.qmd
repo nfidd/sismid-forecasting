@@ -16,11 +16,12 @@ We will be very happy to have your feedback, comments or any questions on the [c
 ## Going further
 
 We recommend exploring these topics in [Further reading](../reference/further_reading.qmd).
-You can also access these in a [living library](https://www.zotero.org/groups/6031904/nowcasting_and_forecasting_infectious_disease_dynamics/library), which you are welcome to contribute to.
+You can also access these in a [living library](https://www.zotero.org/groups/6031904/nowcasting_and_forecasting_infectious_disease_dynamics), which you are welcome to contribute to.
 
 All the course material is openly available for you to come back to at any time.
 If you return to the course after some time, you may want to [update your setup](../getting-started.qmd) to ensure you have the latest content and package versions.
+If you find any issues or mistakes or are confused by a portion of the course, please [let us know](https://github.com/nfidd/sismid-forecasting/issues)!
 
 You are free to share and reuse this content in any way.
-Please consider [including a citation](../authors.qmd#how-to-cite) (and/or [let us know](https://github.com/nfidd/sismid-forecasting/discussions)!) if you find it useful.
+Please consider [including a citation](../authors.qmd#how-to-cite) and let us know if you find it useful.
 

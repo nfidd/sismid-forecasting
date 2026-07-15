@@ -45,6 +45,7 @@ library("tidyr")
 library("ggplot2")
 library("ggtime")
 library("epidatr")
+theme_set(theme_bw())
 ```
 
 ::: callout-tip
