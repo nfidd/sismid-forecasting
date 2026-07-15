@@ -10,27 +10,28 @@ It is paired with the companion [nowcasting course](https://nfidd.github.io/sism
 ::: {.column-page .timetable}
 | Day | Time | Session / activity | Content |
 |---|---|---|---|
-| **Wed 15 Jul** | 13.30–14.15 | Session 0 · Introduction & course overview | [Slides](sessions/slides/introduction-and-course-overview.qmd), [Getting started](getting-started.qmd) |
-| | 14.15–15.00 | Session 1 · Forecasting concepts | [Slides](sessions/slides/introduction-to-forecasting.qmd), [Practice](sessions/forecasting-concepts.qmd) |
+| **Wed 15 Jul** |  | [Getting started](getting-started.qmd) | |
+|  | 13.30–14.15 | [Session 0 · Introduction & course overview](sessions/introduction-and-course-overview.qmd) | [Slides](sessions/slides/introduction-and-course-overview.qmd) |
+| | 14.15–15.00 | [Session 1 · Forecasting concepts](sessions/forecasting-concepts.qmd) | [Slides](sessions/slides/introduction-to-forecasting.qmd) |
 | | 15.00–15.30 | *Coffee break* | |
-| | 15.30–16.15 | Session 2 · Time series forecasting 101 | [Slides](sessions/slides/time-series-101.qmd), [Practice](sessions/time-series-101.qmd) |
-| | 16:15–17.00 | Session 3 · Baselines and seasonality | [Slides](sessions/slides/baselines-and-seasonality.qmd), [Practice](sessions/baselines-and-seasonality.qmd) |
+| | 15.30–16.15 | [Session 2 · Time series forecasting 101](sessions/time-series-101.qmd) | [Slides](sessions/slides/time-series-101.qmd) |
+| | 16:15–17.00 | [Session 3 · Baselines and seasonality](sessions/baselines-and-seasonality.qmd) | [Slides](sessions/slides/baselines-and-seasonality.qmd) |
 | **Thu 16 Jul** | 09.00–09.15 | Day 1 review | |
-| | 09.15–10.30 | Session 4 · Forecast evaluation | [Slides](sessions/slides/forecast-evaluation.qmd), [Practice](sessions/forecast-evaluation.qmd) |
+| | 09.15–10.30 | [Session 4 · Forecast evaluation](sessions/forecast-evaluation.qmd) | [Slides](sessions/slides/forecast-evaluation.qmd) |
 | | 10.30–11.00 | *Coffee break* | |
-| | 11.00–12.30 | Session 5 · Epidemiologically-motivated forecasting | [Slides](sessions/slides/epi-motivated-forecasting.qmd), [Practice](sessions/epi-motivated-forecasting.qmd) |
+| | 11.00–12.30 | [Session 5 · Epidemiologically-motivated forecasting](sessions/epi-motivated-forecasting.qmd) | [Slides](sessions/slides/epi-motivated-forecasting.qmd) |
 | | 12.30–13.30 | *Lunch* | |
-| | 13.30–15.00 | Session 6 · Evaluating real-world outbreak forecasts | [Slides](sessions/slides/introduction-to-real-world-forecasts.qmd), [Practice](sessions/real-world-forecasts.qmd) |
+| | 13.30–15.00 | [Session 6 · Evaluating real-world outbreak forecasts](sessions/real-world-forecasts.qmd) | [Slides](sessions/slides/introduction-to-real-world-forecasts.qmd) |
 | | 15.00–15.30 | *Coffee break* | |
-| | 15.30–17.00 | Session 7 · Forecasting with ensembles | [Slides](sessions/slides/introduction-to-ensembles.qmd), [Practice](sessions/forecast-ensembles.qmd) |
+| | 15.30–17.00 | [Session 7 · Forecasting with ensembles](sessions/forecast-ensembles.qmd) | [Slides](sessions/slides/introduction-to-ensembles.qmd) |
 | **Fri 17 Jul** | 09.00–09.15 | Day 2 review | |
-| | 09.15–10.30 | Session 8 · Building and evaluating real-world ensembles | [Slides](sessions/slides/real-world-ensembles.qmd), [Practice](sessions/eval-real-world-ensembles.qmd) |
+| | 09.15–10.30 | [Session 8 · Building and evaluating real-world ensembles](sessions/eval-real-world-ensembles.qmd) | [Slides](sessions/slides/real-world-ensembles.qmd) |
 | | 10.30–11.00 | *Coffee break* | |
-| | 11.00–12.30 | Session 9 · Local hub playground: building forecasts | [Slides](sessions/slides/hub-playground.qmd), [Practice](sessions/hub-playground.qmd) |
+| | 11.00–12.30 | [Session 9 · Local hub playground: building forecasts](sessions/hub-playground.qmd) | [Slides](sessions/slides/hub-playground.qmd) |
 | | 12.30–13.30 | *Lunch* | |
-| | 13.30–14.00 | Session 10 · Multivariate forecast evaluation | [Slides](sessions/slides/multivariate-forecast-evaluation.qmd), [Practice](sessions/multivariate-forecast-evaluation.qmd) |
-| | 14.00–15.00 | Session 11 · Local hub playgroud: testing & submitting | [Slides](sessions/slides/hub-playground-testing.qmd), [Practice](sessions/hub-playground-testing.qmd) |
+| | 13.30–14.00 | [Session 10 · Multivariate forecast evaluation](sessions/multivariate-forecast-evaluation.qmd) | [Slides](sessions/slides/multivariate-forecast-evaluation.qmd) |
+| | 14.00–15.00 | [Session 11 · Local hub playgroud: testing & submitting](sessions/hub-playground-testing.qmd) | [Slides](sessions/slides/hub-playground-testing.qmd) |
 | | 15.00–15.30 | *Coffee break* | |
 | | 15.30–16.30 | Session 12 · Research talks | TBD |
-| | 16.30–17.00 | Session 13 · Course wrap-up | [Summary](sessions/slides/closing.qmd), [further reading](sessions/end-of-course-summary-and-discussion.qmd) |
+| | 16.30–17.00 | [Session 13 · Course wrap-up](sessions/end-of-course-summary-and-discussion.qmd) | [Slides](sessions/slides/closing.qmd) |
 :::
