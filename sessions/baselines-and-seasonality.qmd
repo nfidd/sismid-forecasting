@@ -105,7 +105,7 @@ It is also equivalent to an `ARIMA(0,1,0)` model.
 where $\epsilon_t \sim N(0, \sigma^2)$.
 
 ::: {.callout-note}
-Note that the variance of the forecasts for an $h$ step-ahead forecast in this model compoound, where $y_{t+h} = y_{t+h-1} + \varepsilon_{t+h} = \cdots = y_t + \sum_{j=1}^{h}\varepsilon_{t+j}.$ This shows that the variance of the Persistence models will grow at larger horizons.
+Note that the variance of the forecasts for an $h$ step-ahead forecast in this model compound, where $y_{t+h} = y_{t+h-1} + \varepsilon_{t+h} = \cdots = y_t + \sum_{j=1}^{h}\varepsilon_{t+j}.$ This shows that the variance of the Persistence models will grow at larger horizons.
 :::
 
 
@@ -129,6 +129,7 @@ forecast(simple_baselines, h = 40) |>
   facet_wrap(~.model) +
   labs(title = "Two simple baselines", y = "% of visits")
 ```
+Note that we include the `1+` in the `ar000` model to ensure that the model includes a constant term (like an intercept) in the regression formula.
 
 ::: callout-tip
 ## Take 5 minutes
@@ -195,7 +196,7 @@ We will re-use this exact `fourier` model later in the course as a simple **seas
 
 Each baseline uses just one idea. Persistence and the mean react only to the level of the data (and not even the recent level, in the case of the mean); the seasonal baseline knows the shape of a typical season but ignores where we are right now.
 Can we do better than *all three* by combining seasonality with recent dynamics?
-A natural step is to add the Fourier terms to an AR(2) model, so the forecast is anchored to recent values *and* pulled toward the seasonal pattern:
+A natural step is to add the Fourier terms to an ARIMA(2,0,0) model, so the forecast is anchored to recent values *and* pulled toward the seasonal pattern:
 
 $$ g(y_t) = \phi_1 g(y_{t-1}) + \phi_2 g(y_{t-2}) + \sum_{k=1}^{3} \left[ \alpha_k \cos\left( \frac{2\pi \cdot k \cdot d(t)}{365} \right) + \beta_k \sin\left( \frac{2\pi \cdot k \cdot d(t)}{365} \right) \right] + \varepsilon_t $$
 

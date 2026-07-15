@@ -74,6 +74,14 @@ $$F_{LOP}(x) = \sum_{m=1}^M w_m F_m(x) $$
       - lots of uncertainty in weight estimation!
       - put a "strong prior" on equal weights, both in your mental and statistical models
 
+### Logistics of building ensembles {.smaller}
+
+- With a handful of models you have fit yourself, you can build an ensemble with a few lines of code.
+
+- What gets hard is the **logistics** at scale: collecting many forecasts in a shared format, validating them, and synthesizing them.
+
+- Collaborative **"hubs"** exist to handle that logistics problem. They are **not a prerequisite** for ensembling -- they just make it a whole lot easier once a few models or teams are involved.
+
 ### Collaborative modelling "hubs"
 
 :::: {.columns}

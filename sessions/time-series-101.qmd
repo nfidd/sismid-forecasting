@@ -98,14 +98,17 @@ The lower left panel plots the auto-correlation function plotted for up to lag 1
 It is commonly referred to as an ACF plot.
 Along the x-axis is the lag value and the y-axis is the correlation between $y_t$ and $y_{t-k}$ where $k$ is the lag value.
 So for example, the vertical bar at x=1 is just less than one, which means that when we compute the correlation between $y_t$ and $y_{t-1}$ across our whole dataset, it is very high.
-We can do this explicitly here for comparison for lags 1 and 12:
+We can do this explicitly here for comparison for lags 1 and 12.
 
+This value matches the value in the ACF plot (lower left, above) at x=1:
 ```{r}
 cor(flu_data$wili, dplyr::lag(flu_data$wili, 1), use = "complete.obs")
-cor(flu_data$wili, dplyr::lag(flu_data$wili, 12), use = "complete.obs")
 ```
 
-By comparing these values computed directly here to the ACF plot above at lags of 1 and 12, you can see that the values are the same.
+And this value matches the value in the ACF plot (lower left, above) at x=12, just after the values switch from being positive to negative:
+```{r}
+cor(flu_data$wili, dplyr::lag(flu_data$wili, 12), use = "complete.obs")
+```
 
 ## PACF plots
 
