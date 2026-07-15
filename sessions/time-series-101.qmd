@@ -15,7 +15,7 @@ It is a common pitfall to just start throwing models at data, without really loo
 
 ## Slides
 
--   [Time series forecasting 101](slides/time-series-101.qmd)
+- [Time series forecasting 101](slides/time-series-101.qmd)
 
 ## Objectives
 
@@ -26,7 +26,7 @@ We will focus on learning how to look at data, transformations and summaries of 
 None of the models introduced in this section are designed for real-world use!
 :::
 
-::: {.callout-note collapse="true"}
+:::: {.callout-note collapse="true"}
 # Setup
 
 ## Source file
@@ -59,7 +59,7 @@ Setting this ensures that you should get exactly the same results on your comput
 ```{r}
 set.seed(123)
 ```
-:::
+::::
 
 # Looking carefully at the data
 
@@ -77,7 +77,7 @@ This is a short-hand way to refer to values of the time-series some steps back i
 So the value $y_{t-3}$ is referred to as the "lag-three" value of $y_t$.
 
 In R, you can access these values of a vector using the `dplyr::lag()` function.
-(Note: there is also a `stats::lag()` function that handles lags a little bit differently.) 
+(Note: there is also a `stats::lag()` function that handles lags a little bit differently.)
 :::
 
 We start by loading in the same dataset that we looked at in the previous session.
@@ -87,6 +87,7 @@ data(flu_data)
 ```
 
 ## ACF plots
+
 We will now use the function `gg_tsdisplay()` from [the `ggtime` R package](https://pkg.mitchelloharawild.com/ggtime/) to give a unique view into our dataset.
 
 ```{r}
@@ -106,6 +107,7 @@ cor(flu_data$wili, dplyr::lag(flu_data$wili, 12), use = "complete.obs")
 ```
 
 By comparing these values computed directly here to the ACF plot above at lags of 1 and 12, you can see that the values are the same.
+- What values are the same?
 
 ## PACF plots
 
@@ -143,9 +145,9 @@ We are not going to give an in-depth review of ARIMA models in this course, but 
 In general, there are three different knobs on ARIMA models that you can fiddle with.
 They are:
 
--   **the auto-regressive order**: how many lags are included ($p$)
--   **the differencing order**: how many differences do you take of the data ($d$)
--   **the moving-average order**: how many residual errors are included as predictors ($q$)
+- **the auto-regressive order**: how many lags are included ($p$)
+- **the differencing order**: how many differences do you take of the data ($d$)
+- **the moving-average order**: how many residual errors are included as predictors ($q$)
 
 We will present briefly each of these pieces.
 But first, a brief detour to describe an important concept: stationarity.
@@ -172,11 +174,8 @@ We are going to fit a few overly simple ARIMA models below just to give examples
 
 ### ARIMA(1,0,0)
 
-Here is the equation for an ARIMA(1,0,0) model: 
-$$ y_t = \mu_t + \phi_1 y_{t-1} + \varepsilon_t $$ 
-where $\mu_t$ is a constant (like an intercept term in the regression), $\phi_1$ is a coefficient for the auto-regressive term, and $\varepsilon_t$ is a random error term with mean zero and constant variance.
-**Note the constant variance assumption!**
-This is one of the places where the stationarity assumption is comes into play: if the time-series is stationary then constant variance is a reasonable assumption.
+Here is the equation for an ARIMA(1,0,0) model: $$ y_t = \mu_t + \phi_1 y_{t-1} + \varepsilon_t $$ where $\mu_t$ is a constant (like an intercept term in the regression), $\phi_1$ is a coefficient for the auto-regressive term, and $\varepsilon_t$ is a random error term with mean zero and constant variance.
+**Note the constant variance assumption!** This is one of the places where the stationarity assumption is comes into play: if the time-series is stationary then constant variance is a reasonable assumption.
 
 Here is code to fit and forecast from an ARIMA(1,0,0) model (this is sometimes also referred to as an AR(1) model):
 
@@ -240,7 +239,6 @@ forecast(fit_arima001, h=40) |>
 ## Take 5 minutes
 
 Using the partial auto-correlation function plots as a guide, which lags might you consider including in the AR part of an ARIMA model?
-
 :::
 
 ::: {.callout-note collapse="true"}
@@ -285,7 +283,9 @@ Let's implement a transformation to try to get something closer to constant vari
 Through a lot of experimentation, we've found that a fourth-root transformation often does a reasonable job at stabilizing variance.[@ray_flusion_2025] And, it has the added benefit of making it so that predictions will never be negative.
 (Remember that problem from last session?) Other transformations might be reasonable too (there is [a whole section on them in the FPP3 textbook](https://otexts.com/fpp3/transformations.html#transformations)), and this is something often worth doing a bit of exploration for with your particular dataset.
 
-The course package provides a fourth-root transformation, `my_fourth_root`, defined with `fable`'s `new_transformation()` standard. We use it throughout the course. This is the code for the transformation:
+The course package provides a fourth-root transformation, `my_fourth_root`, defined with `fable`'s `new_transformation()` standard.
+We use it throughout the course.
+This is the code for the transformation:
 
 ```{r, eval=FALSE}
 fourth_root <- function(x) x^0.25
@@ -336,22 +336,20 @@ But which of these models do you think is doing the most reasonable (or least un
 
 Once again, there is not exactly a "right" answer here, but here are a few things to consider:
 
--   The fact that both of the `_trans` forecasts (the ones with the fourth-root transformation) stay positive seems pretty critical. The other forecasts routinely predict impossible values!
--   The `arima110_trans` model has quite high uncertainty at longer horizons in a way that seems reasonable.
+- The fact that both of the `_trans` forecasts (the ones with the fourth-root transformation) stay positive seems pretty critical. The other forecasts routinely predict impossible values!
+- The `arima110_trans` model has quite high uncertainty at longer horizons in a way that seems reasonable.
 
 Again, all of these forecasts are not very good, but they are progress.
 :::
 
 # Going further
 
-- Read about [ARIMA models in the FPP3 textbook](https://otexts.com/fpp3/arima.html). 
-Try to develop a better understanding of how $p$, $d$, and $q$ impact the behavior of a time-series.
-
+- Read about [ARIMA models in the FPP3 textbook](https://otexts.com/fpp3/arima.html). Try to develop a better understanding of how $p$, $d$, and $q$ impact the behavior of a time-series.
 
 # Wrap up
 
--   Review what you've learned in this session with the [learning objectives](../reference/learning_objectives.qmd)
--   Share your [questions and thoughts](../reference/help.qmd)
+- Review what you've learned in this session with the [learning objectives](../reference/learning_objectives.qmd)
+- Share your [questions and thoughts](../reference/help.qmd)
 
 ## References
 
