@@ -19,7 +19,8 @@ It is paired with the companion [nowcasting course](https://nfidd.github.io/sism
 | **Thu 16 Jul** | 09.00–09.15 | Day 1 review | |
 | | 09.15–10.30 | [Session 4 · Forecast evaluation](sessions/forecast-evaluation.qmd) | [Slides](sessions/slides/forecast-evaluation.qmd) |
 | | 10.30–11.00 | *Coffee break* | |
-| | 11.00–12.30 | [Session 5 · Epidemiologically-motivated forecasting](sessions/epi-motivated-forecasting.qmd) | [Slides](sessions/slides/epi-motivated-forecasting.qmd) |
+| | 11.00–12.00 | [Session 5 · Epidemiologically-motivated forecasting](sessions/epi-motivated-forecasting.qmd) | [Slides](sessions/slides/epi-motivated-forecasting.qmd) |
+| | 12.00–12.30 | Interlude: What do good models look like? | [Slides](sessions/slides/good-models.qmd) |
 | | 12.30–13.30 | *Lunch* | |
 | | 13.30–15.00 | [Session 6 · Evaluating real-world outbreak forecasts](sessions/real-world-forecasts.qmd) | [Slides](sessions/slides/introduction-to-real-world-forecasts.qmd) |
 | | 15.00–15.30 | *Coffee break* | |

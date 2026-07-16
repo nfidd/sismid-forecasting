@@ -1,0 +1,155 @@
+---
+title: "Anatomy of good forecasting models"
+author: "Forecasting & evaluation of infectious disease dynamics"
+engine: knitr
+bibliography: ../../nfidd.bib
+format:
+  revealjs:
+    output: slides/good-models.html
+    footer: "Anatomy of good models"
+    chalkboard: true
+    slide-level: 3
+---
+
+### What is the special sauce of a good model?
+
+- We've spent a lot of time talking about baseline models, and the mechanics of generating simple models. 
+
+- Making good forecast models is hard. 
+
+- What are some of the clever and innovative ideas that make good models good?
+
+### What are the main obstacles to good models?
+
+- Predictive models either need __a lot__ of data or very good "theory".
+   - __Data__: We sometimes have only on the order of 10 seasons of data. We'd like tens of thousands (or more). 
+   - __Theory__: If you could see all the eventual data, would you be able to explain why the outbreak evolved as it did? The underlying mechanics are impossibly complicated.
+
+- In real time, partially reported data can mislead.
+
+- Everyone talks up external data sources, but can they really help?
+
+
+
+<!-- ### Brief list of good ideas -->
+
+
+
+<!-- ::: callout-tip -->
+<!-- ## Be clever with your transformations -->
+
+<!-- Pre-compute different representations of your data: standardizing across data sources, smooth the data, calculate features like smoothed level or slope or growth rate. -->
+<!-- ::: -->
+
+## Selected good models {background-color="#447099"}
+
+
+### Dynamic Bayesian Model [@osthus_dynamic_2019]
+
+🌍 Setting: 2017/18 FluSight challenge
+
+🏆 Credentials: 4th best of 29 models
+
+✨ Special sauce: 
+
+ - SIR models as curve-generating tool
+ - hierarchical statistical discrepancy model
+
+### LNQ (R Wolfinger) & Flusion [@ray_flusion_2025]
+
+🌍 Setting: 
+ 
+ - LNQ: COVID-19 Forecast Hub case forecasting
+ - Flusion: FluSight 2023/2024
+
+🏆 Credentials:
+
+ - LNQ: most accurate case forecasting 2020-2021
+ - Flusion: 1st of 27 models, 2023/2024 season
+
+✨ Special sauce: 
+
+- gradient boosting with lots of feature engineering
+- data synthesis from multiple sources
+- ensembling several individual models
+
+### Pyrenew_HE_COVID model (US CDC CFA)
+
+🌍 Setting: US COVID-19 Forecast Hub 2025-2026
+
+🏆 Credentials: 1st out of 20 models[^1]
+
+✨ Special sauce: 
+
+- Used semi-mechanistic renewal model.
+- Had access to internal CDC data that had 4-5 more days recent data than other models.
+
+[^1]: Only forecasted for 0 and 1 week horizons.
+
+### Google SAI [@martinson_prospective_2026]
+
+🌍 Setting: FluSight 2025/2026[^1] 
+
+🏆 Credentials: 1st out of 39 models
+
+✨ Special sauce: 
+
+- TreeSearch algorithm with LLM re-writing code for models
+- Ensembling multiple candidate models
+
+[^1]: Nick Reich acknowledges paid consulting for Google in 2025-2026.
+
+### KCDE [@ray_infectious_2017] & Copycat (Spencer Fox)
+
+🌍 Setting
+
+ - KCDE: 2010-2017 FluSight Network
+ - Copycat: 2024/2025 FluSight season
+
+🏆 Credentials
+
+ - KCDE: 3rd of 22 models
+ - Copycat: 4th of 23
+
+✨ Special sauce
+
+- non-parametric method of analogues
+- Copycat: matching on log growth rate
+- KCDE: matching on season week and standardized trends
+
+
+### Dante [@osthus_multiscale_2021]
+
+🌍 Setting: 2018/19 FluSight challenge
+
+🏆 Credentials: 1st out of 33 models
+
+✨ Special sauce
+
+   - data (reporting error) + process model
+   - multi-scale hierarchy across locations
+
+
+### Key common features of these models
+
+::: callout-tip
+## Squeeze all the juice out of your data
+
+- Borrow information across locations. (Flusion, DBM, Dante)
+- Find other sources of surveillance data and use them for training. (Flusion, LNQ)
+:::
+
+::: callout-tip
+## "Epi-informed" but not a lot of mechanism
+
+- The above list focused on seasonal settings, where lots of historical data are available.
+- Most models were largely "phenomenological".
+:::
+
+#
+
+[Return to the session](../XXX.qmd)
+
+### References
+
+
