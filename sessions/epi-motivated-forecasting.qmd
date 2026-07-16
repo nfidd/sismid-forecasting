@@ -579,7 +579,7 @@ fc <- as_forecast_sample(
 ```
 
 Reported cases span several orders of magnitude over an epidemic, so a score on the natural scale is dominated by the largest counts near the peak.
-As in the [forecast evaluation session](forecast-evaluation.qmd), we score on both the natural and the log scale.
+Scoring the same forecasts on the log scale instead rewards getting the epidemic's growth rate right, so we score on both scales and compare [@bosseScoringEpidemiologicalForecasts2023].
 We use `transform_forecasts()` with `log_shift` to add log-transformed forecasts alongside the originals, which `score()` then scores together, labelling each with a `scale` column.
 
 ```{r score}
@@ -879,6 +879,7 @@ Could the data available at the forecast date have told the model that its popul
 -   @abbottEpiNow2EstimateRealtime2025 on EpiNow2.
 -   @bhattSemiMechanisticBayesianModeling2020 on renewal models in practice.
 -   @gosticPracticalConsiderationsMeasuring2020 on practical $R_t$ estimation.
+-   @bosseScoringEpidemiologicalForecasts2023 on scoring on the log scale to reward getting the growth rate right.
 
 # Wrap up
 
