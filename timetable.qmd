@@ -26,7 +26,8 @@ It is paired with the companion [nowcasting course](https://nfidd.github.io/sism
 | | 15.00–15.30 | *Coffee break* | |
 | | 15.30–17.00 | [Session 7 · Forecasting with ensembles](sessions/forecast-ensembles.qmd) | [Slides](sessions/slides/introduction-to-ensembles.qmd) |
 | **Fri 17 Jul** | 09.00–09.15 | Day 2 review | |
-| | 09.15–10.30 | [Session 8 · Building and evaluating real-world ensembles](sessions/eval-real-world-ensembles.qmd) | [Slides](sessions/slides/real-world-ensembles.qmd) |
+| | 09.15–10.15 | [Session 8 · Building and evaluating real-world ensembles](sessions/eval-real-world-ensembles.qmd) | [Slides](sessions/slides/real-world-ensembles.qmd) |
+| | 10.15–10.30 | Interlude: model importance | [Slides](sessions/slides/model-importance.qmd) |
 | | 10.30–11.00 | *Coffee break* | |
 | | 11.00–12.30 | [Session 9 · Local hub playground: building forecasts](sessions/hub-playground.qmd) | [Slides](sessions/slides/hub-playground.qmd) |
 | | 12.30–13.30 | *Lunch* | |
