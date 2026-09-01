@@ -1,0 +1,13 @@
+element.style {
+  margin-bottom: 1em;
+}
+
+/* Timetable: span the full page width and keep every row on a single line */
+.timetable table {
+  width: 100%;
+}
+
+.timetable th,
+.timetable td {
+  white-space: nowrap;
+}
